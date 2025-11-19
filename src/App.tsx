@@ -4,6 +4,12 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
+import Privatflytt from "./pages/Privatflytt";
+import Kontorsflytt from "./pages/Kontorsflytt";
+import Priser from "./pages/Priser";
+import Case from "./pages/Case";
+import FAQ from "./pages/FAQ";
+import Kontakt from "./pages/Kontakt";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -16,13 +22,13 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
-          {/* Placeholder routes - to be implemented */}
-          <Route path="/privatflytt" element={<Index />} />
-          <Route path="/kontorsflytt" element={<Index />} />
-          <Route path="/priser" element={<Index />} />
-          <Route path="/kontakt" element={<Index />} />
-          <Route path="/case" element={<Index />} />
-          <Route path="/faq" element={<Index />} />
+          <Route path="/privatflytt" element={<Privatflytt />} />
+          <Route path="/kontorsflytt" element={<Kontorsflytt />} />
+          <Route path="/priser" element={<Priser />} />
+          <Route path="/case" element={<Case />} />
+          <Route path="/faq" element={<FAQ />} />
+          <Route path="/kontakt" element={<Kontakt />} />
+          {/* To be implemented */}
           <Route path="/om" element={<Index />} />
           <Route path="/blogg" element={<Index />} />
           <Route path="/juridik" element={<Index />} />
