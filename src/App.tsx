@@ -10,6 +10,9 @@ import Priser from "./pages/Priser";
 import Case from "./pages/Case";
 import FAQ from "./pages/FAQ";
 import Kontakt from "./pages/Kontakt";
+import Blogg from "./pages/Blogg";
+import BlogPost from "./pages/BlogPost";
+import LocalArea from "./pages/LocalArea";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,9 +31,11 @@ const App = () => (
           <Route path="/case" element={<Case />} />
           <Route path="/faq" element={<FAQ />} />
           <Route path="/kontakt" element={<Kontakt />} />
+          <Route path="/blogg" element={<Blogg />} />
+          <Route path="/blogg/:slug" element={<BlogPost />} />
+          <Route path="/flyttfirma-:slug" element={<LocalArea />} />
           {/* To be implemented */}
           <Route path="/om" element={<Index />} />
-          <Route path="/blogg" element={<Index />} />
           <Route path="/juridik" element={<Index />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
