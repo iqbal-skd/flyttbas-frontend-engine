@@ -39,7 +39,7 @@ export const Hero = () => {
                 Få offert nu
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
-              <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10">
+              <Button size="lg" variant="hero">
                 Ring oss: 070-123 45 67
               </Button>
             </div>
