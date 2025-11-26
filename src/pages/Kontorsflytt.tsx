@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Check, Building2, Clock, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 
 const Kontorsflytt = () => {
   const features = [
@@ -36,6 +37,14 @@ const Kontorsflytt = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <Helmet>
+        <title>Kontorsflytt Stockholm – Minimal störning | Professionell</title>
+        <meta name="description" content="Kontorsflytt i Stockholm med minimal driftsstörning. Flyttar kvällar & helger. IT-flytt, möbler & projektledning. Få offert idag!" />
+        <link rel="canonical" href="https://flyttbas.se/kontorsflytt" />
+        <meta property="og:title" content="Kontorsflytt Stockholm – Professionell kontorsflytt" />
+        <meta property="og:description" content="Professionell kontorsflytt med minimal störning. Vi flyttar på kvällar och helger." />
+        <meta property="og:url" content="https://flyttbas.se/kontorsflytt" />
+      </Helmet>
       <Header />
       
       <main className="flex-1">

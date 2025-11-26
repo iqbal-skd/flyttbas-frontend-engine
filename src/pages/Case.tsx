@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Home, Building2, Clock, Users } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 
 const Case = () => {
   const cases = [
@@ -56,6 +57,14 @@ const Case = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <Helmet>
+        <title>Case Flyttar Stockholm – 500+ Lyckade Flyttar | Flyttbas</title>
+        <meta name="description" content="Läs om våra genomförda flyttar i Stockholm. 500+ nöjda kunder, 0 skador senaste året. Se hur vi hjälper privat- och kontorsflytt." />
+        <link rel="canonical" href="https://flyttbas.se/case" />
+        <meta property="og:title" content="Case – Våra genomförda flyttar i Stockholm" />
+        <meta property="og:description" content="Se exempel på våra lyckade flyttar. 500+ nöjda kunder och 0 skador." />
+        <meta property="og:url" content="https://flyttbas.se/case" />
+      </Helmet>
       <Header />
       
       <main className="flex-1">

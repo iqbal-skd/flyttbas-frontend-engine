@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Check, Home, Package, Truck } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 
 const Privatflytt = () => {
   const services = [
@@ -55,6 +56,14 @@ const Privatflytt = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <Helmet>
+        <title>Privatflytt Stockholm – Från 995 kr/tim | RUT-avdrag 50%</title>
+        <meta name="description" content="Professionell privatflytt i Stockholm. Från lägenhet till villa. Inkl. packning, transport & montering. RUT-avdrag direkt. Boka idag!" />
+        <link rel="canonical" href="https://flyttbas.se/privatflytt" />
+        <meta property="og:title" content="Privatflytt Stockholm – Professionell flyttjänst" />
+        <meta property="og:description" content="Smidig och säker privatflytt i Stockholm. Från 995 kr/tim med RUT-avdrag." />
+        <meta property="og:url" content="https://flyttbas.se/privatflytt" />
+      </Helmet>
       <Header />
       
       <main className="flex-1">

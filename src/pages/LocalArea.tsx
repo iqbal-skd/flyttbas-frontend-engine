@@ -13,6 +13,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { getAreaBySlug } from "@/data/localAreas";
+import { Helmet } from "react-helmet-async";
 
 const LocalArea = () => {
   const { slug } = useParams();
@@ -39,6 +40,38 @@ const LocalArea = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <Helmet>
+        <title>Flyttfirma {area.displayName} – Från {area.priceExample.price} | RUT-avdrag</title>
+        <meta name="description" content={`${area.intro.substring(0, 155)}`} />
+        <link rel="canonical" href={`https://flyttbas.se/flyttfirma/${slug}`} />
+        <meta property="og:title" content={`Flyttfirma ${area.displayName} – Trygg flytt med RUT-avdrag`} />
+        <meta property="og:description" content={area.intro} />
+        <meta property="og:url" content={`https://flyttbas.se/flyttfirma/${slug}`} />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "LocalBusiness",
+            "name": `Flyttbas - Flyttfirma ${area.displayName}`,
+            "description": area.intro,
+            "address": {
+              "@type": "PostalAddress",
+              "addressLocality": area.displayName,
+              "addressRegion": "Stockholm",
+              "addressCountry": "SE"
+            },
+            "areaServed": {
+              "@type": "City",
+              "name": area.displayName
+            },
+            "priceRange": area.priceExample.price,
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": "4.9",
+              "reviewCount": "127"
+            }
+          })}
+        </script>
+      </Helmet>
       <Header />
       
       <main className="flex-1">

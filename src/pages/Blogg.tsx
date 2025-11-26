@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { Calendar, Clock, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Helmet } from "react-helmet-async";
 
 const Blogg = () => {
   const categories = [
@@ -78,6 +79,14 @@ const Blogg = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <Helmet>
+        <title>Blogg – Flyttips & Guider Stockholm 2024 | Flyttbas</title>
+        <meta name="description" content="Expertråd om flytt, packning, RUT-avdrag och flyttstädning. Läs våra guider och gör din flytt i Stockholm enklare och billigare." />
+        <link rel="canonical" href="https://flyttbas.se/blogg" />
+        <meta property="og:title" content="Blogg – Flyttips och guider för din flytt" />
+        <meta property="og:description" content="Expertråd om flytt, packning och RUT-avdrag. Gör din flytt enklare." />
+        <meta property="og:url" content="https://flyttbas.se/blogg" />
+      </Helmet>
       <Header />
       
       <main className="flex-1">
@@ -124,7 +133,7 @@ const Blogg = () => {
                     <div className="aspect-video bg-gray-200 flex items-center justify-center">
                       <img 
                         src={post.image} 
-                        alt={post.title}
+                        alt={`${post.title} - illustration om ${post.category.toLowerCase()}`}
                         className="w-full h-full object-cover"
                       />
                     </div>
