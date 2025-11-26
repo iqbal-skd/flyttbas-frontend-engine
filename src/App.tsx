@@ -33,7 +33,7 @@ const App = () => (
           <Route path="/kontakt" element={<Kontakt />} />
           <Route path="/blogg" element={<Blogg />} />
           <Route path="/blogg/:slug" element={<BlogPost />} />
-          <Route path="/flyttfirma-:slug" element={<LocalArea />} />
+          <Route path="/flyttfirma/:slug" element={<LocalArea />} />
           {/* To be implemented */}
           <Route path="/om" element={<Index />} />
           <Route path="/juridik" element={<Index />} />
