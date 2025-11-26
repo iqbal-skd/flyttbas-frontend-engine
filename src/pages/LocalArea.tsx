@@ -230,7 +230,7 @@ const LocalArea = () => {
               </h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {area.nearby.map((nearby: any, index: number) => (
-                  <Link key={index} to={`/flyttfirma-${nearby.slug}`}>
+                  <Link key={index} to={`/flyttfirma/${nearby.slug}`}>
                     <Card className="p-4 text-center hover:shadow-lg transition-shadow">
                       <MapPin className="h-5 w-5 text-orange mx-auto mb-2" />
                       <div className="font-medium text-navy">{nearby.name}</div>
