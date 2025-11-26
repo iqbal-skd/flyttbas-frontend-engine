@@ -11,6 +11,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Helmet } from "react-helmet-async";
 
 const BlogPost = () => {
   const { slug } = useParams();
@@ -150,6 +151,37 @@ const BlogPost = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <Helmet>
+        <title>{post.title} | Flyttbas Blogg</title>
+        <meta name="description" content={post.content.find(c => c.type === 'intro')?.text?.substring(0, 160) || "Expertråd om flytt i Stockholm"} />
+        <link rel="canonical" href={`https://flyttbas.se/blogg/${slug}`} />
+        <meta property="og:title" content={post.title} />
+        <meta property="og:description" content={post.content.find(c => c.type === 'intro')?.text?.substring(0, 160) || ""} />
+        <meta property="og:type" content="article" />
+        <meta property="og:url" content={`https://flyttbas.se/blogg/${slug}`} />
+        <meta property="article:published_time" content={post.date} />
+        <meta property="article:section" content={post.category} />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BlogPosting",
+            "headline": post.title,
+            "datePublished": post.date,
+            "author": {
+              "@type": "Organization",
+              "name": "Flyttbas"
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": "Flyttbas"
+            },
+            "mainEntityOfPage": {
+              "@type": "WebPage",
+              "@id": `https://flyttbas.se/blogg/${slug}`
+            }
+          })}
+        </script>
+      </Helmet>
       <Header />
       
       <main className="flex-1">

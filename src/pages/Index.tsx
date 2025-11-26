@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Home, Building2, Package, ArrowRight, Star } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 
 const Index = () => {
   const services = [
@@ -39,6 +40,37 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <Helmet>
+        <title>Flyttbas – Professionell Flytthjälp i Stockholm | RUT-avdrag</title>
+        <meta name="description" content="Pålitlig och prisvärd flytthjälp i Stockholm. Få fastpris direkt, RUT-avdrag upp till 50%, försäkring och garanterat 0 skador. Ring idag!" />
+        <link rel="canonical" href="https://flyttbas.se/" />
+        <meta property="og:title" content="Flyttbas – Professionell Flytthjälp i Stockholm" />
+        <meta property="og:description" content="Pålitlig och prisvärd flytthjälp i Stockholm. Få fastpris direkt med RUT-avdrag." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://flyttbas.se/" />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "MovingCompany",
+            "name": "Flyttbas",
+            "description": "Professionell flyttjänst i Stockholm",
+            "address": {
+              "@type": "PostalAddress",
+              "streetAddress": "Drottninggatan 95",
+              "addressLocality": "Stockholm",
+              "postalCode": "113 60",
+              "addressCountry": "SE"
+            },
+            "telephone": "+46701234567",
+            "priceRange": "995-1595 SEK per timme",
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": "4.9",
+              "reviewCount": "2500"
+            }
+          })}
+        </script>
+      </Helmet>
       <Header />
       
       <main className="flex-grow">

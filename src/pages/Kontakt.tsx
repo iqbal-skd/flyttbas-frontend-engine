@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Phone, Mail, MapPin, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
+import { Helmet } from "react-helmet-async";
 
 const Kontakt = () => {
   const { toast } = useToast();
@@ -59,6 +60,14 @@ const Kontakt = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <Helmet>
+        <title>Kontakta Flyttbas Stockholm – Få Offert inom 2 Timmar</title>
+        <meta name="description" content="Kontakta oss för kostnadsfri offert. Tel: 070-123 45 67. Vi svarar inom 2 timmar. Professionell flytthjälp i Stockholm med RUT-avdrag." />
+        <link rel="canonical" href="https://flyttbas.se/kontakt" />
+        <meta property="og:title" content="Kontakta Flyttbas – Få offert inom 2 timmar" />
+        <meta property="og:description" content="Kostnadsfri offert och svar inom 2 timmar. Ring 070-123 45 67." />
+        <meta property="og:url" content="https://flyttbas.se/kontakt" />
+      </Helmet>
       <Header />
       
       <main className="flex-1">

@@ -4,6 +4,7 @@ import { MobileActionBar } from "@/components/MobileActionBar";
 import { QuickQuoteForm } from "@/components/QuickQuoteForm";
 import { Card } from "@/components/ui/card";
 import { Check, Info } from "lucide-react";
+import { Helmet } from "react-helmet-async";
 
 const Priser = () => {
   const priceExamples = [
@@ -57,6 +58,14 @@ const Priser = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <Helmet>
+        <title>Priser Flyttjänster Stockholm 2024 – Från 995 kr/tim | RUT</title>
+        <meta name="description" content="Transparenta priser för flyttjänster i Stockholm. Från 995 kr/tim. RUT-avdrag 50%. Inga dolda kostnader. Få fastpris direkt!" />
+        <link rel="canonical" href="https://flyttbas.se/priser" />
+        <meta property="og:title" content="Priser flyttjänster Stockholm – Transparenta priser" />
+        <meta property="og:description" content="Se våra priser för flyttjänster. Från 995 kr/tim med RUT-avdrag." />
+        <meta property="og:url" content="https://flyttbas.se/priser" />
+      </Helmet>
       <Header />
       
       <main className="flex-1">

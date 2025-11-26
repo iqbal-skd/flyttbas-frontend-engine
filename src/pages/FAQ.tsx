@@ -4,6 +4,7 @@ import { MobileActionBar } from "@/components/MobileActionBar";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 
 const FAQ = () => {
   const faqCategories = [
@@ -104,6 +105,38 @@ const FAQ = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <Helmet>
+        <title>FAQ Flytt Stockholm – Vanliga Frågor om Flyttjänster</title>
+        <meta name="description" content="Vanliga frågor om flytt i Stockholm. RUT-avdrag, försäkring, priser, packning och mer. Få svar på dina flyttfrågor här!" />
+        <link rel="canonical" href="https://flyttbas.se/faq" />
+        <meta property="og:title" content="FAQ – Vanliga frågor om flyttjänster" />
+        <meta property="og:description" content="Svar på vanliga frågor om flytt, RUT-avdrag, försäkring och priser." />
+        <meta property="og:url" content="https://flyttbas.se/faq" />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "Hur fungerar RUT-avdraget?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "RUT-avdraget ger 50% rabatt på arbetskostnaden upp till 75 000 kr per person och år. Vi hanterar alla papper och rapporterar direkt till Skatteverket."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Är mina saker försäkrade under flytten?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Ja, alla våra flyttar är försäkrade genom vår ansvarsförsäkring. Vi täcker eventuella skador som uppstår under flytten."
+                }
+              }
+            ]
+          })}
+        </script>
+      </Helmet>
       <Header />
       
       <main className="flex-1">
