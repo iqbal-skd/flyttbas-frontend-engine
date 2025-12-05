@@ -11,7 +11,7 @@ export const Footer = () => {
           <div>
             <img src={logo} alt="Flyttbas" className="h-8 w-auto mb-4" />
             <p className="text-sm text-white/80">
-              Professionell flytthjälp i Stockholm med garanterat 0 skador och RUT-avdrag.
+              Professionell flytthjälp i Stockholm – vi följer Bohag 2010 och har full ansvarsförsäkring, alltid med möjlighet till RUT-avdrag.
             </p>
           </div>
 

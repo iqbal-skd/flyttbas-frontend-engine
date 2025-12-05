@@ -15,8 +15,7 @@ export const Hero = () => {
               Professionell Flytthjälp i Stockholm
             </h1>
             <p className="text-lg md:text-xl text-white/90 mb-8">
-              Få fastpris direkt, garanterat 0 skador och upp till 50% RUT-avdrag. 
-              Vi gör din flytt smidig och stressfri.
+             Få fast pris direkt, med upp till 50% RUT-avdrag. Vi följer Bohag 2010, är fullt ansvarsförsäkrade och gör din flytt smidig och stressfri.
             </p>
             
             {/* Benefits */}

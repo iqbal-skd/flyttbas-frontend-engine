@@ -42,7 +42,7 @@ const Index = () => {
     <div className="min-h-screen flex flex-col">
       <Helmet>
         <title>Flyttbas – Professionell Flytthjälp i Stockholm | RUT-avdrag</title>
-        <meta name="description" content="Pålitlig och prisvärd flytthjälp i Stockholm. Få fastpris direkt, RUT-avdrag upp till 50%, försäkring och garanterat 0 skador. Ring idag!" />
+        <meta name="description" content="Pålitlig och prisvärd flytthjälp i Stockholm. Fast pris direkt, upp till 50% RUT-avdrag och full ansvarsförsäkring. Vi följer Bohag 2010 och gör din flytt trygg, effektiv och smidig. Ring idag!" />
         <link rel="canonical" href="https://flyttbas.se/" />
         <meta property="og:title" content="Flyttbas – Professionell Flytthjälp i Stockholm" />
         <meta property="og:description" content="Pålitlig och prisvärd flytthjälp i Stockholm. Få fastpris direkt med RUT-avdrag." />
