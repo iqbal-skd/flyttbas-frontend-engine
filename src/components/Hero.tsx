@@ -24,7 +24,7 @@ export const Hero = () => {
               {[
                 "Fastpris – inga dolda kostnader",
                 "RUT-avdrag upp till 50%",
-                "Garanterat 0 skador",
+                "Vi följer Bohag 2010 och har ansvarsförsäkring",
                 "Försäkring inkluderad",
               ].map((benefit) => (
                 <li key={benefit} className="flex items-center gap-3">
