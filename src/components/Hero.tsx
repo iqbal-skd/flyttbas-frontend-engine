@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
-import { QuickQuoteForm } from "./QuickQuoteForm";
+import { QuoteWizard } from "./quote-wizard";
 
 export const Hero = () => {
   return (
@@ -46,7 +46,7 @@ export const Hero = () => {
 
           {/* Quick Quote Form */}
           <div>
-            <QuickQuoteForm />
+            <QuoteWizard />
           </div>
         </div>
       </div>
