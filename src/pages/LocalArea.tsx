@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link, useParams } from "react-router-dom";
 import { MapPin, Users, Clock, ShieldCheck, Check, Star } from "lucide-react";
-import { QuickQuoteForm } from "@/components/QuickQuoteForm";
+import { QuoteWizard } from "@/components/quote-wizard";
 import {
   Accordion,
   AccordionContent,
@@ -184,16 +184,16 @@ const LocalArea = () => {
         </section>
 
         {/* Quote Form */}
-        <section id="offert" className="py-16">
+        <section id="offert" className="py-12 md:py-16">
           <div className="container mx-auto px-4">
             <div className="max-w-2xl mx-auto">
-              <h2 className="text-3xl font-bold text-navy mb-4 text-center">
+              <h2 className="text-2xl sm:text-3xl font-bold text-navy mb-4 text-center">
                 Få fastpris för din flytt i {area.displayName}
               </h2>
-              <p className="text-center text-muted-foreground mb-8">
+              <p className="text-center text-muted-foreground mb-6 md:mb-8">
                 Fyll i formuläret så återkommer vi inom 15 minuter (08-20) med ett preliminärt fastpris.
               </p>
-              <QuickQuoteForm />
+              <QuoteWizard />
             </div>
           </div>
         </section>
