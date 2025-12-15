@@ -15,100 +15,139 @@ export const Step2Details = ({ formData, setFormData }: StepProps) => {
   };
 
   return (
-    <div className="space-y-5">
+    <fieldset className="space-y-5">
+      <legend className="sr-only">Steg 2: Trappor, bärväg och tunga föremål</legend>
+      
       {/* Stairs */}
       <div className="flex items-center gap-2 text-primary mb-4">
-        <Building className="h-5 w-5" />
-        <h3 className="font-semibold">Trappor utan hiss</h3>
+        <Building className="h-5 w-5" aria-hidden="true" />
+        <h3 className="font-semibold text-base sm:text-lg">Trappor utan hiss</h3>
       </div>
       
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="stairs_from">Våningar (från-adress)</Label>
+          <Label htmlFor="stairs_from" className="text-sm font-medium">
+            Våningar (från-adress)
+          </Label>
           <Input
             id="stairs_from"
             type="number"
+            inputMode="numeric"
             min="0"
             placeholder="0"
             value={formData.stairs_from}
             onChange={(e) => setFormData({ ...formData, stairs_from: e.target.value })}
+            className="mt-1.5"
+            aria-describedby="stairs-from-hint"
           />
-          <p className="text-xs text-muted-foreground mt-1">Antal våningar utan hiss</p>
+          <p id="stairs-from-hint" className="text-xs text-muted-foreground mt-1">
+            Antal våningar utan hiss
+          </p>
         </div>
         <div>
-          <Label htmlFor="stairs_to">Våningar (till-adress)</Label>
+          <Label htmlFor="stairs_to" className="text-sm font-medium">
+            Våningar (till-adress)
+          </Label>
           <Input
             id="stairs_to"
             type="number"
+            inputMode="numeric"
             min="0"
             placeholder="0"
             value={formData.stairs_to}
             onChange={(e) => setFormData({ ...formData, stairs_to: e.target.value })}
+            className="mt-1.5"
+            aria-describedby="stairs-to-hint"
           />
-          <p className="text-xs text-muted-foreground mt-1">Antal våningar utan hiss</p>
+          <p id="stairs-to-hint" className="text-xs text-muted-foreground mt-1">
+            Antal våningar utan hiss
+          </p>
         </div>
       </div>
 
       {/* Carry distance */}
       <div className="flex items-center gap-2 text-primary mt-6 mb-4">
-        <Footprints className="h-5 w-5" />
-        <h3 className="font-semibold">Bärväg till fordon</h3>
+        <Footprints className="h-5 w-5" aria-hidden="true" />
+        <h3 className="font-semibold text-base sm:text-lg">Bärväg till fordon</h3>
       </div>
       
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="carry_from_m">Meter (från-adress)</Label>
+          <Label htmlFor="carry_from_m" className="text-sm font-medium">
+            Meter (från-adress)
+          </Label>
           <Input
             id="carry_from_m"
             type="number"
+            inputMode="numeric"
             min="0"
             placeholder="35"
             value={formData.carry_from_m}
             onChange={(e) => setFormData({ ...formData, carry_from_m: e.target.value })}
+            className="mt-1.5"
+            aria-describedby="carry-from-hint"
           />
-          <p className="text-xs text-muted-foreground mt-1">Första 35 m ingår</p>
+          <p id="carry-from-hint" className="text-xs text-muted-foreground mt-1">
+            Första 35 m ingår
+          </p>
         </div>
         <div>
-          <Label htmlFor="carry_to_m">Meter (till-adress)</Label>
+          <Label htmlFor="carry_to_m" className="text-sm font-medium">
+            Meter (till-adress)
+          </Label>
           <Input
             id="carry_to_m"
             type="number"
+            inputMode="numeric"
             min="0"
             placeholder="35"
             value={formData.carry_to_m}
             onChange={(e) => setFormData({ ...formData, carry_to_m: e.target.value })}
+            className="mt-1.5"
+            aria-describedby="carry-to-hint"
           />
-          <p className="text-xs text-muted-foreground mt-1">Första 35 m ingår</p>
+          <p id="carry-to-hint" className="text-xs text-muted-foreground mt-1">
+            Första 35 m ingår
+          </p>
         </div>
       </div>
 
       {/* Parking */}
       <div className="flex items-center gap-2 text-primary mt-6 mb-4">
-        <Car className="h-5 w-5" />
-        <h3 className="font-semibold">Parkeringsmöjligheter</h3>
+        <Car className="h-5 w-5" aria-hidden="true" />
+        <h3 className="font-semibold text-base sm:text-lg">Parkeringsmöjligheter</h3>
       </div>
       
-      <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+      <div className="flex items-start gap-3 p-3 sm:p-4 bg-muted/50 rounded-lg">
         <Checkbox
           id="parking_restrictions"
           checked={formData.parking_restrictions}
           onCheckedChange={(checked) => 
             setFormData({ ...formData, parking_restrictions: checked as boolean })
           }
+          aria-describedby="parking-desc"
         />
-        <Label htmlFor="parking_restrictions" className="text-sm font-normal cursor-pointer">
+        <Label 
+          htmlFor="parking_restrictions" 
+          className="text-sm font-normal cursor-pointer leading-relaxed"
+          id="parking-desc"
+        >
           Svår parkering (begränsade parkeringsmöjligheter vid någon adress)
         </Label>
       </div>
 
       {/* Heavy items */}
       <div className="flex items-center gap-2 text-primary mt-6 mb-4">
-        <Weight className="h-5 w-5" />
-        <h3 className="font-semibold">Tunga föremål</h3>
+        <Weight className="h-5 w-5" aria-hidden="true" />
+        <h3 className="font-semibold text-base sm:text-lg">Tunga föremål</h3>
       </div>
       
-      <div className="space-y-3">
-        <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+      <div 
+        className="space-y-3"
+        role="group"
+        aria-label="Välj tunga föremål som ska flyttas"
+      >
+        <div className="flex items-center gap-3 p-3 sm:p-4 bg-muted/50 rounded-lg">
           <Checkbox
             id="heavy_piano"
             checked={formData.heavy_items?.includes('piano')}
@@ -118,7 +157,7 @@ export const Step2Details = ({ formData, setFormData }: StepProps) => {
             Piano <span className="text-muted-foreground">(+1 995 kr)</span>
           </Label>
         </div>
-        <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+        <div className="flex items-center gap-3 p-3 sm:p-4 bg-muted/50 rounded-lg">
           <Checkbox
             id="heavy_flygel"
             checked={formData.heavy_items?.includes('flygel')}
@@ -128,7 +167,7 @@ export const Step2Details = ({ formData, setFormData }: StepProps) => {
             Flygel <span className="text-muted-foreground">(+3 995 kr)</span>
           </Label>
         </div>
-        <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+        <div className="flex items-center gap-3 p-3 sm:p-4 bg-muted/50 rounded-lg">
           <Checkbox
             id="heavy_safe"
             checked={formData.heavy_items?.includes('safe150')}
@@ -139,6 +178,6 @@ export const Step2Details = ({ formData, setFormData }: StepProps) => {
           </Label>
         </div>
       </div>
-    </div>
+    </fieldset>
   );
 };

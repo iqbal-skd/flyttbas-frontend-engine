@@ -134,43 +134,56 @@ export const QuoteWizard = () => {
 
   return (
     <Card className="shadow-2xl border-0">
-      <CardHeader>
+      <CardHeader className="pb-4 sm:pb-6">
         <div className="flex items-center gap-2 mb-2">
-          <Calculator className="h-5 w-5 text-accent" />
-          <CardTitle>Få Fastpris Direkt</CardTitle>
+          <Calculator className="h-5 w-5 text-accent" aria-hidden="true" />
+          <CardTitle className="text-lg sm:text-xl">Få Fastpris Direkt</CardTitle>
         </div>
-        <CardDescription>
+        <CardDescription className="text-sm">
           Fyll i det du vet – vi räknar ut ett pris och listar alla antaganden
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
         <WizardProgress currentStep={currentStep} />
         
-        <div className="min-h-[400px]">
+        <div 
+          className="min-h-[350px] sm:min-h-[400px]"
+          role="form"
+          aria-label={`Steg ${currentStep} av ${WIZARD_STEPS.length}: ${WIZARD_STEPS[currentStep - 1]?.title}`}
+        >
           {renderStep()}
         </div>
 
         {/* Navigation buttons */}
-        <div className="flex justify-between mt-6 pt-4 border-t border-border">
+        <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 mt-6 pt-4 border-t border-border">
           <Button
             variant="outline"
             onClick={handleBack}
             disabled={currentStep === 1}
-            className="gap-2"
+            className="gap-2 w-full sm:w-auto"
+            aria-label="Gå till föregående steg"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-4 w-4" aria-hidden="true" />
             Tillbaka
           </Button>
           
           {isLastStep ? (
-            <Button onClick={handleSubmit} className="gap-2">
-              <Send className="h-4 w-4" />
+            <Button 
+              onClick={handleSubmit} 
+              className="gap-2 w-full sm:w-auto"
+              aria-label="Skicka din offertförfrågan"
+            >
+              <Send className="h-4 w-4" aria-hidden="true" />
               Skicka förfrågan
             </Button>
           ) : (
-            <Button onClick={handleNext} className="gap-2">
+            <Button 
+              onClick={handleNext} 
+              className="gap-2 w-full sm:w-auto"
+              aria-label="Gå till nästa steg"
+            >
               Nästa
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-4 w-4" aria-hidden="true" />
             </Button>
           )}
         </div>

@@ -1,7 +1,7 @@
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { MobileActionBar } from "@/components/MobileActionBar";
-import { QuickQuoteForm } from "@/components/QuickQuoteForm";
+import { QuoteWizard } from "@/components/quote-wizard";
 import { Card } from "@/components/ui/card";
 import { Check, Info } from "lucide-react";
 import { Helmet } from "react-helmet-async";
@@ -84,11 +84,11 @@ const Priser = () => {
         </section>
 
         {/* Quick Quote Form */}
-        <section className="py-16 bg-light-bg">
+        <section className="py-12 md:py-16 bg-light-bg">
           <div className="container mx-auto px-4">
             <div className="max-w-2xl mx-auto">
-              <h2 className="text-2xl font-bold text-center mb-8 text-navy">Få ett snabbt prisförslag</h2>
-              <QuickQuoteForm />
+              <h2 className="text-2xl font-bold text-center mb-6 md:mb-8 text-navy">Få ett snabbt prisförslag</h2>
+              <QuoteWizard />
             </div>
           </div>
         </section>

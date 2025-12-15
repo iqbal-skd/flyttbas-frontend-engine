@@ -11,17 +11,23 @@ interface Step4QuoteProps extends StepProps {
 
 export const Step4Quote = ({ formData, setFormData, errors, quoteResult }: Step4QuoteProps) => {
   return (
-    <div className="space-y-5">
+    <fieldset className="space-y-5">
+      <legend className="sr-only">Steg 4: Din offert och kontaktuppgifter</legend>
+      
       {/* Quote Display */}
       {quoteResult && (
         <>
           <div className="flex items-center gap-2 text-primary mb-4">
-            <Receipt className="h-5 w-5" />
-            <h3 className="font-semibold">Din offert</h3>
+            <Receipt className="h-5 w-5" aria-hidden="true" />
+            <h3 className="font-semibold text-base sm:text-lg">Din offert</h3>
           </div>
           
-          <div className="bg-secondary p-4 rounded-lg space-y-3">
-            <div className="text-2xl font-bold text-primary">
+          <div 
+            className="bg-secondary p-4 rounded-lg space-y-3"
+            role="region"
+            aria-label="Prissammanställning"
+          >
+            <div className="text-xl sm:text-2xl font-bold text-primary">
               FASTPRIS FLYTT: {quoteResult.move_total.toLocaleString('sv-SE')} kr
             </div>
             
@@ -38,7 +44,7 @@ export const Step4Quote = ({ formData, setFormData, errors, quoteResult }: Step4
             
             <div className="border-t border-border pt-3">
               <p className="font-medium text-sm mb-2">Så har vi räknat:</p>
-              <ul className="text-xs text-muted-foreground space-y-1">
+              <ul className="text-xs text-muted-foreground space-y-1" aria-label="Antaganden för prisberäkning">
                 {quoteResult.assumptions.map((assumption, idx) => (
                   <li key={idx}>• {assumption}</li>
                 ))}
@@ -46,7 +52,10 @@ export const Step4Quote = ({ formData, setFormData, errors, quoteResult }: Step4
             </div>
             
             {quoteResult.requires_home_visit && (
-              <div className="bg-accent/10 text-foreground p-3 rounded-md text-sm border border-accent/20">
+              <div 
+                className="bg-accent/10 text-foreground p-3 rounded-md text-sm border border-accent/20"
+                role="alert"
+              >
                 <strong>Rekommendation:</strong> För större flytt rekommenderar vi hembesök för exakt pris.
               </div>
             )}
@@ -56,43 +65,62 @@ export const Step4Quote = ({ formData, setFormData, errors, quoteResult }: Step4
 
       {/* Contact Fields */}
       <div className="flex items-center gap-2 text-primary mt-6 mb-4">
-        <User className="h-5 w-5" />
-        <h3 className="font-semibold">Dina kontaktuppgifter</h3>
+        <User className="h-5 w-5" aria-hidden="true" />
+        <h3 className="font-semibold text-base sm:text-lg">Dina kontaktuppgifter</h3>
       </div>
       
       <div className="space-y-4">
         <div>
-          <Label htmlFor="customer_name">Namn</Label>
+          <Label htmlFor="customer_name" className="text-sm font-medium">
+            Namn
+          </Label>
           <Input
             id="customer_name"
             placeholder="Ditt namn"
             value={formData.customer_name}
             onChange={(e) => setFormData({ ...formData, customer_name: e.target.value })}
+            className="mt-1.5"
+            autoComplete="name"
           />
         </div>
         
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <Label htmlFor="customer_phone">Telefon</Label>
+            <Label htmlFor="customer_phone" className="text-sm font-medium">
+              Telefon
+            </Label>
             <Input
               id="customer_phone"
               type="tel"
+              inputMode="tel"
               placeholder="+46701234567"
               value={formData.customer_phone}
               onChange={(e) => setFormData({ ...formData, customer_phone: e.target.value })}
+              className="mt-1.5"
+              autoComplete="tel"
             />
           </div>
           <div>
-            <Label htmlFor="customer_email">E-post</Label>
+            <Label htmlFor="customer_email" className="text-sm font-medium">
+              E-post
+            </Label>
             <Input
               id="customer_email"
               type="email"
+              inputMode="email"
               placeholder="din@email.se"
               value={formData.customer_email}
               onChange={(e) => setFormData({ ...formData, customer_email: e.target.value })}
-              className={errors.customer_email ? "border-destructive" : ""}
+              className={`mt-1.5 ${errors.customer_email ? "border-destructive" : ""}`}
+              autoComplete="email"
+              aria-invalid={errors.customer_email ? "true" : "false"}
+              aria-describedby={errors.customer_email ? "email-error" : undefined}
             />
-            {errors.customer_email && <p className="text-xs text-destructive mt-1">{errors.customer_email}</p>}
+            {errors.customer_email && (
+              <p id="email-error" className="text-xs text-destructive mt-1" role="alert">
+                {errors.customer_email}
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -106,19 +134,26 @@ export const Step4Quote = ({ formData, setFormData, errors, quoteResult }: Step4
             setFormData({ ...formData, gdpr_consent: checked as boolean })
           }
           className={errors.gdpr_consent ? "border-destructive" : ""}
+          aria-invalid={errors.gdpr_consent ? "true" : "false"}
+          aria-describedby={errors.gdpr_consent ? "gdpr-error" : "gdpr-label"}
         />
         <Label 
           htmlFor="gdpr_consent" 
-          className="text-xs text-muted-foreground font-normal cursor-pointer"
+          id="gdpr-label"
+          className="text-xs text-muted-foreground font-normal cursor-pointer leading-relaxed"
         >
           Jag godkänner att Flyttbas behandlar mina personuppgifter enligt GDPR *
         </Label>
       </div>
-      {errors.gdpr_consent && <p className="text-xs text-destructive">{errors.gdpr_consent}</p>}
+      {errors.gdpr_consent && (
+        <p id="gdpr-error" className="text-xs text-destructive" role="alert">
+          {errors.gdpr_consent}
+        </p>
+      )}
 
       <p className="text-xs text-muted-foreground text-center mt-4">
         Ingen bindningstid. Gratis prisförslag. Vi ringer inom 15 min (08–20).
       </p>
-    </div>
+    </fieldset>
   );
 };
