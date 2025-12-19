@@ -39,12 +39,11 @@ export const WizardProgress = ({ currentStep }: WizardProgressProps) => {
                 </div>
                 <span 
                   className={cn(
-                    "text-xs mt-1.5 text-center max-w-[60px] sm:max-w-none leading-tight",
+                    "text-xs mt-1.5 text-center max-w-[70px] sm:max-w-none leading-tight",
                     isCurrent ? "text-foreground font-medium" : "text-muted-foreground"
                   )}
                 >
-                  <span className="hidden xs:inline">{step.title}</span>
-                  <span className="xs:hidden">{step.id}</span>
+                  {step.title}
                   <span className="sr-only">
                     {isCompleted ? " (slutfört)" : isCurrent ? " (aktuellt steg)" : ""}
                   </span>
