@@ -9,23 +9,40 @@ import { Helmet } from "react-helmet-async";
 const FAQ = () => {
   const faqCategories = [
     {
-      category: "Bokning & Offert",
+      category: "Om Flyttbas",
+      questions: [
+        {
+          q: "Vad är Flyttbas?",
+          a: "Flyttbas är en marknadsplats där du enkelt kan jämföra offerter från verifierade flyttfirmor i Stockholm. Vi gör det enkelt att hitta rätt firma till rätt pris."
+        },
+        {
+          q: "Kostar det något att använda Flyttbas?",
+          a: "Nej, det är helt gratis för dig som kund. Vi tar en liten avgift från flyttfirmorna när de får ett uppdrag via oss."
+        },
+        {
+          q: "Hur väljer ni ut era partners?",
+          a: "Alla våra partners är verifierade. Vi kontrollerar F-skattesedel, försäkringar, att de följer Bohag 2010 och samlar in kundomdömen."
+        },
+        {
+          q: "Hur snabbt får jag offerter?",
+          a: "Vanligtvis får du offerter inom 2 timmar under kontorstid. De flesta kunder får 3-5 offerter att jämföra."
+        }
+      ]
+    },
+    {
+      category: "Bokning & Priser",
       questions: [
         {
           q: "Hur bokar jag en flytt?",
-          a: "Du kan boka genom att fylla i vårt offertformulär på hemsidan, ringa oss direkt, eller chatta med oss. Vi återkommer vanligtvis inom 2 timmar med en offert."
-        },
-        {
-          q: "Hur snabbt kan ni genomföra en flytt?",
-          a: "I normala fall kan vi genomföra en flytt inom 3-5 dagar från bokning. För akuta flyttar kan vi ofta hjälpa till redan nästa dag."
-        },
-        {
-          q: "Vad kostar en flytt?",
-          a: "Priset beror på flera faktorer: storlek på bostaden, avstånd, tillgänglighet, och extra tjänster. Efter RUT-avdrag börjar priserna från ca 995 kr/timme för en mindre flytt med 2 personer."
+          a: "Fyll i vårt formulär med uppgifter om din flytt. Du får sedan offerter från verifierade flyttfirmor som du kan jämföra innan du väljer."
         },
         {
           q: "Kan jag få ett bindande pris?",
-          a: "Ja, efter ett hembesök kan vi ge ett fast pris för hela flyttjobbet. Detta rekommenderas särskilt för större flyttar."
+          a: "Ja, de flesta firmor erbjuder fast pris efter ett hembesök eller när de har all information om flytten."
+        },
+        {
+          q: "Vad kostar en flytt?",
+          a: "Priset varierar beroende på storlek, avstånd och tjänster. Genom att jämföra offerter kan du hitta bästa priset. Efter RUT-avdrag börjar priserna från ca 995 kr/timme."
         }
       ]
     },
@@ -34,7 +51,7 @@ const FAQ = () => {
       questions: [
         {
           q: "Hur fungerar RUT-avdraget?",
-          a: "RUT-avdraget ger 50% rabatt på arbetskostnaden upp till 75 000 kr per person och år. Vi hanterar alla papper och rapporterar direkt till Skatteverket."
+          a: "RUT-avdraget ger 50% rabatt på arbetskostnaden upp till 75 000 kr per person och år. Alla våra partners hanterar papperarbetet automatiskt."
         },
         {
           q: "Vad ingår i RUT-avdraget?",
@@ -42,24 +59,24 @@ const FAQ = () => {
         },
         {
           q: "Måste jag göra något för att få RUT-avdrag?",
-          a: "Nej, vi sköter allt. Du betalar det rabatterade priset direkt och vi rapporterar till Skatteverket."
+          a: "Nej, flyttfirman sköter allt. Du betalar det rabatterade priset direkt och de rapporterar till Skatteverket."
         }
       ]
     },
     {
-      category: "Försäkring",
+      category: "Trygghet & Garanti",
       questions: [
         {
           q: "Är mina saker försäkrade under flytten?",
-          a: "Ja, alla våra flyttar är försäkrade genom vår ansvarsförsäkring. Vi täcker eventuella skador som uppstår under flytten."
+          a: "Ja, alla våra verifierade partners har ansvarsförsäkring som täcker eventuella skador under flytten."
         },
         {
           q: "Vad händer om något går sönder?",
-          a: "I det osannolika fall att något skulle skadas under flytten, anmäler du detta till oss så snart som möjligt. Vi hanterar ärendet via vår försäkring."
+          a: "Anmäl skadan till flyttfirman så snart som möjligt. De hanterar ärendet via sin försäkring. Som extra trygghet erbjuder vi kundskydd vid alla bokningar via Flyttbas."
         },
         {
-          q: "Behöver jag egen hemförsäkring?",
-          a: "Vi rekommenderar alltid att du har en egen hemförsäkring, men vår ansvarsförsäkring täcker skador som uppstår genom vår hantering."
+          q: "Vad innebär kundskyddet?",
+          a: "Kundskyddet betyder att vi hjälper dig om något skulle gå fel med din bokning. Vi medlar och ser till att du får den service du betalat för."
         }
       ]
     },
@@ -67,37 +84,16 @@ const FAQ = () => {
       category: "Praktiskt",
       questions: [
         {
-          q: "Måste jag packa själv?",
-          a: "Nej, vi erbjuder både packning och uppackning som tilläggstjänst. Du kan också välja att packa en del själv och låta oss hjälpa till med resten."
+          q: "Kan flyttfirmorna hjälpa till med packning?",
+          a: "Ja, de flesta av våra partners erbjuder packning och uppackning som tilläggstjänst."
         },
         {
           q: "Vad ska jag tänka på inför flytten?",
-          a: "Se till att parkeringstillstånd är ordnat, hiss är bokad om det finns, och att värdesaker är markerade. Vi skickar en checklista när du bokar."
-        },
-        {
-          q: "Kan ni hjälpa till med möbelmontering?",
-          a: "Ja, montering och demontering av möbler ingår i våra flyttjänster."
+          a: "Se till att parkeringstillstånd är ordnat, hiss är bokad om det finns, och att värdesaker är markerade. Den firma du väljer skickar en checklista."
         },
         {
           q: "Hur lång tid tar en flytt?",
-          a: "Det beror på storleken. En 2:a tar vanligtvis 4-5 timmar, medan en större villa kan ta 8-10 timmar. Vi ger en tidsuppskattning i offerten."
-        }
-      ]
-    },
-    {
-      category: "Extra tjänster",
-      questions: [
-        {
-          q: "Erbjuder ni flyttstädning?",
-          a: "Ja, vi kan ordna flyttstädning av både gamla och nya bostaden. Detta bokas som en tilläggstjänst."
-        },
-        {
-          q: "Kan ni magasinera mina saker?",
-          a: "Ja, vi erbjuder både kort- och långtidsmagasinering i våra säkra lokaler."
-        },
-        {
-          q: "Kan ni flytta ett piano?",
-          a: "Ja, vi har specialutbildad personal för pianoflytt och annan tung utrustning."
+          a: "Det beror på storleken. En 2:a tar vanligtvis 4-5 timmar, medan en större villa kan ta 8-10 timmar. Du får tidsuppskattning i offerten."
         }
       ]
     }
@@ -106,11 +102,11 @@ const FAQ = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Helmet>
-        <title>FAQ Flytt Stockholm – Vanliga Frågor om Flyttjänster</title>
-        <meta name="description" content="Vanliga frågor om flytt i Stockholm. RUT-avdrag, försäkring, priser, packning och mer. Få svar på dina flyttfrågor här!" />
+        <title>Vanliga Frågor om Flyttbas – Så Fungerar Marknadsplatsen</title>
+        <meta name="description" content="Vanliga frågor om Flyttbas. Hur fungerar jämförelsen? Är det gratis? Hur väljs firmor ut? Få svar på dina frågor här!" />
         <link rel="canonical" href="https://flyttbas.se/faq" />
-        <meta property="og:title" content="FAQ – Vanliga frågor om flyttjänster" />
-        <meta property="og:description" content="Svar på vanliga frågor om flytt, RUT-avdrag, försäkring och priser." />
+        <meta property="og:title" content="FAQ – Vanliga frågor om Flyttbas" />
+        <meta property="og:description" content="Svar på vanliga frågor om hur Flyttbas fungerar, priser och trygghet." />
         <meta property="og:url" content="https://flyttbas.se/faq" />
         <script type="application/ld+json">
           {JSON.stringify({
@@ -119,18 +115,18 @@ const FAQ = () => {
             "mainEntity": [
               {
                 "@type": "Question",
-                "name": "Hur fungerar RUT-avdraget?",
+                "name": "Vad är Flyttbas?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "RUT-avdraget ger 50% rabatt på arbetskostnaden upp till 75 000 kr per person och år. Vi hanterar alla papper och rapporterar direkt till Skatteverket."
+                  "text": "Flyttbas är en marknadsplats där du enkelt kan jämföra offerter från verifierade flyttfirmor i Stockholm."
                 }
               },
               {
                 "@type": "Question",
-                "name": "Är mina saker försäkrade under flytten?",
+                "name": "Kostar det något att använda Flyttbas?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "Ja, alla våra flyttar är försäkrade genom vår ansvarsförsäkring. Vi täcker eventuella skador som uppstår under flytten."
+                  "text": "Nej, det är helt gratis för dig som kund. Vi tar en liten avgift från flyttfirmorna när de får ett uppdrag via oss."
                 }
               }
             ]
@@ -145,10 +141,10 @@ const FAQ = () => {
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center">
               <h1 className="text-4xl md:text-5xl font-bold mb-6">
-                Vanliga frågor om flytt
+                Vanliga frågor
               </h1>
               <p className="text-lg md:text-xl text-white/90">
-                Här hittar du svar på de vanligaste frågorna om våra flyttjänster.
+                Här hittar du svar på de vanligaste frågorna om Flyttbas och hur det fungerar.
               </p>
             </div>
           </div>

@@ -39,18 +39,18 @@ const Priser = () => {
   ];
 
   const included = [
-    "Erfarna och försäkrade flyttare",
-    "Flyttbil med all nödvändig utrustning",
-    "Grundläggande packmaterial",
-    "Skyddande av golv och dörrar",
-    "Fullständig försäkring",
-    "RUT-avdrag upp till 50%"
+    "Offerter från verifierade flyttfirmor",
+    "Alla firmor är försäkrade",
+    "Jämför priser och omdömen",
+    "Kundskydd vid bokningar",
+    "RUT-avdrag hanteras automatiskt",
+    "100% gratis att använda"
   ];
 
   const addons = [
     { name: "Packning", price: "Från 295 kr/tim" },
     { name: "Uppackning", price: "Från 295 kr/tim" },
-    { name: "Montering/demontering", price: "Ingår" },
+    { name: "Montering/demontering", price: "Ofta inkluderat" },
     { name: "Flyttstädning", price: "Från 2 495 kr" },
     { name: "Magasinering", price: "Från 995 kr/mån" },
     { name: "Pianoflytt", price: "Från 2 495 kr" }
@@ -59,11 +59,11 @@ const Priser = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Helmet>
-        <title>Priser Flyttjänster Stockholm 2024 – Från 995 kr/tim | RUT</title>
-        <meta name="description" content="Transparenta priser för flyttjänster i Stockholm. Från 995 kr/tim. RUT-avdrag 50%. Inga dolda kostnader. Få fastpris direkt!" />
+        <title>Jämför Priser Flyttfirmor Stockholm 2024 – Hitta Bästa Priset</title>
+        <meta name="description" content="Jämför priser från verifierade flyttfirmor i Stockholm. Se prisexempel och hitta bästa erbjudandet. RUT-avdrag 50%. Gratis att använda!" />
         <link rel="canonical" href="https://flyttbas.se/priser" />
-        <meta property="og:title" content="Priser flyttjänster Stockholm – Transparenta priser" />
-        <meta property="og:description" content="Se våra priser för flyttjänster. Från 995 kr/tim med RUT-avdrag." />
+        <meta property="og:title" content="Jämför priser från flyttfirmor i Stockholm" />
+        <meta property="og:description" content="Se prisexempel och jämför offerter. Hitta bästa priset för din flytt." />
         <meta property="og:url" content="https://flyttbas.se/priser" />
       </Helmet>
       <Header />
@@ -74,10 +74,10 @@ const Priser = () => {
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center">
               <h1 className="text-4xl md:text-5xl font-bold mb-6">
-                Priser för flyttjänster
+                Jämför priser från flyttfirmor
               </h1>
               <p className="text-lg md:text-xl text-white/90">
-                Transparenta priser med RUT-avdrag. Inga dolda kostnader.
+                Se vad en flytt brukar kosta och jämför offerter för att hitta bästa priset.
               </p>
             </div>
           </div>
@@ -87,7 +87,7 @@ const Priser = () => {
         <section className="py-12 md:py-16 bg-light-bg">
           <div className="container mx-auto px-4">
             <div className="max-w-2xl mx-auto">
-              <h2 className="text-2xl font-bold text-center mb-6 md:mb-8 text-navy">Få ett snabbt prisförslag</h2>
+              <h2 className="text-2xl font-bold text-center mb-6 md:mb-8 text-navy">Få offerter från flyttfirmor</h2>
               <QuoteWizard />
             </div>
           </div>
@@ -96,9 +96,9 @@ const Priser = () => {
         {/* Price Examples */}
         <section className="py-16">
           <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-4 text-navy">Prisexempel</h2>
+            <h2 className="text-3xl font-bold text-center mb-4 text-navy">Typiska priser för flytt</h2>
             <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
-              Alla priser är uppskattningar efter RUT-avdrag på 50%. Exakt pris bekräftas efter offert.
+              Priserna varierar mellan firmor. Jämför offerter för att hitta bästa erbjudandet för just din flytt.
             </p>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
               {priceExamples.map((example, index) => (
@@ -119,7 +119,7 @@ const Priser = () => {
         {/* What's Included */}
         <section className="py-16 bg-light-bg">
           <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-12 text-navy">Vad ingår i priset?</h2>
+            <h2 className="text-3xl font-bold text-center mb-12 text-navy">Vad ingår när du använder Flyttbas?</h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
               {included.map((item, index) => (
                 <div key={index} className="flex items-start gap-3">
@@ -134,7 +134,7 @@ const Priser = () => {
         {/* Add-ons */}
         <section className="py-16">
           <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-12 text-navy">Tilläggstjänster</h2>
+            <h2 className="text-3xl font-bold text-center mb-12 text-navy">Vanliga tilläggstjänster</h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
               {addons.map((addon, index) => (
                 <Card key={index} className="p-4 flex justify-between items-center">
@@ -156,7 +156,7 @@ const Priser = () => {
                   <h3 className="font-bold mb-2 text-navy">Om RUT-avdrag</h3>
                   <p className="text-muted-foreground mb-3">
                     RUT-avdraget ger dig 50% rabatt på arbetskostnaden, upp till ett maxbelopp per år. 
-                    Avdraget görs automatiskt via Skatteverket.
+                    Alla våra verifierade partners hanterar RUT-avdraget automatiskt.
                   </p>
                   <p className="text-sm text-muted-foreground">
                     <strong>Maxbelopp:</strong> 75 000 kr per person och år (vilket motsvarar 150 000 kr i arbetskostnad)

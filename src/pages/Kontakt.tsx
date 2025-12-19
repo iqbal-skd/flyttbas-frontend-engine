@@ -24,7 +24,7 @@ const Kontakt = () => {
     
     toast({
       title: "Tack för din förfrågan!",
-      description: "Vi återkommer till dig inom 2 timmar.",
+      description: "Vi skickar din förfrågan till verifierade flyttfirmor. Du får offerter inom 2 timmar.",
     });
     
     setIsSubmitting(false);
@@ -47,13 +47,13 @@ const Kontakt = () => {
     {
       icon: MapPin,
       title: "Adress",
-      content: "Drottninggatan 95, 113 60 Stockholm",
-      link: "https://maps.google.com"
+      content: "Stockholm, Sverige",
+      link: null
     },
     {
       icon: Clock,
-      title: "Öppettider",
-      content: "Mån-Fre: 07:00-18:00\nLör-Sön: 08:00-16:00",
+      title: "Svarstid",
+      content: "Offerter inom 2 timmar\nKundservice: Mån-Fre 08-18",
       link: null
     }
   ];
@@ -61,11 +61,11 @@ const Kontakt = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Helmet>
-        <title>Kontakta Flyttbas Stockholm – Få Offert inom 2 Timmar</title>
-        <meta name="description" content="Kontakta oss för kostnadsfri offert. Tel: 070-123 45 67. Vi svarar inom 2 timmar. Professionell flytthjälp i Stockholm med RUT-avdrag." />
+        <title>Jämför Flyttofferter – Få Offerter inom 2 Timmar | Flyttbas</title>
+        <meta name="description" content="Få offerter från verifierade flyttfirmor i Stockholm. Fyll i formuläret och jämför priser inom 2 timmar. Gratis och utan förpliktelser." />
         <link rel="canonical" href="https://flyttbas.se/kontakt" />
-        <meta property="og:title" content="Kontakta Flyttbas – Få offert inom 2 timmar" />
-        <meta property="og:description" content="Kostnadsfri offert och svar inom 2 timmar. Ring 070-123 45 67." />
+        <meta property="og:title" content="Jämför Flyttofferter – Få offerter inom 2 timmar" />
+        <meta property="og:description" content="Jämför offerter från verifierade flyttfirmor. Gratis och utan förpliktelser." />
         <meta property="og:url" content="https://flyttbas.se/kontakt" />
       </Helmet>
       <Header />
@@ -76,10 +76,10 @@ const Kontakt = () => {
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center">
               <h1 className="text-4xl md:text-5xl font-bold mb-6">
-                Kontakta oss
+                Jämför offerter från flyttfirmor
               </h1>
               <p className="text-lg md:text-xl text-white/90">
-                Få en kostnadsfri offert eller ställ dina frågor. Vi svarar inom 2 timmar.
+                Fyll i formuläret och få offerter från verifierade partners inom 2 timmar. Helt gratis!
               </p>
             </div>
           </div>
@@ -115,7 +115,7 @@ const Kontakt = () => {
         <section className="py-16">
           <div className="container mx-auto px-4">
             <div className="max-w-2xl mx-auto">
-              <h2 className="text-3xl font-bold text-center mb-8 text-navy">Begär offert</h2>
+              <h2 className="text-3xl font-bold text-center mb-8 text-navy">Beskriv din flytt</h2>
               <Card className="p-8">
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid md:grid-cols-2 gap-6">
@@ -173,7 +173,7 @@ const Kontakt = () => {
                       className="mt-1"
                     />
                     <Label htmlFor="gdpr" className="text-sm text-muted-foreground font-normal">
-                      Jag godkänner att Flyttbas behandlar mina personuppgifter enligt GDPR *
+                      Jag godkänner att Flyttbas delar mina uppgifter med verifierade flyttfirmor enligt GDPR *
                     </Label>
                   </div>
 
@@ -183,11 +183,11 @@ const Kontakt = () => {
                     className="w-full"
                     disabled={isSubmitting}
                   >
-                    {isSubmitting ? "Skickar..." : "Skicka förfrågan"}
+                    {isSubmitting ? "Skickar..." : "Få offerter från flyttfirmor"}
                   </Button>
 
                   <p className="text-sm text-center text-muted-foreground">
-                    Vi återkommer vanligtvis inom 2 timmar under kontorstid
+                    Du får vanligtvis 3-5 offerter inom 2 timmar under kontorstid
                   </p>
                 </form>
               </Card>
@@ -195,13 +195,16 @@ const Kontakt = () => {
           </div>
         </section>
 
-        {/* Map Section (Placeholder) */}
+        {/* Info Section */}
         <section className="py-16 bg-light-bg">
           <div className="container mx-auto px-4">
-            <div className="max-w-4xl mx-auto">
-              <div className="bg-gray-200 rounded-lg h-96 flex items-center justify-center">
-                <p className="text-muted-foreground">Karta kommer här</p>
-              </div>
+            <div className="max-w-3xl mx-auto text-center">
+              <h2 className="text-2xl font-bold mb-4 text-navy">Hur det fungerar</h2>
+              <p className="text-muted-foreground">
+                När du skickar in din förfrågan matchar vi dig med våra verifierade partners. 
+                De skickar sina bästa offerter direkt till dig. Du väljer sedan den firma som passar dig bäst – 
+                helt utan förpliktelser.
+              </p>
             </div>
           </div>
         </section>

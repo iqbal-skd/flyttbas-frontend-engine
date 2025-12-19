@@ -3,66 +3,70 @@ import { Footer } from "@/components/Footer";
 import { MobileActionBar } from "@/components/MobileActionBar";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Home, Building2, Clock, Users } from "lucide-react";
+import { Home, Building2, Clock, Users, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 
 const Case = () => {
   const cases = [
     {
-      title: "Familjeflytt i Södermalm",
+      title: "Familjeflytt via Flyttbas",
       type: "Privatflytt",
       icon: Home,
       area: "85 m²",
       time: "6 timmar",
       team: "3 flyttare",
-      description: "En familj på fyra personer skulle flytta från en 3:a i Södermalm till ett radhus i Nacka. Vi hanterade allt från packning till uppackning.",
-      result: "Flytten genomfördes smidigt på en dag. 0 skador. Familjen kunde börja packa upp samma kväll.",
-      quote: "Fantastiskt professionella! De hanterade våra saker som sina egna."
+      firm: "Stockholms Flyttexpress",
+      description: "En familj i Södermalm jämförde 4 offerter via Flyttbas och valde en firma baserat på bäst omdömen och konkurrenskraftigt pris.",
+      result: "Flytten genomfördes smidigt på en dag. 0 skador. Familjen sparade 2 500 kr jämfört med första offerten de fick.",
+      quote: "Så smidigt att jämföra! Vi hittade en fantastisk firma vi aldrig hade hittat annars."
     },
     {
-      title: "Kontorsflytt Tech-startup",
+      title: "Tech-startup hittade rätt partner",
       type: "Kontorsflytt",
       icon: Building2,
       area: "200 m²",
       time: "12 timmar",
       team: "5 flyttare",
-      description: "Ett snabbväxande tech-företag behövde flytta från Kungsholmen till större lokaler i Hammarby Sjöstad. Kritiskt att minimera stilleståndstid.",
-      result: "Flytten genomfördes över en helg. IT-utrustning och servrar hanterades med extra försiktighet. Kontoret var fullt operativt på måndagsmorgonen.",
-      quote: "De fixade allt över helgen så att vi kunde arbeta som vanligt på måndag. Imponerande!"
+      firm: "Business Move AB",
+      description: "Ett snabbväxande tech-företag behövde flytta på kort varsel. Via Flyttbas fick de 3 offerter från specialiserade kontorsfirmor inom 2 timmar.",
+      result: "Flytten genomfördes över en helg med noll driftstörningar. IT-utrustning hanterades med extra försiktighet.",
+      quote: "Vi fick snabbt kontakt med firmor som verkligen förstod våra behov. Imponerande!"
     },
     {
-      title: "Seniorboende flytt",
+      title: "Seniorboende – trygg flytt",
       type: "Privatflytt",
       icon: Home,
       area: "65 m²",
       time: "5 timmar",
       team: "2 flyttare",
-      description: "En senior skulle flytta från villa till lägenhet och behövde extra omtänksam hantering av möbler och minnessaker.",
-      result: "Vi tog extra tid att placera möblerna precis där de skulle stå. Allt hanterades varsamt och med respekt.",
-      quote: "Så omtänksamma och hjälpsamma. Jag kände mig trygg genom hela processen."
+      firm: "Omsorgsfullt Flytt",
+      description: "En senior skulle flytta till mindre boende. Via Flyttbas hittade hon en firma med extra bra omdömen för försiktig hantering.",
+      result: "Firman tog extra tid att placera möblerna precis rätt. Allt hanterades varsamt och med respekt.",
+      quote: "Jag läste omdömena och valde en firma som verkade omtänksam. Det stämde perfekt!"
     },
     {
-      title: "Expressflytt i centrala Stockholm",
+      title: "Expressflytt löst på 24h",
       type: "Privatflytt",
       icon: Clock,
       area: "55 m²",
       time: "4 timmar",
       team: "3 flyttare",
-      description: "En kund fick ett snabbt jobberbjudande i en annan stad och behövde flytta inom 48 timmar.",
-      result: "Vi mobiliserade teamet och genomförde flytten dagen efter kontakt. Allt packades och flyttades säkert till Göteborg.",
-      quote: "Jag visste inte att en flytt kunde gå så fort. De räddade min situation!"
+      firm: "Snabbflytt Stockholm",
+      description: "En kund behövde flytta akut inom 48 timmar. Via Flyttbas fick han 5 offerter samma dag, varav 3 kunde genomföra flytten nästa dag.",
+      result: "Allt packades och flyttades säkert. Kunden sparade timmar av letande efter lediga firmor.",
+      quote: "Hade aldrig hunnit ringa runt till alla firmor själv. Flyttbas räddade min situation!"
     }
   ];
 
   return (
     <div className="min-h-screen flex flex-col">
       <Helmet>
-        <title>Case Flyttar Stockholm – 500+ Lyckade Flyttar | Flyttbas</title>
-        <meta name="description" content="Läs om våra genomförda flyttar i Stockholm. 500+ nöjda kunder, 0 skador senaste året. Se hur vi hjälper privat- och kontorsflytt." />
+        <title>Kundcase – Så Hittade De Rätt Flyttfirma | Flyttbas</title>
+        <meta name="description" content="Läs hur våra kunder hittat rätt flyttfirma via Flyttbas. Verkliga exempel på hur jämförelse sparar tid och pengar." />
         <link rel="canonical" href="https://flyttbas.se/case" />
-        <meta property="og:title" content="Case – Våra genomförda flyttar i Stockholm" />
-        <meta property="og:description" content="Se exempel på våra lyckade flyttar. 500+ nöjda kunder och 0 skador." />
+        <meta property="og:title" content="Kundcase – Så hittade de rätt flyttfirma" />
+        <meta property="og:description" content="Läs verkliga kundberättelser om att hitta rätt flyttfirma via Flyttbas." />
         <meta property="og:url" content="https://flyttbas.se/case" />
       </Helmet>
       <Header />
@@ -73,10 +77,10 @@ const Case = () => {
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center">
               <h1 className="text-4xl md:text-5xl font-bold mb-6">
-                Våra genomförda flyttar
+                Så hittade de rätt flyttfirma
               </h1>
               <p className="text-lg md:text-xl text-white/90">
-                Läs om hur vi har hjälpt våra kunder med smidiga och trygga flyttar.
+                Läs hur våra kunder använt Flyttbas för att jämföra offerter och hitta perfekta partnern för sin flytt.
               </p>
             </div>
           </div>
@@ -87,20 +91,20 @@ const Case = () => {
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto text-center">
               <div>
-                <div className="text-4xl font-bold text-orange mb-2">500+</div>
+                <div className="text-4xl font-bold text-orange mb-2">12 000+</div>
                 <div className="text-sm text-muted-foreground">Genomförda flyttar</div>
               </div>
               <div>
-                <div className="text-4xl font-bold text-orange mb-2">99%</div>
+                <div className="text-4xl font-bold text-orange mb-2">98%</div>
                 <div className="text-sm text-muted-foreground">Nöjda kunder</div>
               </div>
               <div>
-                <div className="text-4xl font-bold text-orange mb-2">0</div>
-                <div className="text-sm text-muted-foreground">Skador senaste året</div>
+                <div className="text-4xl font-bold text-orange mb-2">150+</div>
+                <div className="text-sm text-muted-foreground">Verifierade partners</div>
               </div>
               <div>
-                <div className="text-4xl font-bold text-orange mb-2">5.0</div>
-                <div className="text-sm text-muted-foreground">Genomsnittligt betyg</div>
+                <div className="text-4xl font-bold text-orange mb-2">4.8</div>
+                <div className="text-sm text-muted-foreground">Snittbetyg</div>
               </div>
             </div>
           </div>
@@ -129,13 +133,15 @@ const Case = () => {
                         <span>{caseItem.time}</span>
                         <span>•</span>
                         <span>{caseItem.team}</span>
+                        <span>•</span>
+                        <span className="text-orange">{caseItem.firm}</span>
                       </div>
                     </div>
                   </div>
                   
                   <div className="space-y-4">
                     <div>
-                      <h4 className="font-semibold mb-2 text-navy">Utmaningen</h4>
+                      <h4 className="font-semibold mb-2 text-navy">Situationen</h4>
                       <p className="text-muted-foreground">{caseItem.description}</p>
                     </div>
                     
@@ -157,12 +163,12 @@ const Case = () => {
         {/* CTA Section */}
         <section className="py-16 bg-navy text-white">
           <div className="container mx-auto px-4 text-center">
-            <h2 className="text-3xl font-bold mb-4">Vill du bli vårt nästa case?</h2>
+            <h2 className="text-3xl font-bold mb-4">Redo att hitta din flyttfirma?</h2>
             <p className="text-lg text-white/90 mb-8 max-w-2xl mx-auto">
-              Låt oss göra din flytt lika smidig och lyckad som dessa.
+              Jämför offerter från verifierade partners – helt gratis och utan förpliktelser.
             </p>
             <Button size="lg" asChild className="bg-orange hover:bg-orange/90">
-              <Link to="/kontakt">Få offert</Link>
+              <Link to="/kontakt">Jämför offerter nu</Link>
             </Button>
           </div>
         </section>

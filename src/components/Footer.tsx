@@ -11,13 +11,13 @@ export const Footer = () => {
           <div>
             <img src={logo} alt="Flyttbas" className="h-8 w-auto mb-4" />
             <p className="text-sm text-white/80">
-              Professionell flytthjälp i Stockholm – vi följer Bohag 2010 och har full ansvarsförsäkring, alltid med möjlighet till RUT-avdrag.
+              Sveriges ledande marknadsplats för flyttjänster. Jämför offerter från verifierade flyttfirmor och hitta bästa priset för din flytt.
             </p>
           </div>
 
           {/* Tjänster */}
           <div>
-            <h3 className="font-semibold mb-4">Tjänster</h3>
+            <h3 className="font-semibold mb-4">Hitta Flyttfirma</h3>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link to="/privatflytt" className="text-white/80 hover:text-white transition-colors">
@@ -36,7 +36,7 @@ export const Footer = () => {
               </li>
               <li>
                 <Link to="/case" className="text-white/80 hover:text-white transition-colors">
-                  Case
+                  Kundcase
                 </Link>
               </li>
             </ul>
@@ -48,12 +48,12 @@ export const Footer = () => {
             <ul className="space-y-2 text-sm">
               <li>
                 <Link to="/om" className="text-white/80 hover:text-white transition-colors">
-                  Om oss
+                  Om Flyttbas
                 </Link>
               </li>
               <li>
                 <Link to="/faq" className="text-white/80 hover:text-white transition-colors">
-                  FAQ
+                  Vanliga frågor
                 </Link>
               </li>
               <li>
@@ -62,8 +62,8 @@ export const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/juridik" className="text-white/80 hover:text-white transition-colors">
-                  Juridik & Villkor
+                <Link to="/partner" className="text-white/80 hover:text-white transition-colors">
+                  Bli partner
                 </Link>
               </li>
             </ul>

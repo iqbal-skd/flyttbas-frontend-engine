@@ -29,7 +29,7 @@ const LocalArea = () => {
             <h1 className="text-3xl font-bold text-navy mb-4">Område inte hittat</h1>
             <p className="text-muted-foreground mb-6">Det område du söker finns inte i vår databas.</p>
             <Button asChild>
-              <Link to="/kontakt">Kontakta oss</Link>
+              <Link to="/kontakt">Jämför offerter</Link>
             </Button>
           </div>
         </main>
@@ -41,33 +41,25 @@ const LocalArea = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Helmet>
-        <title>Flyttfirma {area.displayName} – Från {area.priceExample.price} | RUT-avdrag</title>
-        <meta name="description" content={`${area.intro.substring(0, 155)}`} />
+        <title>Hitta Flyttfirma i {area.displayName} – Jämför Offerter | Flyttbas</title>
+        <meta name="description" content={`Jämför offerter från verifierade flyttfirmor i ${area.displayName}. Hitta bästa priset med RUT-avdrag. Gratis att använda!`} />
         <link rel="canonical" href={`https://flyttbas.se/flyttfirma/${slug}`} />
-        <meta property="og:title" content={`Flyttfirma ${area.displayName} – Trygg flytt med RUT-avdrag`} />
-        <meta property="og:description" content={area.intro} />
+        <meta property="og:title" content={`Hitta Flyttfirma i ${area.displayName} – Jämför Offerter`} />
+        <meta property="og:description" content={`Jämför offerter från verifierade flyttfirmor i ${area.displayName}. Gratis!`} />
         <meta property="og:url" content={`https://flyttbas.se/flyttfirma/${slug}`} />
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",
-            "@type": "LocalBusiness",
-            "name": `Flyttbas - Flyttfirma ${area.displayName}`,
-            "description": area.intro,
-            "address": {
-              "@type": "PostalAddress",
-              "addressLocality": area.displayName,
-              "addressRegion": "Stockholm",
-              "addressCountry": "SE"
-            },
+            "@type": "Service",
+            "name": `Flyttfirma ${area.displayName}`,
+            "description": `Jämför offerter från verifierade flyttfirmor i ${area.displayName}`,
             "areaServed": {
               "@type": "City",
               "name": area.displayName
             },
-            "priceRange": area.priceExample.price,
-            "aggregateRating": {
-              "@type": "AggregateRating",
-              "ratingValue": "4.9",
-              "reviewCount": "127"
+            "provider": {
+              "@type": "Organization",
+              "name": "Flyttbas"
             }
           })}
         </script>
@@ -81,20 +73,20 @@ const LocalArea = () => {
             <div className="max-w-4xl mx-auto">
               <div className="flex items-center gap-2 mb-4">
                 <MapPin className="h-6 w-6 text-orange" />
-                <span className="text-orange font-medium">Lokal flyttfirma</span>
+                <span className="text-orange font-medium">Hitta flyttfirma</span>
               </div>
               <h1 className="text-4xl md:text-5xl font-bold mb-6">
-                Flyttfirma i {area.displayName} – Trygg flytt med RUT-avdrag
+                Jämför Flyttfirmor i {area.displayName}
               </h1>
               <p className="text-lg md:text-xl text-white/90 mb-8">
-                {area.intro}
+                Få offerter från verifierade flyttfirmor som opererar i {area.displayName}. Jämför priser och omdömen – helt gratis.
               </p>
               <div className="flex flex-wrap gap-4">
                 <Button asChild size="lg" variant="secondary">
-                  <a href="#offert">Få offert</a>
+                  <a href="#offert">Jämför offerter</a>
                 </Button>
                 <Button asChild size="lg" variant="outline" className="bg-white/10 text-white border-white/20 hover:bg-white/20">
-                  <a href="tel:+46701234567">Ring 070-123 45 67</a>
+                  <Link to="/faq">Hur det fungerar</Link>
                 </Button>
               </div>
             </div>
@@ -105,7 +97,12 @@ const LocalArea = () => {
         <section className="py-12 bg-light-bg border-b">
           <div className="container mx-auto px-4">
             <div className="grid md:grid-cols-4 gap-6 max-w-5xl mx-auto">
-              {area.highlights.map((highlight: string, index: number) => (
+              {[
+                "Verifierade lokala firmor",
+                "Jämför priser gratis",
+                "RUT-avdrag 50%",
+                "Kundskydd vid bokning"
+              ].map((highlight: string, index: number) => (
                 <div key={index} className="flex items-start gap-3">
                   <Check className="h-5 w-5 text-orange flex-shrink-0 mt-1" />
                   <span className="text-sm font-medium text-foreground">{highlight}</span>
@@ -120,7 +117,7 @@ const LocalArea = () => {
           <div className="container mx-auto px-4">
             <div className="max-w-5xl mx-auto">
               <h2 className="text-3xl font-bold text-navy mb-8 text-center">
-                Senaste flytten i {area.displayName}
+                Senaste flytten via Flyttbas i {area.displayName}
               </h2>
               <Card className="p-8 bg-gradient-to-br from-light-bg to-white">
                 <div className="grid md:grid-cols-4 gap-6 mb-6">
@@ -161,7 +158,7 @@ const LocalArea = () => {
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto">
               <h2 className="text-3xl font-bold text-navy mb-8 text-center">
-                {area.priceExample.title}
+                Typiskt pris för flytt i {area.displayName}
               </h2>
               <Card className="p-8 text-center">
                 <div className="mb-4">
@@ -173,10 +170,11 @@ const LocalArea = () => {
                   {[...Array(5)].map((_, i) => (
                     <Star key={i} className="h-5 w-5 fill-current" />
                   ))}
-                  <span className="ml-2 text-muted-foreground">(4.9/5 baserat på 127 recensioner)</span>
+                  <span className="ml-2 text-muted-foreground">(4.8/5 baserat på kundrecensioner)</span>
                 </div>
+                <p className="text-sm text-muted-foreground mb-4">Priserna varierar – jämför för att hitta bästa erbjudandet</p>
                 <Button asChild size="lg" className="w-full md:w-auto">
-                  <a href="#offert">Få ditt pris</a>
+                  <a href="#offert">Jämför priser</a>
                 </Button>
               </Card>
             </div>
@@ -188,10 +186,10 @@ const LocalArea = () => {
           <div className="container mx-auto px-4">
             <div className="max-w-2xl mx-auto">
               <h2 className="text-2xl sm:text-3xl font-bold text-navy mb-4 text-center">
-                Få fastpris för din flytt i {area.displayName}
+                Jämför offerter för flytt i {area.displayName}
               </h2>
               <p className="text-center text-muted-foreground mb-6 md:mb-8">
-                Fyll i formuläret så återkommer vi inom 15 minuter (08-20) med ett preliminärt fastpris.
+                Fyll i formuläret så skickar vi din förfrågan till verifierade partners. Du får offerter inom 2 timmar.
               </p>
               <QuoteWizard />
             </div>
@@ -226,7 +224,7 @@ const LocalArea = () => {
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
               <h2 className="text-2xl font-bold text-navy mb-6 text-center">
-                Jobb i närområdet
+                Hitta flyttfirma i närområdet
               </h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {area.nearby.map((nearby: any, index: number) => (

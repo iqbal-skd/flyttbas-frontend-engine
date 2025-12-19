@@ -12,19 +12,19 @@ export const Hero = () => {
           {/* Content */}
           <div>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-              Professionell Flytthjälp i Stockholm
+              Hitta Bästa Flyttfirman i Stockholm
             </h1>
             <p className="text-lg md:text-xl text-white/90 mb-8">
-             Få fast pris direkt, med upp till 50% RUT-avdrag. Vi följer Bohag 2010, är fullt ansvarsförsäkrade och gör din flytt smidig och stressfri.
+              Jämför offerter från verifierade flyttfirmor på ett ställe. Alla partners följer Bohag 2010, är försäkrade och erbjuder RUT-avdrag.
             </p>
             
             {/* Benefits */}
             <ul className="space-y-3 mb-8">
               {[
-                "Fastpris – inga dolda kostnader",
+                "Jämför flera offerter gratis",
+                "Endast verifierade flyttfirmor",
                 "RUT-avdrag upp till 50%",
-                "Vi följer Bohag 2010 och har ansvarsförsäkring",
-                "Försäkring inkluderad",
+                "Kundskydd vid alla bokningar",
               ].map((benefit) => (
                 <li key={benefit} className="flex items-center gap-3">
                   <CheckCircle2 className="h-5 w-5 text-orange flex-shrink-0" />
@@ -35,11 +35,11 @@ export const Hero = () => {
 
             <div className="flex flex-wrap gap-4">
               <Button size="lg" variant="default" className="bg-orange hover:bg-orange/90 text-white">
-                Få offert nu
+                Jämför offerter
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
               <Button size="lg" variant="hero">
-                Ring oss: 070-123 45 67
+                Hur det fungerar
               </Button>
             </div>
           </div>
