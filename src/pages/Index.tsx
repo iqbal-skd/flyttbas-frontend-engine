@@ -5,7 +5,7 @@ import { MobileActionBar } from "@/components/MobileActionBar";
 import { ChatLauncher } from "@/components/ChatLauncher";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Home, Building2, Package, ArrowRight, Star } from "lucide-react";
+import { CheckCircle2, Home, Building2, Package, ArrowRight, Star, Shield, Users, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 
@@ -14,59 +14,69 @@ const Index = () => {
     {
       icon: Home,
       title: "Privatflytt",
-      description: "Smidig och säker flytt av ditt hem. Från 1:a till villa.",
+      description: "Hitta erfarna flyttfirmor för din hemflytt. Från lägenhet till villa.",
       href: "/privatflytt",
     },
     {
       icon: Building2,
       title: "Kontorsflytt",
-      description: "Professionell kontorsflytt med minimal driftstörning.",
+      description: "Specialiserade partners för företagsflytt med minimal driftstörning.",
       href: "/kontorsflytt",
     },
     {
       icon: Package,
       title: "Packning & Montering",
-      description: "Vi packar, bär och monterar. Du kan slappna av.",
+      description: "Lägg till packning och montering – våra partners fixar allt.",
       href: "/priser",
     },
   ];
 
   const stats = [
-    { value: "2500+", label: "Nöjda kunder" },
-    { value: "0", label: "Skador 2024" },
-    { value: "4.9", label: "Betyg Google" },
-    { value: "< 24h", label: "Svarstid" },
+    { value: "150+", label: "Verifierade flyttfirmor" },
+    { value: "12 000+", label: "Genomförda flyttar" },
+    { value: "4.8", label: "Snittbetyg" },
+    { value: "< 2h", label: "Tid till offerter" },
+  ];
+
+  const howItWorks = [
+    {
+      icon: Zap,
+      title: "1. Beskriv din flytt",
+      description: "Fyll i formuläret med datum, storlek och önskemål",
+    },
+    {
+      icon: Users,
+      title: "2. Få offerter",
+      description: "Upp till 5 verifierade flyttfirmor skickar sina bästa priser",
+    },
+    {
+      icon: Shield,
+      title: "3. Jämför & välj",
+      description: "Se betyg, omdömen och priser – välj den som passar dig",
+    },
   ];
 
   return (
     <div className="min-h-screen flex flex-col">
       <Helmet>
-        <title>Flyttbas – Professionell Flytthjälp i Stockholm | RUT-avdrag</title>
-        <meta name="description" content="Pålitlig och prisvärd flytthjälp i Stockholm. Fast pris direkt, upp till 50% RUT-avdrag och full ansvarsförsäkring. Vi följer Bohag 2010 och gör din flytt trygg, effektiv och smidig. Ring idag!" />
+        <title>Flyttbas – Jämför Flyttfirmor i Stockholm | Hitta Bästa Priset</title>
+        <meta name="description" content="Jämför offerter från verifierade flyttfirmor i Stockholm. Hitta bästa priset på din flytt med upp till 50% RUT-avdrag. Gratis och utan förpliktelser." />
         <link rel="canonical" href="https://flyttbas.se/" />
-        <meta property="og:title" content="Flyttbas – Professionell Flytthjälp i Stockholm" />
-        <meta property="og:description" content="Pålitlig och prisvärd flytthjälp i Stockholm. Få fastpris direkt med RUT-avdrag." />
+        <meta property="og:title" content="Flyttbas – Jämför Flyttfirmor i Stockholm" />
+        <meta property="og:description" content="Jämför offerter från verifierade flyttfirmor. Hitta bästa priset med RUT-avdrag." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://flyttbas.se/" />
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",
-            "@type": "MovingCompany",
+            "@type": "WebSite",
             "name": "Flyttbas",
-            "description": "Professionell flyttjänst i Stockholm",
-            "address": {
-              "@type": "PostalAddress",
-              "streetAddress": "Drottninggatan 95",
-              "addressLocality": "Stockholm",
-              "postalCode": "113 60",
-              "addressCountry": "SE"
-            },
-            "telephone": "+46701234567",
-            "priceRange": "995-1595 SEK per timme",
-            "aggregateRating": {
-              "@type": "AggregateRating",
-              "ratingValue": "4.9",
-              "reviewCount": "2500"
+            "description": "Marknadsplats för flyttjänster i Stockholm",
+            "url": "https://flyttbas.se",
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": "https://flyttbas.se/sok?q={search_term_string}",
+              "query-input": "required name=search_term_string"
             }
           })}
         </script>
@@ -92,15 +102,44 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Services Section */}
+        {/* How It Works Section */}
         <section className="py-16 md:py-24">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold text-navy mb-4">
-                Våra Tjänster
+                Så fungerar Flyttbas
               </h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Oavsett om du flyttar hem eller kontor, vi har lösningen för dig
+                Hitta rätt flyttfirma på några minuter – helt gratis
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+              {howItWorks.map((step) => {
+                const Icon = step.icon;
+                return (
+                  <div key={step.title} className="text-center">
+                    <div className="h-16 w-16 bg-orange/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Icon className="h-8 w-8 text-accent" />
+                    </div>
+                    <h3 className="text-xl font-bold text-navy mb-2">{step.title}</h3>
+                    <p className="text-muted-foreground">{step.description}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* Services Section */}
+        <section className="py-16 md:py-24 bg-light-bg">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold text-navy mb-4">
+                Hitta Flyttfirma för Din Typ av Flytt
+              </h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                Oavsett om du flyttar hem eller kontor – vi matchar dig med rätt partners
               </p>
             </div>
 
@@ -119,7 +158,7 @@ const Index = () => {
                     <CardContent>
                       <Button variant="link" className="p-0 h-auto" asChild>
                         <Link to={service.href}>
-                          Läs mer <ArrowRight className="ml-2 h-4 w-4" />
+                          Hitta flyttfirma <ArrowRight className="ml-2 h-4 w-4" />
                         </Link>
                       </Button>
                     </CardContent>
@@ -131,25 +170,25 @@ const Index = () => {
         </section>
 
         {/* Why Choose Us Section */}
-        <section className="py-16 md:py-24 bg-light-bg">
+        <section className="py-16 md:py-24">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold text-navy mb-4">
-                Varför Välja Flyttbas?
+                Varför Använda Flyttbas?
               </h2>
               <p className="text-lg text-muted-foreground">
-                Vi gör skillnad genom att alltid sätta kunden först
+                Vi gör det enkelt att hitta pålitliga flyttfirmor
               </p>
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
               {[
-                "Professionella och erfarna flyttare",
-                "Försäkring som täcker all egendom",
-                "Flexibla tider – även helger",
-                "Miljövänliga förpackningar",
-                "RUT-avdrag direkt på fakturan",
-                "Transparent prissättning",
+                "Endast verifierade och försäkrade firmor",
+                "Jämför flera offerter på ett ställe",
+                "Läs riktiga omdömen från kunder",
+                "Kundskydd vid alla bokningar",
+                "RUT-avdrag hanteras automatiskt",
+                "100% gratis för dig som kund",
               ].map((feature) => (
                 <div key={feature} className="flex items-start gap-3">
                   <CheckCircle2 className="h-6 w-6 text-accent flex-shrink-0 mt-0.5" />
@@ -161,15 +200,15 @@ const Index = () => {
         </section>
 
         {/* Reviews Teaser */}
-        <section className="py-16 md:py-24">
+        <section className="py-16 md:py-24 bg-light-bg">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
               <div className="flex items-center justify-center gap-2 mb-4">
                 <Star className="h-6 w-6 fill-orange text-orange" />
-                <span className="text-2xl font-bold">4.9/5</span>
+                <span className="text-2xl font-bold">4.8/5</span>
               </div>
               <h2 className="text-3xl md:text-4xl font-bold text-navy mb-4">
-                Vad Säger Våra Kunder?
+                Vad Säger Kunderna?
               </h2>
             </div>
 
@@ -177,17 +216,17 @@ const Index = () => {
               {[
                 {
                   name: "Anna Svensson",
-                  text: "Otroligt professionella! Flytten gick smidigt och inget gick sönder. Rekommenderar varmt!",
+                  text: "Fick 4 offerter inom 2 timmar. Valde den med bäst omdömen och flytten gick perfekt!",
                   rating: 5,
                 },
                 {
                   name: "Erik Johansson",
-                  text: "Snabb offert, tydlig kommunikation och bra pris. Kommer definitivt använda dem igen.",
+                  text: "Så smidigt att jämföra priser. Sparade tusenlappar och hittade en fantastisk flyttfirma.",
                   rating: 5,
                 },
                 {
                   name: "Maria Andersson",
-                  text: "Fantastisk service från början till slut. Killarna var både snabba och försiktiga.",
+                  text: "Tryggt att alla firmor är verifierade. Valde baserat på recensioner och blev supernöjd.",
                   rating: 5,
                 },
               ].map((review) => (
@@ -211,20 +250,20 @@ const Index = () => {
         <section className="py-16 md:py-24 bg-navy text-white">
           <div className="container mx-auto px-4 text-center">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Redo Att Boka Din Flytt?
+              Redo Att Hitta Din Flyttfirma?
             </h2>
             <p className="text-lg text-white/90 mb-8 max-w-2xl mx-auto">
-              Få en kostnadsfri offert idag och låt oss göra din flytt enkel och stressfri
+              Få offerter från flera verifierade flyttfirmor – helt gratis och utan förpliktelser
             </p>
             <div className="flex flex-wrap gap-4 justify-center">
               <Button size="lg" variant="default" className="bg-orange hover:bg-orange/90" asChild>
                 <Link to="/kontakt">
-                  Få offert nu
+                  Jämför offerter nu
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
               <Button size="lg" variant="hero" asChild>
-                <a href="tel:+46701234567">Ring: 070-123 45 67</a>
+                <Link to="/faq">Läs mer om hur det fungerar</Link>
               </Button>
             </div>
           </div>
