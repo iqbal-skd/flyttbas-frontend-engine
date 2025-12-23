@@ -55,16 +55,23 @@ export const Header = () => {
               </Link>
             </Button>
             {user ? (
-              <Button size="sm" asChild>
-                <Link to={getDashboardLink()} className="flex items-center gap-2">
-                  <UserCircle className="h-4 w-4" />
-                  {isAdmin ? 'Admin' : isPartner ? 'Dashboard' : 'Mitt konto'}
-                </Link>
-              </Button>
+              <>
+                <Button size="sm" asChild>
+                  <Link to={getDashboardLink()} className="flex items-center gap-2">
+                    <UserCircle className="h-4 w-4" />
+                    {isAdmin ? 'Admin' : isPartner ? 'Dashboard' : 'Mitt konto'}
+                  </Link>
+                </Button>
+              </>
             ) : (
-              <Button size="sm" asChild>
-                <Link to="/#quote-wizard">Jämför Offerter</Link>
-              </Button>
+              <>
+                <Button variant="ghost" size="sm" asChild>
+                  <Link to="/auth">Logga in</Link>
+                </Button>
+                <Button size="sm" asChild>
+                  <Link to="/#quote-wizard">Jämför Offerter</Link>
+                </Button>
+              </>
             )}
           </div>
 
