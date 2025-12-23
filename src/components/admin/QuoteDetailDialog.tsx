@@ -32,10 +32,13 @@ import {
   Trash2,
   Plus,
   Building2,
-  DollarSign,
   CheckCircle,
   XCircle,
+  Package,
+  Truck,
+  MessageSquare,
 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import type { Database } from "@/integrations/supabase/types";
 
 type QuoteStatus = Database["public"]["Enums"]["quote_status"];
@@ -65,8 +68,12 @@ interface QuoteRequest {
   notes: string | null;
   parking_restrictions: boolean | null;
   home_visit_requested: boolean | null;
+  contact_preference: string | null;
   status: string | null;
   created_at: string;
+  updated_at?: string;
+  expires_at?: string | null;
+  customer_id?: string | null;
 }
 
 interface Offer {
@@ -333,7 +340,7 @@ export const QuoteDetailDialog = ({
                 <User className="h-4 w-4" />
                 Kundinformation
               </h3>
-              <div className="grid sm:grid-cols-3 gap-4">
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
                   <Label>Namn</Label>
                   <Input
@@ -346,7 +353,7 @@ export const QuoteDetailDialog = ({
                 <div>
                   <Label>E-post</Label>
                   <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                     <Input
                       value={formData.customer_email || ""}
                       onChange={(e) =>
@@ -358,7 +365,7 @@ export const QuoteDetailDialog = ({
                 <div>
                   <Label>Telefon</Label>
                   <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                     <Input
                       value={formData.customer_phone || ""}
                       onChange={(e) =>
@@ -366,6 +373,24 @@ export const QuoteDetailDialog = ({
                       }
                     />
                   </div>
+                </div>
+                <div>
+                  <Label>Kontaktpreferens</Label>
+                  <Select
+                    value={formData.contact_preference || "email"}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, contact_preference: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="email">E-post</SelectItem>
+                      <SelectItem value="phone">Telefon</SelectItem>
+                      <SelectItem value="both">Båda</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </div>
@@ -513,14 +538,133 @@ export const QuoteDetailDialog = ({
               </div>
             </div>
 
+            {/* Carry Distances */}
+            <div className="space-y-4">
+              <h3 className="font-semibold flex items-center gap-2">
+                <Truck className="h-4 w-4" />
+                Bärvägar & Parkering
+              </h3>
+              <div className="grid sm:grid-cols-4 gap-4">
+                <div>
+                  <Label>Bärväg från (meter)</Label>
+                  <Input
+                    type="number"
+                    value={formData.carry_from_m || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, carry_from_m: parseInt(e.target.value) || 0 })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Bärväg till (meter)</Label>
+                  <Input
+                    type="number"
+                    value={formData.carry_to_m || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, carry_to_m: parseInt(e.target.value) || 0 })
+                    }
+                  />
+                </div>
+                <div className="flex items-end gap-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="parking_restrictions"
+                      checked={formData.parking_restrictions || false}
+                      onCheckedChange={(checked) =>
+                        setFormData({ ...formData, parking_restrictions: checked as boolean })
+                      }
+                    />
+                    <Label htmlFor="parking_restrictions">Parkeringsrestriktioner</Label>
+                  </div>
+                </div>
+                <div className="flex items-end gap-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="home_visit"
+                      checked={formData.home_visit_requested || false}
+                      onCheckedChange={(checked) =>
+                        setFormData({ ...formData, home_visit_requested: checked as boolean })
+                      }
+                    />
+                    <Label htmlFor="home_visit">Hembesök önskas</Label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Services */}
+            <div className="space-y-4">
+              <h3 className="font-semibold flex items-center gap-2">
+                <Package className="h-4 w-4" />
+                Tilläggstjänster
+              </h3>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <Label>Packningstimmar</Label>
+                  <Input
+                    type="number"
+                    value={formData.packing_hours || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, packing_hours: parseInt(e.target.value) || 0 })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Monteringstimmar</Label>
+                  <Input
+                    type="number"
+                    value={formData.assembly_hours || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, assembly_hours: parseInt(e.target.value) || 0 })
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Heavy Items */}
+            <div className="space-y-4">
+              <h3 className="font-semibold flex items-center gap-2">
+                <Package className="h-4 w-4" />
+                Tunga föremål
+              </h3>
+              <div className="bg-secondary/30 rounded-lg p-4">
+                {formData.heavy_items && Array.isArray(formData.heavy_items) && (formData.heavy_items as string[]).length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {(formData.heavy_items as string[]).map((item, index) => (
+                      <Badge key={index} variant="secondary">
+                        {item}
+                      </Badge>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">Inga tunga föremål angivna</p>
+                )}
+              </div>
+            </div>
+
             {/* Notes */}
             <div className="space-y-2">
-              <Label>Anteckningar</Label>
+              <h3 className="font-semibold flex items-center gap-2">
+                <MessageSquare className="h-4 w-4" />
+                Anteckningar från kund
+              </h3>
               <Textarea
                 value={formData.notes || ""}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 rows={3}
+                placeholder="Kundens anteckningar..."
               />
+            </div>
+
+            {/* Metadata */}
+            <div className="bg-secondary/20 rounded-lg p-4 text-sm text-muted-foreground">
+              <div className="grid sm:grid-cols-2 gap-2">
+                <p>Skapad: {new Date(quote.created_at).toLocaleString('sv-SE')}</p>
+                {quote.updated_at && (
+                  <p>Uppdaterad: {new Date(quote.updated_at).toLocaleString('sv-SE')}</p>
+                )}
+              </div>
             </div>
 
             <div className="flex justify-end">
