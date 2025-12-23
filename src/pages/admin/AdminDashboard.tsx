@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { PartnerDetailDialog } from "@/components/admin/PartnerDetailDialog";
+import { QuoteDetailDialog } from "@/components/admin/QuoteDetailDialog";
 import {
   Building2,
   FileText,
@@ -50,10 +51,27 @@ interface QuoteRequest {
   id: string;
   customer_name: string;
   customer_email: string;
+  customer_phone: string | null;
   from_address: string;
+  from_postal_code: string;
   to_address: string;
+  to_postal_code: string;
   move_date: string;
-  status: string;
+  move_start_time: string | null;
+  dwelling_type: string;
+  area_m2: number;
+  rooms: number | null;
+  stairs_from: number | null;
+  stairs_to: number | null;
+  carry_from_m: number | null;
+  carry_to_m: number | null;
+  packing_hours: number | null;
+  assembly_hours: number | null;
+  heavy_items: unknown;
+  notes: string | null;
+  parking_restrictions: boolean | null;
+  home_visit_requested: boolean | null;
+  status: string | null;
   created_at: string;
 }
 
@@ -78,6 +96,8 @@ const AdminDashboard = () => {
   const [fees, setFees] = useState<CommissionFee[]>([]);
   const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
   const [partnerDialogOpen, setPartnerDialogOpen] = useState(false);
+  const [selectedQuote, setSelectedQuote] = useState<QuoteRequest | null>(null);
+  const [quoteDialogOpen, setQuoteDialogOpen] = useState(false);
   const [stats, setStats] = useState({
     pendingPartners: 0,
     activePartners: 0,
@@ -149,6 +169,11 @@ const AdminDashboard = () => {
     setPartnerDialogOpen(true);
   };
 
+  const openQuoteDetail = (quote: QuoteRequest) => {
+    setSelectedQuote(quote);
+    setQuoteDialogOpen(true);
+  };
+
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
@@ -172,6 +197,11 @@ const AdminDashboard = () => {
     rejected: "bg-red-100 text-red-800",
     more_info_requested: "bg-blue-100 text-blue-800",
     suspended: "bg-gray-100 text-gray-800",
+    offers_received: "bg-blue-100 text-blue-800",
+    offer_approved: "bg-green-100 text-green-800",
+    completed: "bg-green-200 text-green-900",
+    cancelled: "bg-red-100 text-red-800",
+    expired: "bg-gray-100 text-gray-800",
   };
 
   const statusLabels: Record<string, string> = {
@@ -180,6 +210,11 @@ const AdminDashboard = () => {
     rejected: "Avvisad",
     more_info_requested: "Begärt mer info",
     suspended: "Avstängd",
+    offers_received: "Offerter mottagna",
+    offer_approved: "Offert godkänd",
+    completed: "Genomförd",
+    cancelled: "Avbruten",
+    expired: "Utgången",
   };
 
   return (
@@ -360,13 +395,17 @@ const AdminDashboard = () => {
                       <p className="text-muted-foreground text-center py-8">Inga förfrågningar ännu</p>
                     ) : (
                       quotes.map((quote) => (
-                        <div key={quote.id} className="border rounded-lg p-4">
-                          <div className="flex items-start justify-between">
-                            <div>
+                        <div
+                          key={quote.id}
+                          className="border rounded-lg p-4 hover:bg-secondary/30 transition-colors cursor-pointer"
+                          onClick={() => openQuoteDetail(quote)}
+                        >
+                          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                            <div className="flex-1">
                               <div className="flex items-center gap-2 mb-1">
                                 <h3 className="font-medium">{quote.customer_name}</h3>
-                                <Badge className={statusColors[quote.status] || ""}>
-                                  {quote.status}
+                                <Badge className={statusColors[quote.status || "pending"]}>
+                                  {statusLabels[quote.status || "pending"] || quote.status}
                                 </Badge>
                               </div>
                               <p className="text-sm text-muted-foreground">
@@ -375,10 +414,30 @@ const AdminDashboard = () => {
                               <p className="text-sm text-muted-foreground">
                                 Flyttdatum: {new Date(quote.move_date).toLocaleDateString('sv-SE')}
                               </p>
+                              <div className="flex flex-wrap gap-2 mt-2">
+                                <Badge variant="outline">{quote.dwelling_type}</Badge>
+                                <Badge variant="outline">{quote.area_m2} m²</Badge>
+                                {quote.rooms && (
+                                  <Badge variant="outline">{quote.rooms} rum</Badge>
+                                )}
+                              </div>
                             </div>
-                            <p className="text-xs text-muted-foreground">
-                              {new Date(quote.created_at).toLocaleDateString('sv-SE')}
-                            </p>
+                            <div className="flex items-center gap-2">
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(quote.created_at).toLocaleDateString('sv-SE')}
+                              </p>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openQuoteDetail(quote);
+                                }}
+                              >
+                                <Eye className="h-4 w-4 mr-1" />
+                                Detaljer
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       ))
@@ -430,6 +489,13 @@ const AdminDashboard = () => {
         onOpenChange={setPartnerDialogOpen}
         onUpdate={fetchData}
         userId={user?.id}
+      />
+
+      <QuoteDetailDialog
+        quote={selectedQuote}
+        open={quoteDialogOpen}
+        onOpenChange={setQuoteDialogOpen}
+        onUpdate={fetchData}
       />
       
       <Footer />
