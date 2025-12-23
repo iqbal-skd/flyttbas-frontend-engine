@@ -2,7 +2,11 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-const FROM_EMAIL = Deno.env.get("FROM_EMAIL") || "Flyttbas <noreply@resend.dev>";
+const FROM_EMAIL_RAW = Deno.env.get("FROM_EMAIL") || "noreply@resend.dev";
+// Ensure proper format: "Name <email>" - if just email provided, wrap with brand name
+const FROM_EMAIL = FROM_EMAIL_RAW.includes("<") 
+  ? FROM_EMAIL_RAW 
+  : `Flyttbas <${FROM_EMAIL_RAW}>`;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
