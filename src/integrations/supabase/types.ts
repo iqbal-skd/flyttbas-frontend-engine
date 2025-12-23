@@ -496,6 +496,7 @@ export type Database = {
       }
       promote_to_admin: { Args: { target_email: string }; Returns: undefined }
       promote_to_partner: { Args: { target_email: string }; Returns: undefined }
+      set_partner_role: { Args: { target_user_id: string }; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "partner" | "customer"

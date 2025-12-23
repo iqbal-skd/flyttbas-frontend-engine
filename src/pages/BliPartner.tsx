@@ -196,16 +196,15 @@ const BliPartner = () => {
       if (partnerError) throw partnerError;
 
       // Update role from 'customer' (auto-created by trigger) to 'partner'
-      // First delete the customer role, then add partner role
-      await supabase.from('user_roles')
-        .delete()
-        .eq('user_id', userId)
-        .eq('role', 'customer');
-      
-      await supabase.from('user_roles').insert({
-        user_id: userId,
-        role: 'partner',
+      // Uses security definer function to bypass RLS
+      const { error: roleError } = await supabase.rpc('set_partner_role', {
+        target_user_id: userId
       });
+      
+      if (roleError) {
+        console.error('Failed to set partner role:', roleError);
+        // Don't fail the registration if role update fails
+      }
 
       // Send confirmation email with magic link
       try {
