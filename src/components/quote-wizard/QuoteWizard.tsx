@@ -50,11 +50,15 @@ export const QuoteWizard = () => {
     setIsSubmitting(true);
 
     try {
+      // Check if user is logged in
+      const { data: { user } } = await supabase.auth.getUser();
+      
       // Submit to database
       const { data, error } = await supabase.from('quote_requests').insert({
         customer_name: formData.customer_name,
         customer_email: formData.customer_email,
         customer_phone: formData.customer_phone || null,
+        customer_id: user?.id || null,
         contact_preference: formData.contact_preference,
         from_address: formData.from_address || '',
         from_postal_code: formData.from_postal_code || '',
@@ -81,10 +85,25 @@ export const QuoteWizard = () => {
 
       if (error) throw error;
 
+      // Send confirmation email with magic link
+      try {
+        await supabase.functions.invoke('send-confirmation-email', {
+          body: {
+            type: 'quote_request',
+            email: formData.customer_email,
+            name: formData.customer_name,
+            quoteId: data?.id,
+          }
+        });
+      } catch (emailError) {
+        console.error('Failed to send confirmation email:', emailError);
+        // Don't fail the whole process if email fails
+      }
+
       setSubmitted(true);
       toast({
         title: "Förfrågan skickad!",
-        description: "Du får offerter via e-post inom kort.",
+        description: "Vi har skickat ett bekräftelsemail med en länk till din kundportal.",
         duration: 10000,
       });
 
@@ -93,7 +112,7 @@ export const QuoteWizard = () => {
         setFormData(initialFormData);
         setCurrentStep(1);
         setSubmitted(false);
-      }, 5000);
+      }, 8000);
 
     } catch (error: any) {
       console.error('Quote submission error:', error);
@@ -134,11 +153,14 @@ export const QuoteWizard = () => {
             <Send className="h-8 w-8 text-green-600" />
           </div>
           <h3 className="text-xl font-bold mb-2">Tack för din förfrågan!</h3>
-          <p className="text-muted-foreground">
-            Verifierade flyttfirmor i ditt område kommer skicka offerter till {formData.customer_email}.
+          <p className="text-muted-foreground mb-4">
+            Vi har skickat ett bekräftelsemail till <strong>{formData.customer_email}</strong>.
           </p>
-          <p className="text-sm text-muted-foreground mt-4">
-            Du kan jämföra och välja den offert som passar dig bäst.
+          <p className="text-sm text-muted-foreground mb-4">
+            I mailet finns en länk där du kan skapa ett konto eller logga in med magic link för att se dina offerter.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Verifierade flyttfirmor i ditt område kommer skicka offerter som du kan jämföra.
           </p>
         </CardContent>
       </Card>
