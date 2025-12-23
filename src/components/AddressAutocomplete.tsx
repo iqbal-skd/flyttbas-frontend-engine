@@ -15,7 +15,7 @@ interface Prediction {
 
 interface AddressAutocompleteProps {
   value: string;
-  onChange: (address: string, postalCode?: string) => void;
+  onChange: (address: string, postalCode?: string, location?: { lat: number; lng: number }) => void;
   placeholder?: string;
   id?: string;
   className?: string;
@@ -93,14 +93,14 @@ export const AddressAutocomplete = ({
     setShowDropdown(false);
     setPredictions([]);
 
-    // Fetch place details to get postal code
+    // Fetch place details to get postal code and location
     try {
       const { data, error } = await supabase.functions.invoke('google-maps', {
         body: { action: 'place-details', place_id: prediction.place_id },
       });
 
       if (error) throw error;
-      onChange(prediction.description, data.postal_code);
+      onChange(prediction.description, data.postal_code, data.location);
     } catch (error) {
       console.error('Place details error:', error);
       onChange(prediction.description);

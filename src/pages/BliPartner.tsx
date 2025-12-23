@@ -10,11 +10,13 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import { 
   Building2, 
   FileCheck, 
   CheckCircle,
-  Loader2
+  Loader2,
+  MapPin
 } from "lucide-react";
 import { z } from "zod";
 
@@ -24,13 +26,17 @@ const partnerSchema = z.object({
   contact_name: z.string().min(2, "Kontaktperson krävs"),
   contact_email: z.string().email("Ange giltig e-postadress"),
   contact_phone: z.string().min(8, "Ange giltigt telefonnummer"),
+  address: z.string().min(5, "Ange företagets adress"),
   traffic_license_number: z.string().optional(),
   f_tax_certificate: z.boolean(),
   insurance_company: z.string().optional(),
   gdpr_consent: z.boolean().refine(val => val === true, "Du måste godkänna villkoren"),
 });
 
-type PartnerFormData = z.infer<typeof partnerSchema>;
+type PartnerFormData = z.infer<typeof partnerSchema> & {
+  address_lat?: number;
+  address_lng?: number;
+};
 
 const BliPartner = () => {
   const { toast } = useToast();
@@ -47,6 +53,9 @@ const BliPartner = () => {
     contact_name: "",
     contact_email: "",
     contact_phone: "",
+    address: "",
+    address_lat: undefined,
+    address_lng: undefined,
     traffic_license_number: "",
     f_tax_certificate: false,
     insurance_company: "",
@@ -156,6 +165,9 @@ const BliPartner = () => {
         contact_name: formData.contact_name,
         contact_email: formData.contact_email,
         contact_phone: formData.contact_phone,
+        address: formData.address,
+        address_lat: formData.address_lat || null,
+        address_lng: formData.address_lng || null,
         traffic_license_number: formData.traffic_license_number || null,
         f_tax_certificate: formData.f_tax_certificate,
         insurance_company: formData.insurance_company || null,
@@ -311,6 +323,34 @@ const BliPartner = () => {
                         className={errors.contact_email ? "border-destructive" : ""}
                       />
                       {errors.contact_email && <p className="text-xs text-destructive mt-1">{errors.contact_email}</p>}
+                    </div>
+
+                    <div className="border-t pt-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <MapPin className="h-5 w-5 text-primary" />
+                        <h3 className="font-semibold">Företagets adress</h3>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Ange adressen där ert företag är baserat. Detta används för att matcha er med jobb i närheten.
+                      </p>
+                      <div>
+                        <Label htmlFor="address">Adress *</Label>
+                        <AddressAutocomplete
+                          id="address"
+                          value={formData.address}
+                          onChange={(address, _postalCode, location) => {
+                            setFormData({ 
+                              ...formData, 
+                              address,
+                              address_lat: location?.lat,
+                              address_lng: location?.lng,
+                            });
+                          }}
+                          placeholder="Sök företagets adress..."
+                          className={errors.address ? "border-destructive" : ""}
+                        />
+                        {errors.address && <p className="text-xs text-destructive mt-1">{errors.address}</p>}
+                      </div>
                     </div>
 
                     <div className="border-t pt-6">
