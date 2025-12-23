@@ -43,7 +43,7 @@ const handler = async (req: Request): Promise<Response> => {
     
     if (type === "partner_application") {
       redirectTo = `${siteUrl}/partner`;
-      subject = "Din partneransökan har mottagits - Flyttbas";
+      subject = "Verifiera din e-post - Flyttbas";
       
       htmlContent = `
         <!DOCTYPE html>
@@ -64,12 +64,12 @@ const handler = async (req: Request): Promise<Response> => {
           <p>Vårt team kommer att granska dina uppgifter och återkommer inom 1-2 arbetsdagar via e-post.</p>
           
           <div style="background-color: #f7fafc; border-radius: 8px; padding: 20px; margin: 30px 0;">
-            <h3 style="color: #1a365d; margin-top: 0;">Nästa steg</h3>
-            <p>Klicka på knappen nedan för att skapa ditt konto och sätta ett lösenord:</p>
+            <h3 style="color: #1a365d; margin-top: 0;">Verifiera din e-post</h3>
+            <p>Klicka på knappen nedan för att verifiera din e-postadress. Detta krävs innan din ansökan kan godkännas.</p>
             <p style="text-align: center;">
-              <a href="{{MAGIC_LINK}}" style="display: inline-block; background-color: #2563eb; color: white; text-decoration: none; padding: 12px 30px; border-radius: 6px; font-weight: bold;">Skapa konto & sätt lösenord</a>
+              <a href="{{CONFIRM_LINK}}" style="display: inline-block; background-color: #2563eb; color: white; text-decoration: none; padding: 12px 30px; border-radius: 6px; font-weight: bold;">Verifiera e-post</a>
             </p>
-            <p style="font-size: 14px; color: #666;">Du kan också alltid logga in med en engångslänk via din e-post.</p>
+            <p style="font-size: 14px; color: #666;">Efter verifiering kan du logga in med e-post och lösenord som du angav vid registreringen.</p>
           </div>
           
           <p style="color: #666; font-size: 14px;">
@@ -142,7 +142,7 @@ const handler = async (req: Request): Promise<Response> => {
       `;
     }
 
-    // Generate magic link
+    // Generate magic link for both types
     const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
       type: "magiclink",
       email: email,
@@ -152,15 +152,32 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     if (linkError) {
-      console.error("Error generating magic link:", linkError);
-      throw new Error(`Failed to generate magic link: ${linkError.message}`);
+      console.error("Error generating link:", linkError);
+      throw new Error(`Failed to generate link: ${linkError.message}`);
+    }
+    
+    // For partner applications, confirm the user's email since they set a password during registration
+    if (type === "partner_application") {
+      try {
+        const { data: users } = await supabase.auth.admin.listUsers();
+        const user = users?.users?.find(u => u.email === email);
+        if (user) {
+          await supabase.auth.admin.updateUserById(user.id, { email_confirm: true });
+          console.log("Email confirmed for user:", email);
+        }
+      } catch (confirmError) {
+        console.log("Could not auto-confirm email:", confirmError);
+        // Not critical - user can still use the link
+      }
     }
 
-    // Replace magic link placeholder in email
-    const magicLink = linkData?.properties?.action_link;
-    console.log("Magic link generated successfully");
+    // Replace link placeholder in email
+    const actionLink = linkData?.properties?.action_link;
+    console.log("Link generated successfully");
     
-    const finalHtml = htmlContent.replace("{{MAGIC_LINK}}", magicLink || redirectTo);
+    const finalHtml = htmlContent
+      .replace("{{CONFIRM_LINK}}", actionLink || redirectTo)
+      .replace("{{MAGIC_LINK}}", actionLink || redirectTo);
 
     // Send email with Resend API
     const resendResponse = await fetch("https://api.resend.com/emails", {
