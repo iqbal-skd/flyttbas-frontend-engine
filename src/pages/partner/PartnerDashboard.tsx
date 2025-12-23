@@ -23,7 +23,10 @@ import {
   Star,
   LogOut,
   AlertCircle,
+  Settings,
+  Ruler,
 } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
 
 interface Partner {
   id: string;
@@ -32,6 +35,8 @@ interface Partner {
   average_rating: number;
   total_reviews: number;
   completed_jobs: number;
+  max_drive_distance_km: number | null;
+  service_postal_codes: string[] | null;
 }
 
 interface QuoteRequest {
@@ -85,7 +90,8 @@ const PartnerDashboard = () => {
     terms: "",
   });
   const [submitting, setSubmitting] = useState(false);
-
+  const [updatingSettings, setUpdatingSettings] = useState(false);
+  const [maxDistance, setMaxDistance] = useState<number>(50);
   useEffect(() => {
     if (!loading && (!user || !isPartner)) {
       navigate("/bli-partner");
@@ -108,7 +114,7 @@ const PartnerDashboard = () => {
 
     if (partnerData) {
       setPartner(partnerData);
-
+      setMaxDistance(partnerData.max_drive_distance_km || 50);
       if (partnerData.status === 'approved') {
         // Fetch available quotes
         const { data: quotesData } = await supabase
@@ -198,6 +204,34 @@ const PartnerDashboard = () => {
     navigate("/");
   };
 
+  const handleUpdateProximity = async (newDistance: number) => {
+    if (!partner) return;
+    
+    setUpdatingSettings(true);
+    try {
+      const { error } = await supabase
+        .from('partners')
+        .update({ max_drive_distance_km: newDistance })
+        .eq('id', partner.id);
+
+      if (error) throw error;
+
+      setPartner({ ...partner, max_drive_distance_km: newDistance });
+      toast({
+        title: "Inställningar uppdaterade",
+        description: `Ditt serviceområde är nu ${newDistance} km`,
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Fel",
+        description: error.message || "Kunde inte uppdatera inställningar.",
+      });
+    } finally {
+      setUpdatingSettings(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -266,6 +300,10 @@ const PartnerDashboard = () => {
                 <TabsTrigger value="offers" className="gap-2">
                   <Send className="h-4 w-4" />
                   Mina offerter
+                </TabsTrigger>
+                <TabsTrigger value="settings" className="gap-2">
+                  <Settings className="h-4 w-4" />
+                  Inställningar
                 </TabsTrigger>
               </TabsList>
 
@@ -463,6 +501,56 @@ const PartnerDashboard = () => {
                           </div>
                         ))
                       )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="settings">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Ruler className="h-5 w-5" />
+                      Serviceområde
+                    </CardTitle>
+                    <CardDescription>
+                      Ange hur långt du är villig att köra för uppdrag. Du ser bara förfrågningar inom ditt serviceområde.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <Label>Max körsträcka</Label>
+                        <span className="text-lg font-semibold text-primary">{maxDistance} km</span>
+                      </div>
+                      <Slider
+                        value={[maxDistance]}
+                        onValueChange={(value) => setMaxDistance(value[0])}
+                        min={10}
+                        max={200}
+                        step={10}
+                        className="w-full"
+                      />
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>10 km</span>
+                        <span>100 km</span>
+                        <span>200 km</span>
+                      </div>
+                    </div>
+
+                    <Button 
+                      onClick={() => handleUpdateProximity(maxDistance)}
+                      disabled={updatingSettings || maxDistance === partner.max_drive_distance_km}
+                      className="w-full"
+                    >
+                      {updatingSettings ? "Sparar..." : "Spara inställningar"}
+                    </Button>
+
+                    <div className="pt-4 border-t">
+                      <h4 className="font-medium mb-2">Aktuellt serviceområde</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Du ser förfrågningar inom <span className="font-medium">{partner.max_drive_distance_km || 50} km</span> från din registrerade adress.
+                      </p>
                     </div>
                   </CardContent>
                 </Card>
