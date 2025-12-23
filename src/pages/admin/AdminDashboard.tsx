@@ -13,6 +13,7 @@ import { Footer } from "@/components/Footer";
 import { PartnerDetailDialog } from "@/components/admin/PartnerDetailDialog";
 import { QuoteDetailDialog } from "@/components/admin/QuoteDetailDialog";
 import { OfferDetailDialog } from "@/components/admin/OfferDetailDialog";
+import { Input } from "@/components/ui/input";
 import {
   Building2,
   FileText,
@@ -21,6 +22,8 @@ import {
   LogOut,
   Eye,
   Send,
+  Search,
+  X,
 } from "lucide-react";
 
 interface Partner {
@@ -135,6 +138,8 @@ const AdminDashboard = () => {
   const [quoteDialogOpen, setQuoteDialogOpen] = useState(false);
   const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
   const [offerDialogOpen, setOfferDialogOpen] = useState(false);
+  const [quoteSearchQuery, setQuoteSearchQuery] = useState("");
+  const [quoteStatusFilter, setQuoteStatusFilter] = useState<string>("all");
   const [stats, setStats] = useState({
     pendingPartners: 0,
     activePartners: 0,
@@ -142,6 +147,32 @@ const AdminDashboard = () => {
     totalFees: 0,
     pendingOffers: 0,
   });
+
+  // Filter quotes based on search and status
+  const filteredQuotes = quotes.filter((quote) => {
+    const matchesSearch = quoteSearchQuery === "" || 
+      quote.customer_name.toLowerCase().includes(quoteSearchQuery.toLowerCase()) ||
+      quote.customer_email.toLowerCase().includes(quoteSearchQuery.toLowerCase()) ||
+      quote.from_address.toLowerCase().includes(quoteSearchQuery.toLowerCase()) ||
+      quote.to_address.toLowerCase().includes(quoteSearchQuery.toLowerCase()) ||
+      quote.from_postal_code.includes(quoteSearchQuery) ||
+      quote.to_postal_code.includes(quoteSearchQuery);
+    
+    const matchesStatus = quoteStatusFilter === "all" || quote.status === quoteStatusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
+
+  // Get counts per status for filter badges
+  const quoteCounts = {
+    all: quotes.length,
+    pending: quotes.filter(q => q.status === "pending").length,
+    offers_received: quotes.filter(q => q.status === "offers_received").length,
+    offer_approved: quotes.filter(q => q.status === "offer_approved").length,
+    completed: quotes.filter(q => q.status === "completed").length,
+    cancelled: quotes.filter(q => q.status === "cancelled").length,
+    expired: quotes.filter(q => q.status === "expired").length,
+  };
 
   useEffect(() => {
     if (!loading && (!user || !isAdmin)) {
@@ -452,57 +483,155 @@ const AdminDashboard = () => {
                   <CardDescription>Alla inkomna förfrågningar</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    {quotes.length === 0 ? (
-                      <p className="text-muted-foreground text-center py-8">Inga förfrågningar ännu</p>
-                    ) : (
-                      quotes.map((quote) => (
-                        <div
-                          key={quote.id}
-                          className="border rounded-lg p-4 hover:bg-secondary/30 transition-colors cursor-pointer"
-                          onClick={() => openQuoteDetail(quote)}
+                  {/* Search and Filter Controls */}
+                  <div className="space-y-4 mb-6">
+                    {/* Search Input */}
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Sök på kundnamn, e-post, adress eller postnummer..."
+                        value={quoteSearchQuery}
+                        onChange={(e) => setQuoteSearchQuery(e.target.value)}
+                        className="pl-10 pr-10"
+                      />
+                      {quoteSearchQuery && (
+                        <button
+                          onClick={() => setQuoteSearchQuery("")}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                         >
-                          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <h3 className="font-medium">{quote.customer_name}</h3>
-                                <Badge className={statusColors[quote.status || "pending"]}>
-                                  {statusLabels[quote.status || "pending"] || quote.status}
-                                </Badge>
+                          <X className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Status Filter Pills */}
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        size="sm"
+                        variant={quoteStatusFilter === "all" ? "default" : "outline"}
+                        onClick={() => setQuoteStatusFilter("all")}
+                        className="h-8"
+                      >
+                        Alla ({quoteCounts.all})
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={quoteStatusFilter === "pending" ? "default" : "outline"}
+                        onClick={() => setQuoteStatusFilter("pending")}
+                        className="h-8"
+                      >
+                        <span className="w-2 h-2 rounded-full bg-yellow-500 mr-2" />
+                        Väntande ({quoteCounts.pending})
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={quoteStatusFilter === "offers_received" ? "default" : "outline"}
+                        onClick={() => setQuoteStatusFilter("offers_received")}
+                        className="h-8"
+                      >
+                        <span className="w-2 h-2 rounded-full bg-blue-500 mr-2" />
+                        Offerter mottagna ({quoteCounts.offers_received})
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={quoteStatusFilter === "offer_approved" ? "default" : "outline"}
+                        onClick={() => setQuoteStatusFilter("offer_approved")}
+                        className="h-8"
+                      >
+                        <span className="w-2 h-2 rounded-full bg-green-500 mr-2" />
+                        Offert godkänd ({quoteCounts.offer_approved})
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={quoteStatusFilter === "completed" ? "default" : "outline"}
+                        onClick={() => setQuoteStatusFilter("completed")}
+                        className="h-8"
+                      >
+                        <span className="w-2 h-2 rounded-full bg-green-700 mr-2" />
+                        Genomförd ({quoteCounts.completed})
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={quoteStatusFilter === "cancelled" ? "default" : "outline"}
+                        onClick={() => setQuoteStatusFilter("cancelled")}
+                        className="h-8"
+                      >
+                        <span className="w-2 h-2 rounded-full bg-red-500 mr-2" />
+                        Avbruten ({quoteCounts.cancelled})
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={quoteStatusFilter === "expired" ? "default" : "outline"}
+                        onClick={() => setQuoteStatusFilter("expired")}
+                        className="h-8"
+                      >
+                        <span className="w-2 h-2 rounded-full bg-gray-500 mr-2" />
+                        Utgången ({quoteCounts.expired})
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Results */}
+                  <div className="space-y-4">
+                    {filteredQuotes.length === 0 ? (
+                      <p className="text-muted-foreground text-center py-8">
+                        {quotes.length === 0 
+                          ? "Inga förfrågningar ännu" 
+                          : "Inga förfrågningar matchar din sökning"}
+                      </p>
+                    ) : (
+                      <>
+                        <p className="text-sm text-muted-foreground">
+                          Visar {filteredQuotes.length} av {quotes.length} förfrågningar
+                        </p>
+                        {filteredQuotes.map((quote) => (
+                          <div
+                            key={quote.id}
+                            className="border rounded-lg p-4 hover:bg-secondary/30 transition-colors cursor-pointer"
+                            onClick={() => openQuoteDetail(quote)}
+                          >
+                            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h3 className="font-medium">{quote.customer_name}</h3>
+                                  <Badge className={statusColors[quote.status || "pending"]}>
+                                    {statusLabels[quote.status || "pending"] || quote.status}
+                                  </Badge>
+                                </div>
+                                <p className="text-sm text-muted-foreground">
+                                  {quote.from_address} → {quote.to_address}
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                  Flyttdatum: {new Date(quote.move_date).toLocaleDateString('sv-SE')}
+                                </p>
+                                <div className="flex flex-wrap gap-2 mt-2">
+                                  <Badge variant="outline">{quote.dwelling_type}</Badge>
+                                  <Badge variant="outline">{quote.area_m2} m²</Badge>
+                                  {quote.rooms && (
+                                    <Badge variant="outline">{quote.rooms} rum</Badge>
+                                  )}
+                                </div>
                               </div>
-                              <p className="text-sm text-muted-foreground">
-                                {quote.from_address} → {quote.to_address}
-                              </p>
-                              <p className="text-sm text-muted-foreground">
-                                Flyttdatum: {new Date(quote.move_date).toLocaleDateString('sv-SE')}
-                              </p>
-                              <div className="flex flex-wrap gap-2 mt-2">
-                                <Badge variant="outline">{quote.dwelling_type}</Badge>
-                                <Badge variant="outline">{quote.area_m2} m²</Badge>
-                                {quote.rooms && (
-                                  <Badge variant="outline">{quote.rooms} rum</Badge>
-                                )}
+                              <div className="flex items-center gap-2">
+                                <p className="text-xs text-muted-foreground">
+                                  {new Date(quote.created_at).toLocaleDateString('sv-SE')}
+                                </p>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    openQuoteDetail(quote);
+                                  }}
+                                >
+                                  <Eye className="h-4 w-4 mr-1" />
+                                  Detaljer
+                                </Button>
                               </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <p className="text-xs text-muted-foreground">
-                                {new Date(quote.created_at).toLocaleDateString('sv-SE')}
-                              </p>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  openQuoteDetail(quote);
-                                }}
-                              >
-                                <Eye className="h-4 w-4 mr-1" />
-                                Detaljer
-                              </Button>
                             </div>
                           </div>
-                        </div>
-                      ))
+                        ))}
+                      </>
                     )}
                   </div>
                 </CardContent>
