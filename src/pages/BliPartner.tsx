@@ -42,11 +42,12 @@ const BliPartner = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   
-  const [step, setStep] = useState<'info' | 'auth' | 'form' | 'success'>('info');
+  const [step, setStep] = useState<'info' | 'auth' | 'form' | 'success' | 'already_partner'>('info');
   const [email, setEmail] = useState("");
   const [authSent, setAuthSent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [checkingPartner, setCheckingPartner] = useState(false);
   
   const [formData, setFormData] = useState<PartnerFormData>({
     company_name: "",
@@ -60,15 +61,37 @@ const BliPartner = () => {
     gdpr_consent: false,
   });
 
+  // Check if user is already a partner
   useEffect(() => {
-    if (user && step === 'auth') {
-      setStep('form');
-      setFormData(prev => ({
-        ...prev,
-        contact_email: user.email || "",
-      }));
-    }
-  }, [user, step]);
+    const checkExistingPartner = async () => {
+      if (!user) return;
+      
+      setCheckingPartner(true);
+      const { data: existingPartner } = await supabase
+        .from('partners')
+        .select('id, status')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (existingPartner) {
+        if (existingPartner.status === 'approved') {
+          // Redirect to partner dashboard
+          navigate('/partner');
+        } else {
+          setStep('already_partner');
+        }
+      } else if (step === 'auth') {
+        setStep('form');
+        setFormData(prev => ({
+          ...prev,
+          contact_email: user.email || "",
+        }));
+      }
+      setCheckingPartner(false);
+    };
+    
+    checkExistingPartner();
+  }, [user, step, navigate]);
 
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -179,7 +202,7 @@ const BliPartner = () => {
     },
   ];
 
-  if (authLoading) {
+  if (authLoading || checkingPartner) {
     return (
       <>
         <Header />
@@ -460,6 +483,24 @@ const BliPartner = () => {
                   </form>
                 </CardContent>
               </Card>
+            </div>
+          </section>
+        )}
+
+        {/* Already Partner */}
+        {step === 'already_partner' && (
+          <section className="py-16">
+            <div className="container mx-auto px-4 max-w-md text-center">
+              <div className="mx-auto mb-6 h-16 w-16 rounded-full bg-amber-100 flex items-center justify-center">
+                <Building2 className="h-8 w-8 text-amber-600" />
+              </div>
+              <h2 className="text-2xl font-bold mb-4">Du har redan en ansökan</h2>
+              <p className="text-muted-foreground mb-8">
+                Din ansökan är under granskning. Vi återkommer inom 1-2 arbetsdagar via e-post.
+              </p>
+              <Button onClick={() => navigate("/")}>
+                Tillbaka till startsidan
+              </Button>
             </div>
           </section>
         )}
