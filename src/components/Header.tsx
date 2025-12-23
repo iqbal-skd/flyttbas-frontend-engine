@@ -1,22 +1,28 @@
 import { Link } from "react-router-dom";
-import { Phone, Menu, X } from "lucide-react";
+import { Menu, X, Truck, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import logo from "@/assets/flyttbas-logo.svg";
 
 export const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user, isAdmin, isPartner } = useAuth();
 
   const navigation = [
     { name: "Hem", href: "/" },
     { name: "Privatflytt", href: "/privatflytt" },
     { name: "Kontorsflytt", href: "/kontorsflytt" },
     { name: "Priser", href: "/priser" },
-    { name: "Case", href: "/case" },
     { name: "FAQ", href: "/faq" },
-    { name: "Blogg", href: "/blogg" },
     { name: "Kontakt", href: "/kontakt" },
   ];
+
+  const getDashboardLink = () => {
+    if (isAdmin) return "/admin";
+    if (isPartner) return "/partner";
+    return "/auth";
+  };
 
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
@@ -43,20 +49,30 @@ export const Header = () => {
           {/* Desktop CTA */}
           <div className="hidden lg:flex items-center gap-3">
             <Button variant="outline" size="sm" asChild>
-              <a href="tel:+46701234567" className="flex items-center gap-2">
-                <Phone className="h-4 w-4" />
-                Ring oss
-              </a>
+              <Link to="/bli-partner" className="flex items-center gap-2">
+                <Truck className="h-4 w-4" />
+                Bli Partner
+              </Link>
             </Button>
-            <Button size="sm" asChild>
-              <Link to="/kontakt">Få offert</Link>
-            </Button>
+            {user ? (
+              <Button size="sm" asChild>
+                <Link to={getDashboardLink()} className="flex items-center gap-2">
+                  <UserCircle className="h-4 w-4" />
+                  {isAdmin ? 'Admin' : isPartner ? 'Dashboard' : 'Mitt konto'}
+                </Link>
+              </Button>
+            ) : (
+              <Button size="sm" asChild>
+                <Link to="/#quote-wizard">Jämför Offerter</Link>
+              </Button>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
           <button
             className="lg:hidden p-2 text-foreground"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label={mobileMenuOpen ? "Stäng meny" : "Öppna meny"}
           >
             {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
@@ -77,14 +93,31 @@ export const Header = () => {
             ))}
             <div className="pt-3 space-y-2">
               <Button variant="outline" size="sm" className="w-full" asChild>
-                <a href="tel:+46701234567" className="flex items-center justify-center gap-2">
-                  <Phone className="h-4 w-4" />
-                  Ring oss
-                </a>
+                <Link 
+                  to="/bli-partner" 
+                  className="flex items-center justify-center gap-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Truck className="h-4 w-4" />
+                  Bli Partner
+                </Link>
               </Button>
-              <Button size="sm" className="w-full" asChild>
-                <Link to="/kontakt">Få offert</Link>
-              </Button>
+              {user ? (
+                <Button size="sm" className="w-full" asChild>
+                  <Link 
+                    to={getDashboardLink()}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {isAdmin ? 'Admin Dashboard' : isPartner ? 'Partner Dashboard' : 'Mitt konto'}
+                  </Link>
+                </Button>
+              ) : (
+                <Button size="sm" className="w-full" asChild>
+                  <Link to="/#quote-wizard" onClick={() => setMobileMenuOpen(false)}>
+                    Jämför Offerter
+                  </Link>
+                </Button>
+              )}
             </div>
           </div>
         )}
