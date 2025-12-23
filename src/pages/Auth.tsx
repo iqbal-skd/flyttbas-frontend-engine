@@ -9,8 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { Mail, ArrowLeft, CheckCircle } from "lucide-react";
 import { z } from "zod";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
 
 const emailSchema = z.string().email("Ange en giltig e-postadress");
 
