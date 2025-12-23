@@ -10,16 +10,14 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { PartnerDetailDialog } from "@/components/admin/PartnerDetailDialog";
 import {
   Building2,
   FileText,
   DollarSign,
-  Users,
-  CheckCircle,
-  XCircle,
   Clock,
-  MessageSquare,
   LogOut,
+  Eye,
 } from "lucide-react";
 
 interface Partner {
@@ -30,10 +28,22 @@ interface Partner {
   contact_email: string;
   contact_phone: string;
   traffic_license_number: string | null;
-  f_tax_certificate: boolean;
+  traffic_license_valid_until: string | null;
+  f_tax_certificate: boolean | null;
   insurance_company: string | null;
-  status: string;
+  insurance_policy_number: string | null;
+  insurance_valid_until: string | null;
+  max_drive_distance_km: number | null;
+  service_postal_codes: string[] | null;
+  status: string | null;
+  status_reason: string | null;
+  average_rating: number | null;
+  total_reviews: number | null;
+  completed_jobs: number | null;
+  is_sponsored: boolean | null;
+  sponsored_until: string | null;
   created_at: string;
+  updated_at: string;
 }
 
 interface QuoteRequest {
@@ -66,6 +76,8 @@ const AdminDashboard = () => {
   const [partners, setPartners] = useState<Partner[]>([]);
   const [quotes, setQuotes] = useState<QuoteRequest[]>([]);
   const [fees, setFees] = useState<CommissionFee[]>([]);
+  const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
+  const [partnerDialogOpen, setPartnerDialogOpen] = useState(false);
   const [stats, setStats] = useState({
     pendingPartners: 0,
     activePartners: 0,
@@ -132,30 +144,9 @@ const AdminDashboard = () => {
     }
   };
 
-  const updatePartnerStatus = async (partnerId: string, newStatus: 'pending' | 'approved' | 'rejected' | 'more_info_requested' | 'suspended', reason?: string) => {
-    const { error } = await supabase
-      .from('partners')
-      .update({
-        status: newStatus,
-        status_reason: reason || null,
-        reviewed_by: user?.id,
-        reviewed_at: new Date().toISOString(),
-      })
-      .eq('id', partnerId);
-
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Fel",
-        description: "Kunde inte uppdatera status.",
-      });
-    } else {
-      toast({
-        title: "Status uppdaterad",
-        description: `Partner har markerats som ${status}.`,
-      });
-      fetchData();
-    }
+  const openPartnerDetail = (partner: Partner) => {
+    setSelectedPartner(partner);
+    setPartnerDialogOpen(true);
   };
 
   const handleSignOut = async () => {
@@ -181,6 +172,14 @@ const AdminDashboard = () => {
     rejected: "bg-red-100 text-red-800",
     more_info_requested: "bg-blue-100 text-blue-800",
     suspended: "bg-gray-100 text-gray-800",
+  };
+
+  const statusLabels: Record<string, string> = {
+    pending: "Väntande",
+    approved: "Godkänd",
+    rejected: "Avvisad",
+    more_info_requested: "Begärt mer info",
+    suspended: "Avstängd",
   };
 
   return (
@@ -288,14 +287,21 @@ const AdminDashboard = () => {
                       <p className="text-muted-foreground text-center py-8">Inga partners ännu</p>
                     ) : (
                       partners.map((partner) => (
-                        <div key={partner.id} className="border rounded-lg p-4">
+                        <div
+                          key={partner.id}
+                          className="border rounded-lg p-4 hover:bg-secondary/30 transition-colors cursor-pointer"
+                          onClick={() => openPartnerDetail(partner)}
+                        >
                           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-2">
                                 <h3 className="font-semibold">{partner.company_name}</h3>
-                                <Badge className={statusColors[partner.status] || ""}>
-                                  {partner.status}
+                                <Badge className={statusColors[partner.status || "pending"]}>
+                                  {statusLabels[partner.status || "pending"]}
                                 </Badge>
+                                {partner.is_sponsored && (
+                                  <Badge className="bg-purple-100 text-purple-800">Sponsrad</Badge>
+                                )}
                               </div>
                               <p className="text-sm text-muted-foreground">
                                 Org.nr: {partner.org_number} | Kontakt: {partner.contact_name}
@@ -305,45 +311,34 @@ const AdminDashboard = () => {
                               </p>
                               <div className="flex flex-wrap gap-2 mt-2">
                                 {partner.traffic_license_number && (
-                                  <Badge variant="outline">Trafiktillstånd: {partner.traffic_license_number}</Badge>
+                                  <Badge variant="outline">Trafiktillstånd ✓</Badge>
                                 )}
                                 {partner.f_tax_certificate && (
                                   <Badge variant="outline" className="bg-green-50">F-skatt ✓</Badge>
                                 )}
                                 {partner.insurance_company && (
-                                  <Badge variant="outline">Försäkring: {partner.insurance_company}</Badge>
+                                  <Badge variant="outline">Försäkring ✓</Badge>
+                                )}
+                                {(partner.completed_jobs || 0) > 0 && (
+                                  <Badge variant="secondary">{partner.completed_jobs} jobb</Badge>
+                                )}
+                                {partner.average_rating && (
+                                  <Badge variant="secondary">★ {partner.average_rating.toFixed(1)}</Badge>
                                 )}
                               </div>
                             </div>
-                            
-                            {partner.status === 'pending' && (
-                              <div className="flex gap-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => updatePartnerStatus(partner.id, 'more_info_requested')}
-                                >
-                                  <MessageSquare className="h-4 w-4 mr-1" />
-                                  Begär info
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="text-red-600 hover:text-red-700"
-                                  onClick={() => updatePartnerStatus(partner.id, 'rejected')}
-                                >
-                                  <XCircle className="h-4 w-4 mr-1" />
-                                  Avslå
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  onClick={() => updatePartnerStatus(partner.id, 'approved')}
-                                >
-                                  <CheckCircle className="h-4 w-4 mr-1" />
-                                  Godkänn
-                                </Button>
-                              </div>
-                            )}
+
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openPartnerDetail(partner);
+                              }}
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              Detaljer
+                            </Button>
                           </div>
                         </div>
                       ))
@@ -428,6 +423,14 @@ const AdminDashboard = () => {
           </Tabs>
         </div>
       </main>
+
+      <PartnerDetailDialog
+        partner={selectedPartner}
+        open={partnerDialogOpen}
+        onOpenChange={setPartnerDialogOpen}
+        onUpdate={fetchData}
+        userId={user?.id}
+      />
       
       <Footer />
     </>
