@@ -17,7 +17,7 @@ serve(async (req) => {
       throw new Error('GOOGLE_MAPS_API_KEY is not set');
     }
 
-    const { action, input, origins, destinations } = await req.json();
+    const { action, input, origins, destinations, place_id } = await req.json();
     console.log(`Google Maps API called with action: ${action}`);
 
     if (action === 'autocomplete') {
@@ -57,8 +57,9 @@ serve(async (req) => {
 
     } else if (action === 'place-details') {
       // Get place details including postal code
-      const { place_id } = await req.json();
-      
+      if (!place_id) {
+        throw new Error('place_id is required for place-details action');
+      }
       const url = new URL('https://maps.googleapis.com/maps/api/place/details/json');
       url.searchParams.set('place_id', place_id);
       url.searchParams.set('key', GOOGLE_MAPS_API_KEY);
