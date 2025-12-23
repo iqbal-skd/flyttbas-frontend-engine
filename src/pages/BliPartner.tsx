@@ -7,19 +7,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { 
   Building2, 
   FileCheck, 
-  Shield, 
-  TrendingUp,
   CheckCircle,
-  ArrowRight,
-  Users,
-  Star
+  Loader2
 } from "lucide-react";
 import { z } from "zod";
 
@@ -38,16 +33,13 @@ const partnerSchema = z.object({
 type PartnerFormData = z.infer<typeof partnerSchema>;
 
 const BliPartner = () => {
-  const { user, loading: authLoading, signInWithMagicLink } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   
-  const [step, setStep] = useState<'info' | 'auth' | 'form' | 'success' | 'already_partner'>('info');
-  const [email, setEmail] = useState("");
-  const [authSent, setAuthSent] = useState(false);
+  const [step, setStep] = useState<'form' | 'success' | 'already_partner'>('form');
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [checkingPartner, setCheckingPartner] = useState(false);
+  const [checkingPartner, setCheckingPartner] = useState(true);
   
   const [formData, setFormData] = useState<PartnerFormData>({
     company_name: "",
@@ -61,12 +53,16 @@ const BliPartner = () => {
     gdpr_consent: false,
   });
 
-  // Check if user is already a partner
+  // Check if user is already a partner (only if logged in)
   useEffect(() => {
     const checkExistingPartner = async () => {
-      if (!user) return;
+      const { data: { user } } = await supabase.auth.getUser();
       
-      setCheckingPartner(true);
+      if (!user) {
+        setCheckingPartner(false);
+        return;
+      }
+      
       const { data: existingPartner } = await supabase
         .from('partners')
         .select('id, status')
@@ -75,13 +71,12 @@ const BliPartner = () => {
       
       if (existingPartner) {
         if (existingPartner.status === 'approved') {
-          // Redirect to partner dashboard
           navigate('/partner');
         } else {
           setStep('already_partner');
         }
-      } else if (step === 'auth') {
-        setStep('form');
+      } else {
+        // Pre-fill email if user is logged in
         setFormData(prev => ({
           ...prev,
           contact_email: user.email || "",
@@ -91,27 +86,7 @@ const BliPartner = () => {
     };
     
     checkExistingPartner();
-  }, [user, step, navigate]);
-
-  const handleAuthSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const { error } = await signInWithMagicLink(email);
-    
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Fel",
-        description: "Kunde inte skicka inloggningslänk. Försök igen.",
-      });
-    } else {
-      setAuthSent(true);
-      toast({
-        title: "Länk skickad!",
-        description: "Kolla din inkorg för inloggningslänken.",
-      });
-    }
-  };
+  }, [navigate]);
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -129,20 +104,53 @@ const BliPartner = () => {
       return;
     }
 
-    if (!user) {
-      toast({
-        variant: "destructive",
-        title: "Fel",
-        description: "Du måste vara inloggad för att registrera dig.",
-      });
-      return;
-    }
-
     setSubmitting(true);
 
     try {
-      const { error } = await supabase.from('partners').insert({
-        user_id: user.id,
+      // First, check if a user exists with this email or create a placeholder
+      let userId: string;
+      
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      
+      if (currentUser) {
+        userId = currentUser.id;
+      } else {
+        // Sign up the user with magic link - this creates the user account
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email: formData.contact_email,
+          password: crypto.randomUUID(), // Random password, they'll use magic link
+          options: {
+            emailRedirectTo: `${window.location.origin}/partner`,
+            data: {
+              full_name: formData.contact_name,
+            }
+          }
+        });
+        
+        if (signUpError) {
+          // User might already exist
+          if (signUpError.message.includes('already registered')) {
+            toast({
+              variant: "destructive",
+              title: "E-post redan registrerad",
+              description: "Denna e-postadress är redan registrerad. Logga in först eller använd en annan e-post.",
+            });
+            setSubmitting(false);
+            return;
+          }
+          throw signUpError;
+        }
+        
+        if (!signUpData.user) {
+          throw new Error("Kunde inte skapa användarkonto");
+        }
+        
+        userId = signUpData.user.id;
+      }
+
+      // Insert partner application
+      const { error: partnerError } = await supabase.from('partners').insert({
+        user_id: userId,
         company_name: formData.company_name,
         org_number: formData.org_number,
         contact_name: formData.contact_name,
@@ -154,18 +162,33 @@ const BliPartner = () => {
         status: 'pending',
       });
 
-      if (error) throw error;
+      if (partnerError) throw partnerError;
 
       // Add partner role
       await supabase.from('user_roles').insert({
-        user_id: user.id,
+        user_id: userId,
         role: 'partner',
       });
+
+      // Send confirmation email with magic link
+      try {
+        await supabase.functions.invoke('send-confirmation-email', {
+          body: {
+            type: 'partner_application',
+            email: formData.contact_email,
+            name: formData.contact_name,
+            companyName: formData.company_name,
+          }
+        });
+      } catch (emailError) {
+        console.error('Failed to send confirmation email:', emailError);
+        // Don't fail the whole process if email fails
+      }
 
       setStep('success');
       toast({
         title: "Ansökan skickad!",
-        description: "Vi granskar din ansökan och återkommer inom 1-2 arbetsdagar.",
+        description: "Vi har skickat ett bekräftelsemail med en länk för att skapa ditt konto.",
       });
     } catch (error: any) {
       console.error('Partner registration error:', error);
@@ -179,30 +202,7 @@ const BliPartner = () => {
     }
   };
 
-  const benefits = [
-    {
-      icon: Users,
-      title: "Fler kunder",
-      description: "Få tillgång till kvalificerade flyttförfrågningar i ditt område",
-    },
-    {
-      icon: TrendingUp,
-      title: "Öka omsättningen",
-      description: "Fyll luckor i schemat med matchade jobb",
-    },
-    {
-      icon: Star,
-      title: "Bygg rykte",
-      description: "Samla omdömen och bygg ditt varumärke",
-    },
-    {
-      icon: Shield,
-      title: "Trygg plattform",
-      description: "Vi hanterar betalningar och kundservice",
-    },
-  ];
-
-  if (authLoading || checkingPartner) {
+  if (checkingPartner) {
     return (
       <>
         <Header />
@@ -224,127 +224,22 @@ const BliPartner = () => {
       
       <main className="min-h-screen bg-background">
         {/* Hero Section */}
-        <section className="bg-gradient-to-br from-primary/10 via-background to-background py-16 sm:py-24">
+        <section className="bg-gradient-to-br from-primary/10 via-background to-background py-12 sm:py-16">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center">
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6">
-                Väx ditt flyttföretag med Flyttbas
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4">
+                Bli partner hos Flyttbas
               </h1>
-              <p className="text-lg text-muted-foreground mb-8">
-                Anslut dig till Sveriges ledande marknadsplats för flyttjänster. 
-                Vi matchar dig med kvalificerade kunder i ditt område – du betalar endast vid genomfört jobb.
+              <p className="text-muted-foreground mb-4">
+                Fyll i formuläret nedan så granskar vi din ansökan inom 1-2 arbetsdagar.
               </p>
-              
-              {step === 'info' && (
-                <Button size="lg" onClick={() => user ? setStep('form') : setStep('auth')}>
-                  Ansök om partnerskap
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              )}
             </div>
           </div>
         </section>
 
-        {/* Benefits */}
-        {step === 'info' && (
-          <section className="py-16 bg-secondary/30">
-            <div className="container mx-auto px-4">
-              <h2 className="text-2xl font-bold text-center mb-12">Fördelar med Flyttbas</h2>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                {benefits.map((benefit, index) => (
-                  <div key={index} className="bg-background p-6 rounded-lg shadow-sm">
-                    <benefit.icon className="h-10 w-10 text-primary mb-4" />
-                    <h3 className="font-semibold mb-2">{benefit.title}</h3>
-                    <p className="text-sm text-muted-foreground">{benefit.description}</p>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-12 text-center">
-                <h3 className="text-xl font-semibold mb-4">Så fungerar det</h3>
-                <div className="flex flex-col sm:flex-row justify-center gap-8 mt-8">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">1</div>
-                    <span>Registrera dig</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">2</div>
-                    <span>Vi granskar & godkänner</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">3</div>
-                    <span>Börja ge offerter</span>
-                  </div>
-                </div>
-
-                <div className="mt-12 p-6 bg-accent/10 rounded-lg max-w-xl mx-auto">
-                  <p className="text-sm text-muted-foreground mb-2">Avgift</p>
-                  <p className="text-2xl font-bold">7% av ordervärdet före RUT</p>
-                  <p className="text-sm text-muted-foreground mt-2">Endast vid genomfört jobb. Ingen startavgift eller månadsavgift.</p>
-                </div>
-
-                <Button size="lg" className="mt-8" onClick={() => user ? setStep('form') : setStep('auth')}>
-                  Kom igång nu
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* Auth Step */}
-        {step === 'auth' && !authSent && (
-          <section className="py-16">
-            <div className="container mx-auto px-4 max-w-md">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Skapa konto</CardTitle>
-                  <CardDescription>
-                    Ange din e-post så skickar vi en inloggningslänk
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleAuthSubmit} className="space-y-4">
-                    <div>
-                      <Label htmlFor="email">E-postadress</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="foretag@email.se"
-                        required
-                      />
-                    </div>
-                    <Button type="submit" className="w-full">
-                      Skicka inloggningslänk
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
-            </div>
-          </section>
-        )}
-
-        {step === 'auth' && authSent && (
-          <section className="py-16">
-            <div className="container mx-auto px-4 max-w-md">
-              <Card>
-                <CardHeader className="text-center">
-                  <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
-                  <CardTitle>Kolla din e-post</CardTitle>
-                  <CardDescription>
-                    Vi har skickat en inloggningslänk till {email}
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            </div>
-          </section>
-        )}
-
         {/* Registration Form */}
-        {step === 'form' && user && (
-          <section className="py-16">
+        {step === 'form' && (
+          <section className="py-8 sm:py-12">
             <div className="container mx-auto px-4 max-w-2xl">
               <Card>
                 <CardHeader>
@@ -478,7 +373,14 @@ const BliPartner = () => {
                     </div>
 
                     <Button type="submit" className="w-full" disabled={submitting}>
-                      {submitting ? "Skickar..." : "Skicka ansökan"}
+                      {submitting ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Skickar...
+                        </>
+                      ) : (
+                        "Skicka ansökan"
+                      )}
                     </Button>
                   </form>
                 </CardContent>
@@ -513,8 +415,11 @@ const BliPartner = () => {
                 <CheckCircle className="h-8 w-8 text-green-600" />
               </div>
               <h2 className="text-2xl font-bold mb-4">Tack för din ansökan!</h2>
-              <p className="text-muted-foreground mb-8">
-                Vi granskar din ansökan och återkommer inom 1-2 arbetsdagar via e-post.
+              <p className="text-muted-foreground mb-4">
+                Vi har skickat ett bekräftelsemail till <strong>{formData.contact_email}</strong> med en länk för att skapa ditt konto.
+              </p>
+              <p className="text-sm text-muted-foreground mb-8">
+                Vi granskar din ansökan och återkommer inom 1-2 arbetsdagar.
               </p>
               <Button onClick={() => navigate("/")}>
                 Tillbaka till startsidan
