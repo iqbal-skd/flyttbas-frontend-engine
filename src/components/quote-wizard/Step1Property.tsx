@@ -1,10 +1,42 @@
+import { useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MapPin, Home, Calendar } from "lucide-react";
+import { MapPin, Home, Calendar, Route } from "lucide-react";
+import { AddressAutocomplete } from "@/components/AddressAutocomplete";
+import { useDistanceCalculation } from "@/hooks/useDistanceCalculation";
 import type { StepProps } from "./types";
 
 export const Step1Property = ({ formData, setFormData }: StepProps) => {
+  const { calculateDistance, isCalculating, result } = useDistanceCalculation();
+
+  // Calculate distance when both addresses are set
+  useEffect(() => {
+    if (formData.from_address && formData.to_address && 
+        formData.from_address.length > 5 && formData.to_address.length > 5) {
+      const timer = setTimeout(() => {
+        calculateDistance(formData.from_address || '', formData.to_address || '');
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [formData.from_address, formData.to_address, calculateDistance]);
+
+  const handleFromAddressChange = (address: string, postalCode?: string) => {
+    setFormData({ 
+      ...formData, 
+      from_address: address,
+      from_postal_code: postalCode || formData.from_postal_code 
+    });
+  };
+
+  const handleToAddressChange = (address: string, postalCode?: string) => {
+    setFormData({ 
+      ...formData, 
+      to_address: address,
+      to_postal_code: postalCode || formData.to_postal_code 
+    });
+  };
+
   return (
     <fieldset className="space-y-5">
       <legend className="sr-only">Steg 1: Adress och bostadsinformation</legend>
@@ -20,29 +52,54 @@ export const Step1Property = ({ formData, setFormData }: StepProps) => {
           <Label htmlFor="from_address" className="text-sm font-medium">
             Från adress
           </Label>
-          <Input
+          <AddressAutocomplete
             id="from_address"
-            placeholder="Ex: Södermalm, Stockholm"
-            value={formData.from_address}
-            onChange={(e) => setFormData({ ...formData, from_address: e.target.value })}
+            value={formData.from_address || ''}
+            onChange={handleFromAddressChange}
+            placeholder="Sök adress, t.ex. Södermalm, Stockholm"
             className="mt-1.5"
-            autoComplete="address-line1"
           />
+          {formData.from_postal_code && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Postnummer: {formData.from_postal_code}
+            </p>
+          )}
         </div>
         <div>
           <Label htmlFor="to_address" className="text-sm font-medium">
             Till adress
           </Label>
-          <Input
+          <AddressAutocomplete
             id="to_address"
-            placeholder="Ex: Vasastan, Stockholm"
-            value={formData.to_address}
-            onChange={(e) => setFormData({ ...formData, to_address: e.target.value })}
+            value={formData.to_address || ''}
+            onChange={handleToAddressChange}
+            placeholder="Sök adress, t.ex. Vasastan, Stockholm"
             className="mt-1.5"
-            autoComplete="address-line1"
           />
+          {formData.to_postal_code && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Postnummer: {formData.to_postal_code}
+            </p>
+          )}
         </div>
       </div>
+
+      {/* Distance Display */}
+      {(result || isCalculating) && (
+        <div className="flex items-center gap-2 p-3 bg-secondary/50 rounded-lg border">
+          <Route className="h-4 w-4 text-primary" />
+          {isCalculating ? (
+            <span className="text-sm text-muted-foreground">Beräknar avstånd...</span>
+          ) : result?.distance_km ? (
+            <span className="text-sm">
+              <span className="font-medium">{result.distance_text}</span>
+              <span className="text-muted-foreground"> • ca {result.duration_text}</span>
+            </span>
+          ) : result?.error ? (
+            <span className="text-sm text-muted-foreground">{result.error}</span>
+          ) : null}
+        </div>
+      )}
 
       {/* Dwelling info */}
       <div className="flex items-center gap-2 text-primary mt-6 mb-4">
