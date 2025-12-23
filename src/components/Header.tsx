@@ -21,7 +21,7 @@ export const Header = () => {
   const getDashboardLink = () => {
     if (isAdmin) return "/admin";
     if (isPartner) return "/partner";
-    return "/auth";
+    return "/dashboard";
   };
 
   return (
