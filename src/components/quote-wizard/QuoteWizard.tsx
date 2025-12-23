@@ -1,10 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Calculator, ChevronLeft, ChevronRight, Send } from "lucide-react";
-import { calcQuote, type QuoteInput, type QuoteResult } from "@/lib/quoteCalculator";
-import { FormData, initialFormData, WIZARD_STEPS } from "./types";
+import { Calculator, ChevronLeft, ChevronRight, Send, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { FormData, initialFormData, WIZARD_STEPS, formSchema } from "./types";
 import { WizardProgress } from "./WizardProgress";
 import { Step1Property } from "./Step1Property";
 import { Step2Details } from "./Step2Details";
@@ -16,48 +16,11 @@ export const QuoteWizard = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [quoteResult, setQuoteResult] = useState<QuoteResult | null>(null);
-
-  const buildQuoteInput = useCallback((): QuoteInput => {
-    return {
-      from_address: formData.from_address || undefined,
-      to_address: formData.to_address || undefined,
-      area_m2: formData.area_m2 ? parseFloat(formData.area_m2) : undefined,
-      rooms: formData.rooms ? parseInt(formData.rooms) : undefined,
-      dwelling_type: formData.dwelling_type as QuoteInput['dwelling_type'] || undefined,
-      date: formData.date || undefined,
-      start_time: formData.start_time || undefined,
-      stairs_from: formData.stairs_from ? parseInt(formData.stairs_from) : undefined,
-      stairs_to: formData.stairs_to ? parseInt(formData.stairs_to) : undefined,
-      carry_from_m: formData.carry_from_m ? parseInt(formData.carry_from_m) : undefined,
-      carry_to_m: formData.carry_to_m ? parseInt(formData.carry_to_m) : undefined,
-      parking_restrictions: formData.parking_restrictions || false,
-      heavy_items: (formData.heavy_items || []) as QuoteInput['heavy_items'],
-      packing_hours: formData.packing_hours ? parseFloat(formData.packing_hours) : undefined,
-      assembly_hours: formData.assembly_hours ? parseFloat(formData.assembly_hours) : undefined,
-      rut_eligible: true,
-      customer_name: formData.customer_name || undefined,
-      customer_phone: formData.customer_phone !== '+46' ? formData.customer_phone : undefined,
-      customer_email: formData.customer_email || undefined,
-      home_visit_requested: formData.home_visit_requested || false,
-      gdpr_consent: formData.gdpr_consent || false,
-    };
-  }, [formData]);
-
-  const calculateQuote = useCallback(() => {
-    const input = buildQuoteInput();
-    const result = calcQuote(input);
-    setQuoteResult(result);
-    console.log('[QuoteWizard] Quote calculated:', JSON.stringify(result, null, 2));
-    return result;
-  }, [buildQuoteInput]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   const handleNext = () => {
     if (currentStep < WIZARD_STEPS.length) {
-      // Calculate quote when moving to final step
-      if (currentStep === WIZARD_STEPS.length - 1) {
-        calculateQuote();
-      }
       setCurrentStep(currentStep + 1);
     }
   };
@@ -68,49 +31,80 @@ export const QuoteWizard = () => {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setErrors({});
     
-    // Validate email if provided
-    if (formData.customer_email && formData.customer_email.length > 0) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(formData.customer_email)) {
-        setErrors({ customer_email: "Ange giltig e-postadress" });
-        return;
-      }
-    }
-    
-    // Check GDPR consent
-    if (!formData.gdpr_consent) {
-      setErrors({ gdpr_consent: "Du måste godkänna GDPR för att skicka förfrågan" });
+    // Validate form
+    const result = formSchema.safeParse(formData);
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      result.error.issues.forEach(err => {
+        if (err.path[0]) {
+          fieldErrors[err.path[0].toString()] = err.message;
+        }
+      });
+      setErrors(fieldErrors);
       return;
     }
-    
-    const result = quoteResult || calculateQuote();
-    
-    // Log for future backend integration
-    console.log('[QuoteWizard] Lead submission:', JSON.stringify({
-      quote: result,
-      customer: {
-        name: formData.customer_name,
-        phone: formData.customer_phone,
-        email: formData.customer_email,
-        home_visit_requested: formData.home_visit_requested,
-        gdpr_consent: formData.gdpr_consent,
-      },
-      submitted_at: new Date().toISOString(),
-    }, null, 2));
 
-    toast({
-      title: "Tack! Vi ringer dig inom 15 min (08–20).",
-      description: `Fastpris: ${result.move_total.toLocaleString('sv-SE')} kr${result.requires_home_visit ? ' (hembesök rekommenderas)' : ''}`,
-      duration: 10000,
-    });
+    setIsSubmitting(true);
 
-    // Reset form
-    setFormData(initialFormData);
-    setCurrentStep(1);
-    setQuoteResult(null);
+    try {
+      // Submit to database
+      const { data, error } = await supabase.from('quote_requests').insert({
+        customer_name: formData.customer_name,
+        customer_email: formData.customer_email,
+        customer_phone: formData.customer_phone || null,
+        contact_preference: formData.contact_preference,
+        from_address: formData.from_address || '',
+        from_postal_code: formData.from_postal_code || '',
+        to_address: formData.to_address || '',
+        to_postal_code: formData.to_postal_code || '',
+        dwelling_type: formData.dwelling_type || 'apartment',
+        area_m2: formData.area_m2 ? parseInt(formData.area_m2) : 50,
+        rooms: formData.rooms ? parseInt(formData.rooms) : null,
+        move_date: formData.date || new Date().toISOString().split('T')[0],
+        move_start_time: formData.start_time || null,
+        stairs_from: formData.stairs_from ? parseInt(formData.stairs_from) : 0,
+        stairs_to: formData.stairs_to ? parseInt(formData.stairs_to) : 0,
+        carry_from_m: formData.carry_from_m ? parseInt(formData.carry_from_m) : 0,
+        carry_to_m: formData.carry_to_m ? parseInt(formData.carry_to_m) : 0,
+        parking_restrictions: formData.parking_restrictions || false,
+        heavy_items: formData.heavy_items || [],
+        packing_hours: formData.packing_hours ? parseInt(formData.packing_hours) : 0,
+        assembly_hours: formData.assembly_hours ? parseInt(formData.assembly_hours) : 0,
+        home_visit_requested: formData.home_visit_requested || false,
+        notes: formData.notes || null,
+        status: 'pending',
+        expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+      }).select().single();
+
+      if (error) throw error;
+
+      setSubmitted(true);
+      toast({
+        title: "Förfrågan skickad!",
+        description: "Du får offerter via e-post inom kort.",
+        duration: 10000,
+      });
+
+      // Reset form after showing success
+      setTimeout(() => {
+        setFormData(initialFormData);
+        setCurrentStep(1);
+        setSubmitted(false);
+      }, 5000);
+
+    } catch (error: any) {
+      console.error('Quote submission error:', error);
+      toast({
+        variant: "destructive",
+        title: "Fel",
+        description: "Kunde inte skicka förfrågan. Försök igen.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const renderStep = () => {
@@ -124,7 +118,7 @@ export const QuoteWizard = () => {
       case 3:
         return <Step3Services {...stepProps} />;
       case 4:
-        return <Step4Quote {...stepProps} quoteResult={quoteResult} />;
+        return <Step4Quote {...stepProps} />;
       default:
         return null;
     }
@@ -132,15 +126,34 @@ export const QuoteWizard = () => {
 
   const isLastStep = currentStep === WIZARD_STEPS.length;
 
+  if (submitted) {
+    return (
+      <Card className="shadow-2xl border-0" id="quote-wizard">
+        <CardContent className="py-12 text-center">
+          <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-green-100 flex items-center justify-center">
+            <Send className="h-8 w-8 text-green-600" />
+          </div>
+          <h3 className="text-xl font-bold mb-2">Tack för din förfrågan!</h3>
+          <p className="text-muted-foreground">
+            Verifierade flyttfirmor i ditt område kommer skicka offerter till {formData.customer_email}.
+          </p>
+          <p className="text-sm text-muted-foreground mt-4">
+            Du kan jämföra och välja den offert som passar dig bäst.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <Card className="shadow-2xl border-0">
+    <Card className="shadow-2xl border-0" id="quote-wizard">
       <CardHeader className="pb-4 sm:pb-6">
         <div className="flex items-center gap-2 mb-2">
           <Calculator className="h-5 w-5 text-accent" aria-hidden="true" />
-          <CardTitle className="text-lg sm:text-xl">Få Fastpris Direkt</CardTitle>
+          <CardTitle className="text-lg sm:text-xl">Jämför Offerter Gratis</CardTitle>
         </div>
         <CardDescription className="text-sm">
-          Fyll i det du vet – vi räknar ut ett pris och listar alla antaganden
+          Fyll i dina uppgifter så matchar vi dig med verifierade flyttfirmor
         </CardDescription>
       </CardHeader>
       <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
@@ -159,7 +172,7 @@ export const QuoteWizard = () => {
           <Button
             variant="outline"
             onClick={handleBack}
-            disabled={currentStep === 1}
+            disabled={currentStep === 1 || isSubmitting}
             className="gap-2 w-full sm:w-auto"
             aria-label="Gå till föregående steg"
           >
@@ -172,9 +185,19 @@ export const QuoteWizard = () => {
               onClick={handleSubmit} 
               className="gap-2 w-full sm:w-auto"
               aria-label="Skicka din offertförfrågan"
+              disabled={isSubmitting}
             >
-              <Send className="h-4 w-4" aria-hidden="true" />
-              Skicka förfrågan
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                  Skickar...
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4" aria-hidden="true" />
+                  Få offerter
+                </>
+              )}
             </Button>
           ) : (
             <Button 

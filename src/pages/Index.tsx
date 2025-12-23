@@ -2,10 +2,9 @@ import { Hero } from "@/components/Hero";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { MobileActionBar } from "@/components/MobileActionBar";
-import { ChatLauncher } from "@/components/ChatLauncher";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Home, Building2, Package, ArrowRight, Star, Shield, Users, Zap } from "lucide-react";
+import { CheckCircle2, Home, Building2, Package, ArrowRight, Star, Shield, Users, Zap, Truck } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 
@@ -59,10 +58,10 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Helmet>
-        <title>Flyttbas – Jämför Flyttfirmor i Stockholm | Hitta Bästa Priset</title>
-        <meta name="description" content="Jämför offerter från verifierade flyttfirmor i Stockholm. Hitta bästa priset på din flytt med upp till 50% RUT-avdrag. Gratis och utan förpliktelser." />
+        <title>Flyttbas – Jämför Flyttfirmor i Sverige | Hitta Bästa Priset</title>
+        <meta name="description" content="Jämför offerter från verifierade flyttfirmor i hela Sverige. Hitta bästa priset på din flytt med upp till 50% RUT-avdrag. Gratis och utan förpliktelser." />
         <link rel="canonical" href="https://flyttbas.se/" />
-        <meta property="og:title" content="Flyttbas – Jämför Flyttfirmor i Stockholm" />
+        <meta property="og:title" content="Flyttbas – Jämför Flyttfirmor i Sverige" />
         <meta property="og:description" content="Jämför offerter från verifierade flyttfirmor. Hitta bästa priset med RUT-avdrag." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://flyttbas.se/" />
@@ -71,7 +70,7 @@ const Index = () => {
             "@context": "https://schema.org",
             "@type": "WebSite",
             "name": "Flyttbas",
-            "description": "Marknadsplats för flyttjänster i Stockholm",
+            "description": "Marknadsplats för flyttjänster i Sverige",
             "url": "https://flyttbas.se",
             "potentialAction": {
               "@type": "SearchAction",
@@ -169,6 +168,61 @@ const Index = () => {
           </div>
         </section>
 
+        {/* For Partners Section */}
+        <section className="py-16 md:py-24 bg-gradient-to-br from-primary/5 to-primary/10">
+          <div className="container mx-auto px-4">
+            <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center gap-8">
+              <div className="flex-1">
+                <div className="inline-flex items-center gap-2 bg-primary/10 px-3 py-1 rounded-full text-sm mb-4">
+                  <Truck className="h-4 w-4 text-primary" />
+                  För Flyttföretag
+                </div>
+                <h2 className="text-3xl md:text-4xl font-bold text-navy mb-4">
+                  Är du flyttfirma?
+                </h2>
+                <p className="text-lg text-muted-foreground mb-6">
+                  Anslut dig till Flyttbas och få tillgång till nya kunder i hela Sverige. 
+                  Ingen startavgift – du betalar endast 7% vid genomfört jobb.
+                </p>
+                <div className="space-y-3 mb-6">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-green-600" />
+                    <span>Fler kvalificerade förfrågningar</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-green-600" />
+                    <span>Fyll luckor i schemat</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-green-600" />
+                    <span>Bygg rykte med omdömen</span>
+                  </div>
+                </div>
+                <Button size="lg" asChild>
+                  <Link to="/bli-partner">
+                    Bli Partner
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
+                </Button>
+              </div>
+              <div className="flex-1 flex justify-center">
+                <div className="bg-background p-8 rounded-2xl shadow-xl">
+                  <div className="text-center mb-4">
+                    <p className="text-sm text-muted-foreground">Provision</p>
+                    <p className="text-4xl font-bold text-primary">7%</p>
+                    <p className="text-sm text-muted-foreground">per genomfört jobb</p>
+                  </div>
+                  <div className="border-t pt-4 space-y-2 text-sm">
+                    <p className="flex justify-between"><span>Startavgift</span><strong>0 kr</strong></p>
+                    <p className="flex justify-between"><span>Månadsavgift</span><strong>0 kr</strong></p>
+                    <p className="flex justify-between"><span>Bindningstid</span><strong>Ingen</strong></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Why Choose Us Section */}
         <section className="py-16 md:py-24">
           <div className="container mx-auto px-4">
@@ -257,10 +311,10 @@ const Index = () => {
             </p>
             <div className="flex flex-wrap gap-4 justify-center">
               <Button size="lg" variant="default" className="bg-orange hover:bg-orange/90" asChild>
-                <Link to="/kontakt">
+                <a href="#quote-wizard">
                   Jämför offerter nu
                   <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
+                </a>
               </Button>
               <Button size="lg" variant="hero" asChild>
                 <Link to="/faq">Läs mer om hur det fungerar</Link>
@@ -272,7 +326,6 @@ const Index = () => {
 
       <Footer />
       <MobileActionBar />
-      <ChatLauncher />
     </div>
   );
 };
