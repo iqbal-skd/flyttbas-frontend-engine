@@ -12,6 +12,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { PartnerDetailDialog } from "@/components/admin/PartnerDetailDialog";
 import { QuoteDetailDialog } from "@/components/admin/QuoteDetailDialog";
+import { OfferDetailDialog } from "@/components/admin/OfferDetailDialog";
 import {
   Building2,
   FileText,
@@ -19,6 +20,7 @@ import {
   Clock,
   LogOut,
   Eye,
+  Send,
 } from "lucide-react";
 
 interface Partner {
@@ -87,6 +89,37 @@ interface CommissionFee {
   } | null;
 }
 
+type OfferStatus = "pending" | "approved" | "rejected" | "expired" | "withdrawn";
+
+interface Offer {
+  id: string;
+  quote_request_id: string;
+  partner_id: string;
+  available_date: string;
+  time_window: string;
+  estimated_hours: number;
+  team_size: number;
+  price_before_rut: number;
+  rut_deduction: number | null;
+  total_price: number;
+  terms: string | null;
+  valid_until: string;
+  status: OfferStatus | null;
+  distance_km: number | null;
+  drive_time_minutes: number | null;
+  ranking_score: number | null;
+  created_at: string;
+  updated_at: string;
+  partners?: {
+    company_name: string;
+  } | null;
+  quote_requests?: {
+    customer_name: string;
+    from_address: string;
+    to_address: string;
+  } | null;
+}
+
 const AdminDashboard = () => {
   const { user, isAdmin, loading, signOut } = useAuth();
   const navigate = useNavigate();
@@ -95,15 +128,19 @@ const AdminDashboard = () => {
   const [partners, setPartners] = useState<Partner[]>([]);
   const [quotes, setQuotes] = useState<QuoteRequest[]>([]);
   const [fees, setFees] = useState<CommissionFee[]>([]);
+  const [offers, setOffers] = useState<Offer[]>([]);
   const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
   const [partnerDialogOpen, setPartnerDialogOpen] = useState(false);
   const [selectedQuote, setSelectedQuote] = useState<QuoteRequest | null>(null);
   const [quoteDialogOpen, setQuoteDialogOpen] = useState(false);
+  const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
+  const [offerDialogOpen, setOfferDialogOpen] = useState(false);
   const [stats, setStats] = useState({
     pendingPartners: 0,
     activePartners: 0,
     pendingQuotes: 0,
     totalFees: 0,
+    pendingOffers: 0,
   });
 
   useEffect(() => {
@@ -149,6 +186,21 @@ const AdminDashboard = () => {
       }));
     }
 
+    // Fetch offers with partner and quote info
+    const { data: offersData } = await supabase
+      .from('offers')
+      .select('*, partners(company_name), quote_requests(customer_name, from_address, to_address)')
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    if (offersData) {
+      setOffers(offersData);
+      setStats(prev => ({
+        ...prev,
+        pendingOffers: offersData.filter(o => o.status === 'pending').length,
+      }));
+    }
+
     // Fetch fees
     const { data: feesData } = await supabase
       .from('commission_fees')
@@ -173,6 +225,11 @@ const AdminDashboard = () => {
   const openQuoteDetail = (quote: QuoteRequest) => {
     setSelectedQuote(quote);
     setQuoteDialogOpen(true);
+  };
+
+  const openOfferDetail = (offer: Offer) => {
+    setSelectedOffer(offer);
+    setOfferDialogOpen(true);
   };
 
   const handleSignOut = async () => {
@@ -304,6 +361,10 @@ const AdminDashboard = () => {
               <TabsTrigger value="quotes" className="gap-2">
                 <FileText className="h-4 w-4" />
                 Förfrågningar
+              </TabsTrigger>
+              <TabsTrigger value="offers" className="gap-2">
+                <Send className="h-4 w-4" />
+                Inkomna offerter ({offers.length})
               </TabsTrigger>
               <TabsTrigger value="fees" className="gap-2">
                 <DollarSign className="h-4 w-4" />
@@ -448,6 +509,71 @@ const AdminDashboard = () => {
               </Card>
             </TabsContent>
 
+            <TabsContent value="offers">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Inkomna offerter</CardTitle>
+                  <CardDescription>Alla offerter från partners</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {offers.length === 0 ? (
+                      <p className="text-muted-foreground text-center py-8">Inga offerter ännu</p>
+                    ) : (
+                      offers.map((offer) => (
+                        <div
+                          key={offer.id}
+                          className="border rounded-lg p-4 hover:bg-secondary/30 transition-colors cursor-pointer"
+                          onClick={() => openOfferDetail(offer)}
+                        >
+                          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h3 className="font-medium">{offer.partners?.company_name || 'Okänd partner'}</h3>
+                                <Badge className={statusColors[offer.status || "pending"]}>
+                                  {statusLabels[offer.status || "pending"]}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground">
+                                Kund: {offer.quote_requests?.customer_name || 'Okänd'}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                {offer.quote_requests?.from_address} → {offer.quote_requests?.to_address}
+                              </p>
+                              <div className="flex flex-wrap gap-2 mt-2">
+                                <Badge variant="outline">{offer.total_price.toLocaleString('sv-SE')} kr</Badge>
+                                <Badge variant="outline">{offer.team_size} pers</Badge>
+                                <Badge variant="outline">{offer.estimated_hours} tim</Badge>
+                                <Badge variant="secondary">
+                                  {new Date(offer.available_date).toLocaleDateString('sv-SE')}
+                                </Badge>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(offer.created_at).toLocaleDateString('sv-SE')}
+                              </p>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openOfferDetail(offer);
+                                }}
+                              >
+                                <Eye className="h-4 w-4 mr-1" />
+                                Detaljer
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
             <TabsContent value="fees">
               <Card>
                 <CardHeader>
@@ -496,6 +622,13 @@ const AdminDashboard = () => {
         quote={selectedQuote}
         open={quoteDialogOpen}
         onOpenChange={setQuoteDialogOpen}
+        onUpdate={fetchData}
+      />
+
+      <OfferDetailDialog
+        offer={selectedOffer}
+        open={offerDialogOpen}
+        onOpenChange={setOfferDialogOpen}
         onUpdate={fetchData}
       />
       
