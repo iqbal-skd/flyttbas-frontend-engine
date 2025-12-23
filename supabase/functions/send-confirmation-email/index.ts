@@ -24,6 +24,8 @@ interface EmailRequest {
 
 const handler = async (req: Request): Promise<Response> => {
   console.log("send-confirmation-email function called");
+  console.log("FROM_EMAIL_RAW:", FROM_EMAIL_RAW);
+  console.log("FROM_EMAIL:", FROM_EMAIL);
   
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
