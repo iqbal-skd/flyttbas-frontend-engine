@@ -27,15 +27,32 @@ const partnerSchema = z.object({
   contact_email: z.string().email("Ange giltig e-postadress"),
   contact_phone: z.string().min(8, "Ange giltigt telefonnummer"),
   address: z.string().min(5, "Ange företagets adress"),
+  password: z.string().min(8, "Lösenord måste vara minst 8 tecken"),
+  confirm_password: z.string().min(8, "Bekräfta lösenord"),
   traffic_license_number: z.string().optional(),
   f_tax_certificate: z.boolean(),
   insurance_company: z.string().optional(),
   gdpr_consent: z.boolean().refine(val => val === true, "Du måste godkänna villkoren"),
+}).refine(data => data.password === data.confirm_password, {
+  message: "Lösenorden matchar inte",
+  path: ["confirm_password"],
 });
 
-type PartnerFormData = z.infer<typeof partnerSchema> & {
+type PartnerFormData = {
+  company_name: string;
+  org_number: string;
+  contact_name: string;
+  contact_email: string;
+  contact_phone: string;
+  address: string;
   address_lat?: number;
   address_lng?: number;
+  password: string;
+  confirm_password: string;
+  traffic_license_number: string;
+  f_tax_certificate: boolean;
+  insurance_company: string;
+  gdpr_consent: boolean;
 };
 
 const BliPartner = () => {
@@ -56,6 +73,8 @@ const BliPartner = () => {
     address: "",
     address_lat: undefined,
     address_lng: undefined,
+    password: "",
+    confirm_password: "",
     traffic_license_number: "",
     f_tax_certificate: false,
     insurance_company: "",
@@ -124,10 +143,10 @@ const BliPartner = () => {
       if (currentUser) {
         userId = currentUser.id;
       } else {
-        // Sign up the user with magic link - this creates the user account
+        // Sign up the user with their chosen password
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email: formData.contact_email,
-          password: crypto.randomUUID(), // Random password, they'll use magic link
+          password: formData.password,
           options: {
             emailRedirectTo: `${window.location.origin}/partner`,
             data: {
@@ -176,7 +195,13 @@ const BliPartner = () => {
 
       if (partnerError) throw partnerError;
 
-      // Add partner role
+      // Update role from 'customer' (auto-created by trigger) to 'partner'
+      // First delete the customer role, then add partner role
+      await supabase.from('user_roles')
+        .delete()
+        .eq('user_id', userId)
+        .eq('role', 'customer');
+      
       await supabase.from('user_roles').insert({
         user_id: userId,
         role: 'partner',
@@ -323,6 +348,32 @@ const BliPartner = () => {
                         className={errors.contact_email ? "border-destructive" : ""}
                       />
                       {errors.contact_email && <p className="text-xs text-destructive mt-1">{errors.contact_email}</p>}
+                    </div>
+
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="password">Lösenord *</Label>
+                        <Input
+                          id="password"
+                          type="password"
+                          value={formData.password}
+                          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                          className={errors.password ? "border-destructive" : ""}
+                          placeholder="Minst 8 tecken"
+                        />
+                        {errors.password && <p className="text-xs text-destructive mt-1">{errors.password}</p>}
+                      </div>
+                      <div>
+                        <Label htmlFor="confirm_password">Bekräfta lösenord *</Label>
+                        <Input
+                          id="confirm_password"
+                          type="password"
+                          value={formData.confirm_password}
+                          onChange={(e) => setFormData({ ...formData, confirm_password: e.target.value })}
+                          className={errors.confirm_password ? "border-destructive" : ""}
+                        />
+                        {errors.confirm_password && <p className="text-xs text-destructive mt-1">{errors.confirm_password}</p>}
+                      </div>
                     </div>
 
                     <div className="border-t pt-6">
