@@ -19,6 +19,7 @@ import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import BliPartner from "./pages/BliPartner";
 import MinaOfferter from "./pages/MinaOfferter";
+import CustomerDashboard from "./pages/CustomerDashboard";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import PartnerDashboard from "./pages/partner/PartnerDashboard";
 
@@ -48,6 +49,7 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/bli-partner" element={<BliPartner />} />
               <Route path="/mina-offerter" element={<MinaOfferter />} />
+              <Route path="/dashboard" element={<CustomerDashboard />} />
               
               {/* Admin Routes */}
               <Route path="/admin" element={<AdminDashboard />} />
