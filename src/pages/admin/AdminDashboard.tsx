@@ -71,6 +71,7 @@ interface QuoteRequest {
   notes: string | null;
   parking_restrictions: boolean | null;
   home_visit_requested: boolean | null;
+  contact_preference: string | null;
   status: string | null;
   created_at: string;
 }
