@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
@@ -7,104 +7,106 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { Mail, ArrowLeft, CheckCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Mail, ArrowLeft, Lock, User } from "lucide-react";
 import { z } from "zod";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 
 const emailSchema = z.string().email("Ange en giltig e-postadress");
+const passwordSchema = z.string().min(6, "Lösenordet måste vara minst 6 tecken");
 
 const Auth = () => {
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
-  const { signInWithMagicLink } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate("/");
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     
     // Validate email
-    const result = emailSchema.safeParse(email);
-    if (!result.success) {
-      setError(result.error.issues[0].message);
+    const emailResult = emailSchema.safeParse(email);
+    if (!emailResult.success) {
+      setError(emailResult.error.issues[0].message);
+      return;
+    }
+
+    // Validate password
+    const passwordResult = passwordSchema.safeParse(password);
+    if (!passwordResult.success) {
+      setError(passwordResult.error.issues[0].message);
       return;
     }
 
     setLoading(true);
     
-    const { error: authError } = await signInWithMagicLink(email);
-    
-    if (authError) {
+    try {
+      if (isSignUp) {
+        const { error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/`,
+          },
+        });
+        
+        if (signUpError) {
+          if (signUpError.message.includes("already registered")) {
+            setError("Den här e-postadressen är redan registrerad. Försök logga in istället.");
+          } else {
+            setError(signUpError.message);
+          }
+        } else {
+          toast({
+            title: "Konto skapat!",
+            description: "Du är nu inloggad.",
+          });
+          navigate("/");
+        }
+      } else {
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        
+        if (signInError) {
+          if (signInError.message.includes("Invalid login credentials")) {
+            setError("Fel e-post eller lösenord. Försök igen.");
+          } else {
+            setError(signInError.message);
+          }
+        } else {
+          toast({
+            title: "Inloggad!",
+            description: "Välkommen tillbaka.",
+          });
+          navigate("/");
+        }
+      }
+    } catch (err) {
       setError("Något gick fel. Försök igen.");
-      toast({
-        variant: "destructive",
-        title: "Fel",
-        description: authError.message,
-      });
-    } else {
-      setSent(true);
-      toast({
-        title: "Länk skickad!",
-        description: "Kolla din inkorg för inloggningslänken.",
-      });
     }
     
     setLoading(false);
   };
 
-  if (sent) {
-    return (
-      <>
-        <Helmet>
-          <title>Kolla din e-post | Flyttbas</title>
-        </Helmet>
-        <Header />
-        <main className="min-h-screen bg-background flex items-center justify-center px-4 py-16">
-          <Card className="w-full max-w-md">
-            <CardHeader className="text-center">
-              <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
-                <CheckCircle className="h-6 w-6 text-green-600" />
-              </div>
-              <CardTitle>Kolla din e-post</CardTitle>
-              <CardDescription>
-                Vi har skickat en inloggningslänk till <strong>{email}</strong>
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground text-center">
-                Klicka på länken i e-postmeddelandet för att logga in. Länken är giltig i 1 timme.
-              </p>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => setSent(false)}
-              >
-                Försök med annan e-post
-              </Button>
-              <Button
-                variant="ghost"
-                className="w-full"
-                onClick={() => navigate("/")}
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Tillbaka till startsidan
-              </Button>
-            </CardContent>
-          </Card>
-        </main>
-        <Footer />
-      </>
-    );
-  }
-
   return (
     <>
       <Helmet>
-        <title>Logga in | Flyttbas</title>
+        <title>{isSignUp ? "Skapa konto" : "Logga in"} | Flyttbas</title>
         <meta name="description" content="Logga in på Flyttbas för att hantera dina flyttförfrågningar och offerter." />
       </Helmet>
       <Header />
@@ -112,11 +114,13 @@ const Auth = () => {
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-              <Mail className="h-6 w-6 text-primary" />
+              {isSignUp ? <User className="h-6 w-6 text-primary" /> : <Lock className="h-6 w-6 text-primary" />}
             </div>
-            <CardTitle>Logga in</CardTitle>
+            <CardTitle>{isSignUp ? "Skapa konto" : "Logga in"}</CardTitle>
             <CardDescription>
-              Ange din e-postadress så skickar vi en inloggningslänk
+              {isSignUp 
+                ? "Registrera dig för att börja använda Flyttbas" 
+                : "Ange dina uppgifter för att logga in"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -130,22 +134,47 @@ const Auth = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   autoComplete="email"
-                  aria-invalid={error ? "true" : "false"}
-                  aria-describedby={error ? "email-error" : undefined}
                 />
-                {error && (
-                  <p id="email-error" className="text-sm text-destructive" role="alert">
-                    {error}
-                  </p>
-                )}
               </div>
               
+              <div className="space-y-2">
+                <Label htmlFor="password">Lösenord</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete={isSignUp ? "new-password" : "current-password"}
+                />
+              </div>
+
+              {error && (
+                <p className="text-sm text-destructive" role="alert">
+                  {error}
+                </p>
+              )}
+              
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Skickar..." : "Skicka inloggningslänk"}
+                {loading ? "Vänta..." : (isSignUp ? "Skapa konto" : "Logga in")}
               </Button>
             </form>
 
-            <div className="mt-6 text-center">
+            <div className="mt-4 text-center">
+              <Button
+                variant="link"
+                onClick={() => {
+                  setIsSignUp(!isSignUp);
+                  setError("");
+                }}
+              >
+                {isSignUp 
+                  ? "Har du redan ett konto? Logga in" 
+                  : "Inget konto? Skapa ett"}
+              </Button>
+            </div>
+
+            <div className="mt-2 text-center">
               <Button
                 variant="ghost"
                 onClick={() => navigate("/")}
