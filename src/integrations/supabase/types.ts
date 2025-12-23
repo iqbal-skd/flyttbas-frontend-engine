@@ -193,6 +193,9 @@ export type Database = {
       }
       partners: {
         Row: {
+          address: string | null
+          address_lat: number | null
+          address_lng: number | null
           average_rating: number | null
           company_name: string
           completed_jobs: number | null
@@ -221,6 +224,9 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          address?: string | null
+          address_lat?: number | null
+          address_lng?: number | null
           average_rating?: number | null
           company_name: string
           completed_jobs?: number | null
@@ -249,6 +255,9 @@ export type Database = {
           user_id: string
         }
         Update: {
+          address?: string | null
+          address_lat?: number | null
+          address_lng?: number | null
           average_rating?: number | null
           company_name?: string
           completed_jobs?: number | null
