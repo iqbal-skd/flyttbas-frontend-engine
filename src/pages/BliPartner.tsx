@@ -135,15 +135,34 @@ const BliPartner = () => {
     setSubmitting(true);
 
     try {
-      // First, check if a user exists with this email or create a placeholder
+      // Determine userId: check if logged in, or if user exists with this email, or create new user
       let userId: string;
       
       const { data: { user: currentUser } } = await supabase.auth.getUser();
       
       if (currentUser) {
+        // User is logged in, use their ID
         userId = currentUser.id;
       } else {
-        // Sign up the user with their chosen password
+        // Check if a user already exists with this email by checking profiles table
+        const { data: existingProfile } = await supabase
+          .from('profiles')
+          .select('user_id')
+          .eq('email', formData.contact_email)
+          .maybeSingle();
+        
+        if (existingProfile) {
+          // User exists but is not logged in - they need to log in first for security
+          toast({
+            variant: "destructive",
+            title: "E-post redan registrerad",
+            description: "Denna e-postadress är redan registrerad. Vänligen logga in först för att bli partner.",
+          });
+          setSubmitting(false);
+          return;
+        }
+        
+        // No user exists, create a new one with their chosen password
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email: formData.contact_email,
           password: formData.password,
@@ -156,7 +175,7 @@ const BliPartner = () => {
         });
         
         if (signUpError) {
-          // User might already exist
+          // Handle edge case where user exists in auth but not profiles
           if (signUpError.message.includes('already registered')) {
             toast({
               variant: "destructive",
@@ -174,6 +193,7 @@ const BliPartner = () => {
         }
         
         userId = signUpData.user.id;
+        // The trigger handle_new_user will automatically create profile and assign 'customer' role
       }
 
       // Insert partner application
