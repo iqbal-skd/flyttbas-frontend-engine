@@ -156,24 +156,26 @@ export const PartnerDetailDialog = ({
       return;
     }
     
-    // Send approval notification email when partner is approved
-    if (newStatus === "approved") {
+    // Send notification emails based on status change
+    if (newStatus === "approved" || newStatus === "more_info_requested") {
       try {
+        const emailType = newStatus === "approved" ? "partner_approved" : "partner_more_info";
         const { error: emailError } = await supabase.functions.invoke("send-confirmation-email", {
           body: {
-            type: "partner_approved",
+            type: emailType,
             email: partner.contact_email,
             name: partner.contact_name,
             companyName: partner.company_name,
+            statusReason: reason,
           },
         });
         
         if (emailError) {
-          console.error("Failed to send approval email:", emailError);
+          console.error(`Failed to send ${emailType} email:`, emailError);
           // Don't fail the status update if email fails
         }
       } catch (emailErr) {
-        console.error("Error sending approval email:", emailErr);
+        console.error("Error sending notification email:", emailErr);
       }
     }
     

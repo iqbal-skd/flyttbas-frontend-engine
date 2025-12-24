@@ -15,11 +15,12 @@ const corsHeaders = {
 };
 
 interface EmailRequest {
-  type: "partner_application" | "quote_request" | "partner_approved";
+  type: "partner_application" | "quote_request" | "partner_approved" | "partner_more_info";
   email: string;
   name: string;
   companyName?: string;
   quoteId?: string;
+  statusReason?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -33,7 +34,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { type, email, name, companyName, quoteId }: EmailRequest = await req.json();
+    const { type, email, name, companyName, quoteId, statusReason }: EmailRequest = await req.json();
     console.log(`Processing ${type} email for ${email}`);
 
     // Create Supabase client to generate magic link
@@ -41,14 +42,105 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Generate magic link for the user
-    const siteUrl = Deno.env.get("SITE_URL") || "https://preview--flyttbas.lovable.app";
+    // Generate magic link for the user - ensure no trailing slash
+    const siteUrlRaw = Deno.env.get("SITE_URL") || "https://preview--flyttbas.lovable.app";
+    const siteUrl = siteUrlRaw.replace(/\/+$/, "");
     
     let redirectTo: string;
     let subject: string;
     let htmlContent: string;
     
-    if (type === "partner_approved") {
+    if (type === "partner_more_info") {
+      // More info requested notification
+      redirectTo = `${siteUrl}/partner`;
+      subject = "Vi behöver mer information - Flyttbas";
+      
+      htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #1a365d; margin: 0;">Flyttbas</h1>
+          </div>
+          
+          <div style="background-color: #dbeafe; border-radius: 8px; padding: 20px; margin-bottom: 30px; text-align: center;">
+            <h2 style="color: #1e40af; margin: 0;">Hej ${name}!</h2>
+            <p style="color: #1e40af; margin: 10px 0 0 0; font-size: 18px;">Vi behöver lite mer information om din ansökan</p>
+          </div>
+          
+          <p>Tack för din partneransökan för <strong>${companyName}</strong>.</p>
+          
+          <p>Vårt team har granskat din ansökan och behöver lite mer information innan vi kan gå vidare.</p>
+          
+          ${statusReason ? `
+          <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0;">
+            <h4 style="color: #92400e; margin: 0 0 10px 0;">Meddelande från administratören:</h4>
+            <p style="color: #78350f; margin: 0;">${statusReason}</p>
+          </div>
+          ` : ''}
+          
+          <div style="background-color: #f7fafc; border-radius: 8px; padding: 20px; margin: 30px 0;">
+            <h3 style="color: #1a365d; margin-top: 0;">Vad behöver du göra?</h3>
+            <ol style="padding-left: 20px; margin: 0;">
+              <li style="margin-bottom: 10px;">Logga in på din partnerpanel</li>
+              <li style="margin-bottom: 10px;">Uppdatera din information enligt ovan</li>
+              <li style="margin-bottom: 10px;">Din ansökan kommer automatiskt att granskas igen</li>
+            </ol>
+          </div>
+          
+          <p style="text-align: center; margin: 30px 0;">
+            <a href="${siteUrl}/partner" style="display: inline-block; background-color: #2563eb; color: white; text-decoration: none; padding: 14px 35px; border-radius: 6px; font-weight: bold; font-size: 16px;">Uppdatera din ansökan</a>
+          </p>
+          
+          <p style="color: #666; font-size: 14px;">
+            Har du frågor? Kontakta oss på <a href="mailto:support@flyttbas.se" style="color: #2563eb;">support@flyttbas.se</a>
+          </p>
+          
+          <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
+          
+          <p style="color: #999; font-size: 12px; text-align: center;">
+            © ${new Date().getFullYear()} Flyttbas. Sveriges ledande marknadsplats för flyttjänster.
+          </p>
+        </body>
+        </html>
+      `;
+      
+      // Send email directly without magic link
+      const resendResponse = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${RESEND_API_KEY}`,
+        },
+        body: JSON.stringify({
+          from: FROM_EMAIL,
+          to: [email],
+          subject: subject,
+          html: htmlContent,
+        }),
+      });
+
+      if (!resendResponse.ok) {
+        const errorData = await resendResponse.text();
+        console.error("Resend API error:", errorData);
+        throw new Error(`Failed to send email: ${errorData}`);
+      }
+
+      const emailResponse = await resendResponse.json();
+      console.log("More info requested email sent successfully:", emailResponse);
+
+      return new Response(JSON.stringify({ success: true, emailId: emailResponse.id }), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders,
+        },
+      });
+    } else if (type === "partner_approved") {
       // Partner approval notification - no magic link needed
       redirectTo = `${siteUrl}/partner`;
       subject = "Din partneransökan har godkänts! - Flyttbas";
