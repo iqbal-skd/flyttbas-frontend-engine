@@ -89,6 +89,7 @@ interface Offer {
   quote_requests: {
     customer_name: string;
     customer_email: string;
+    customer_phone: string | null;
     from_address: string;
     to_address: string;
     move_date: string;
@@ -156,7 +157,7 @@ const PartnerDashboard = () => {
 
         const { data: offersData } = await supabase
           .from('offers')
-          .select('*, quote_requests(customer_name, customer_email, from_address, to_address, move_date)')
+          .select('*, quote_requests(customer_name, customer_email, customer_phone, from_address, to_address, move_date)')
           .eq('partner_id', partnerData.id)
           .order('created_at', { ascending: false });
 
@@ -584,6 +585,11 @@ const PartnerDashboard = () => {
                                       <p className="text-sm text-muted-foreground">
                                         {offer.quote_requests?.customer_email}
                                       </p>
+                                      {offer.quote_requests?.customer_phone && (
+                                        <p className="text-sm text-muted-foreground">
+                                          📞 {offer.quote_requests.customer_phone}
+                                        </p>
+                                      )}
                                     </>
                                   ) : (
                                     <p className="font-medium text-muted-foreground italic">

@@ -5,3 +5,9 @@ verify_jwt = false
 
 [functions.google-maps]
 verify_jwt = false
+
+[functions.send-offer-notification]
+verify_jwt = false
+
+[functions.send-offer-accepted]
+verify_jwt = false
