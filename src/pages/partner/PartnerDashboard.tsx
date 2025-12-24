@@ -13,18 +13,25 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   FileText,
   Send,
-  DollarSign,
   MapPin,
   Calendar,
-  Clock,
   Star,
   LogOut,
   AlertCircle,
   Settings,
   Ruler,
+  ChevronDown,
+  ChevronRight,
+  Package,
+  Home,
+  Building,
+  Weight,
+  Clock,
+  CheckCircle2,
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 
@@ -42,6 +49,8 @@ interface Partner {
 interface QuoteRequest {
   id: string;
   customer_name: string;
+  customer_email: string;
+  customer_phone: string | null;
   from_address: string;
   from_postal_code: string;
   to_address: string;
@@ -53,20 +62,25 @@ interface QuoteRequest {
   dwelling_type: string;
   stairs_from: number;
   stairs_to: number;
+  carry_from_m: number | null;
+  carry_to_m: number | null;
   heavy_items: any;
   packing_hours: number;
   assembly_hours: number;
+  notes: string | null;
   status: string;
   created_at: string;
 }
 
 interface Offer {
   id: string;
+  quote_request_id: string;
   total_price: number;
   status: string;
   created_at: string;
   quote_requests: {
     customer_name: string;
+    customer_email: string;
     from_address: string;
     to_address: string;
     move_date: string;
@@ -81,6 +95,7 @@ const PartnerDashboard = () => {
   const [partner, setPartner] = useState<Partner | null>(null);
   const [quotes, setQuotes] = useState<QuoteRequest[]>([]);
   const [myOffers, setMyOffers] = useState<Offer[]>([]);
+  const [expandedQuotes, setExpandedQuotes] = useState<Set<string>>(new Set());
   const [selectedQuote, setSelectedQuote] = useState<QuoteRequest | null>(null);
   const [offerForm, setOfferForm] = useState({
     total_price: "",
@@ -92,6 +107,10 @@ const PartnerDashboard = () => {
   const [submitting, setSubmitting] = useState(false);
   const [updatingSettings, setUpdatingSettings] = useState(false);
   const [maxDistance, setMaxDistance] = useState<number>(50);
+
+  // Get IDs of quotes the partner has already made offers on
+  const quotesWithOffers = new Set(myOffers.map(o => o.quote_request_id));
+
   useEffect(() => {
     if (!loading && (!user || !isPartner)) {
       navigate("/bli-partner");
@@ -130,7 +149,7 @@ const PartnerDashboard = () => {
         // Fetch my offers
         const { data: offersData } = await supabase
           .from('offers')
-          .select('*, quote_requests(customer_name, from_address, to_address, move_date)')
+          .select('*, quote_requests(customer_name, customer_email, from_address, to_address, move_date)')
           .eq('partner_id', partnerData.id)
           .order('created_at', { ascending: false });
 
@@ -141,18 +160,51 @@ const PartnerDashboard = () => {
     }
   };
 
+  const toggleQuoteExpanded = (quoteId: string) => {
+    const newExpanded = new Set(expandedQuotes);
+    if (newExpanded.has(quoteId)) {
+      newExpanded.delete(quoteId);
+    } else {
+      newExpanded.add(quoteId);
+    }
+    setExpandedQuotes(newExpanded);
+  };
+
+  const handleSelectQuote = (quote: QuoteRequest) => {
+    // Don't allow selecting if already offered
+    if (quotesWithOffers.has(quote.id)) {
+      toast({
+        variant: "destructive",
+        title: "Offert redan skickad",
+        description: "Du har redan lämnat en offert på denna förfrågan.",
+      });
+      return;
+    }
+    setSelectedQuote(quote);
+  };
+
   const handleSubmitOffer = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedQuote || !partner) return;
 
+    // Double-check no existing offer
+    if (quotesWithOffers.has(selectedQuote.id)) {
+      toast({
+        variant: "destructive",
+        title: "Offert redan skickad",
+        description: "Du har redan lämnat en offert på denna förfrågan.",
+      });
+      return;
+    }
+
     setSubmitting(true);
 
     const totalPrice = parseInt(offerForm.total_price);
-    const rutDeduction = Math.min(Math.floor(totalPrice * 0.5), 75000); // Max 50% up to 75000 SEK
+    const rutDeduction = Math.min(Math.floor(totalPrice * 0.5), 75000);
     const priceBeforeRut = totalPrice;
 
     try {
-      const { error } = await supabase.from('offers').insert({
+      const { data: offerData, error } = await supabase.from('offers').insert({
         quote_request_id: selectedQuote.id,
         partner_id: partner.id,
         total_price: totalPrice,
@@ -163,8 +215,8 @@ const PartnerDashboard = () => {
         available_date: selectedQuote.move_date,
         time_window: offerForm.time_window,
         terms: offerForm.terms || null,
-        valid_until: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
-      });
+        valid_until: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      }).select().single();
 
       if (error) throw error;
 
@@ -174,9 +226,26 @@ const PartnerDashboard = () => {
         .update({ status: 'offers_received' })
         .eq('id', selectedQuote.id);
 
+      // Send email notification to customer
+      try {
+        await supabase.functions.invoke('send-offer-notification', {
+          body: {
+            customerEmail: selectedQuote.customer_email,
+            customerName: selectedQuote.customer_name,
+            partnerName: partner.company_name,
+            offerPrice: totalPrice,
+            moveDate: selectedQuote.move_date,
+            quoteId: selectedQuote.id,
+          }
+        });
+      } catch (emailError) {
+        console.error("Failed to send notification email:", emailError);
+        // Don't fail the whole operation if email fails
+      }
+
       toast({
         title: "Offert skickad!",
-        description: "Kunden kommer meddelas om din offert.",
+        description: "Kunden har meddelats om din offert.",
       });
 
       setSelectedQuote(null);
@@ -232,6 +301,12 @@ const PartnerDashboard = () => {
     }
   };
 
+  // Check if partner's offer for a quote is approved
+  const isOfferApproved = (quoteId: string) => {
+    const offer = myOffers.find(o => o.quote_request_id === quoteId);
+    return offer?.status === 'approved';
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -249,6 +324,11 @@ const PartnerDashboard = () => {
     more_info_requested: { message: "Vi behöver mer information. Kolla din e-post.", variant: "destructive" },
     rejected: { message: "Din ansökan har avslagits. Kontakta oss för mer information.", variant: "destructive" },
     suspended: { message: "Ditt konto är tillfälligt avstängt.", variant: "destructive" },
+  };
+
+  const formatHeavyItems = (items: any) => {
+    if (!items || !Array.isArray(items) || items.length === 0) return null;
+    return items.filter((item: any) => item.quantity > 0).map((item: any) => `${item.name}: ${item.quantity}`).join(', ');
   };
 
   return (
@@ -319,49 +399,167 @@ const PartnerDashboard = () => {
                         </CardContent>
                       </Card>
                     ) : (
-                      quotes.map((quote) => (
-                        <Card 
-                          key={quote.id} 
-                          className={`cursor-pointer transition-shadow hover:shadow-md ${selectedQuote?.id === quote.id ? 'ring-2 ring-primary' : ''}`}
-                          onClick={() => setSelectedQuote(quote)}
-                        >
-                          <CardContent className="pt-6">
-                            <div className="flex items-start justify-between mb-3">
-                              <div>
-                                <div className="flex items-center gap-2 mb-1">
-                                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                                  <span className="font-medium">
-                                    {new Date(quote.move_date).toLocaleDateString('sv-SE')}
-                                  </span>
-                                  {quote.move_start_time && (
-                                    <span className="text-sm text-muted-foreground">
-                                      kl {quote.move_start_time}
-                                    </span>
-                                  )}
+                      quotes.map((quote) => {
+                        const hasOffer = quotesWithOffers.has(quote.id);
+                        const isExpanded = expandedQuotes.has(quote.id);
+                        
+                        return (
+                          <Card 
+                            key={quote.id} 
+                            className={`transition-shadow ${hasOffer ? 'opacity-60' : 'hover:shadow-md'} ${selectedQuote?.id === quote.id ? 'ring-2 ring-primary' : ''}`}
+                          >
+                            <Collapsible open={isExpanded} onOpenChange={() => toggleQuoteExpanded(quote.id)}>
+                              <CardContent className="pt-6">
+                                {/* Summary - Always visible */}
+                                <div className="flex items-start justify-between mb-3">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                                      <span className="font-medium">
+                                        {new Date(quote.move_date).toLocaleDateString('sv-SE')}
+                                      </span>
+                                      {quote.move_start_time && (
+                                        <span className="text-sm text-muted-foreground">
+                                          kl {quote.move_start_time}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    {hasOffer && (
+                                      <Badge className="bg-green-100 text-green-800">
+                                        <CheckCircle2 className="h-3 w-3 mr-1" />
+                                        Offert skickad
+                                      </Badge>
+                                    )}
+                                    <Badge variant="outline">{quote.dwelling_type}</Badge>
+                                  </div>
                                 </div>
-                              </div>
-                              <Badge variant="outline">{quote.dwelling_type}</Badge>
-                            </div>
-                            
-                            <div className="space-y-1 text-sm">
-                              <div className="flex items-start gap-2">
-                                <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
-                                <div>
-                                  <p>{quote.from_address}</p>
-                                  <p className="text-muted-foreground">→ {quote.to_address}</p>
+                                
+                                <div className="space-y-1 text-sm mb-3">
+                                  <div className="flex items-start gap-2">
+                                    <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
+                                    <div>
+                                      <p>{quote.from_postal_code}</p>
+                                      <p className="text-muted-foreground">→ {quote.to_postal_code}</p>
+                                    </div>
+                                  </div>
                                 </div>
-                              </div>
-                            </div>
 
-                            <div className="flex flex-wrap gap-2 mt-3 text-xs">
-                              <Badge variant="secondary">{quote.area_m2} m²</Badge>
-                              {quote.rooms && <Badge variant="secondary">{quote.rooms} rum</Badge>}
-                              {quote.stairs_from > 0 && <Badge variant="secondary">{quote.stairs_from} tr (från)</Badge>}
-                              {quote.stairs_to > 0 && <Badge variant="secondary">{quote.stairs_to} tr (till)</Badge>}
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))
+                                <div className="flex flex-wrap gap-2 text-xs mb-3">
+                                  <Badge variant="secondary">{quote.area_m2} m²</Badge>
+                                  {quote.rooms && <Badge variant="secondary">{quote.rooms} rum</Badge>}
+                                </div>
+
+                                {/* Expand/Collapse Button */}
+                                <CollapsibleTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="w-full mt-2">
+                                    {isExpanded ? (
+                                      <>
+                                        <ChevronDown className="h-4 w-4 mr-2" />
+                                        Dölj detaljer
+                                      </>
+                                    ) : (
+                                      <>
+                                        <ChevronRight className="h-4 w-4 mr-2" />
+                                        Visa alla detaljer
+                                      </>
+                                    )}
+                                  </Button>
+                                </CollapsibleTrigger>
+
+                                {/* Expanded Details */}
+                                <CollapsibleContent className="mt-4 space-y-4 border-t pt-4">
+                                  {/* Full Addresses */}
+                                  <div className="space-y-2">
+                                    <h4 className="font-medium text-sm flex items-center gap-2">
+                                      <MapPin className="h-4 w-4" />
+                                      Adresser
+                                    </h4>
+                                    <div className="text-sm space-y-1 pl-6">
+                                      <p><span className="text-muted-foreground">Från:</span> {quote.from_address}, {quote.from_postal_code}</p>
+                                      <p><span className="text-muted-foreground">Till:</span> {quote.to_address}, {quote.to_postal_code}</p>
+                                    </div>
+                                  </div>
+
+                                  {/* Property Details */}
+                                  <div className="space-y-2">
+                                    <h4 className="font-medium text-sm flex items-center gap-2">
+                                      <Home className="h-4 w-4" />
+                                      Bostadsdetaljer
+                                    </h4>
+                                    <div className="grid grid-cols-2 gap-2 text-sm pl-6">
+                                      <p><span className="text-muted-foreground">Typ:</span> {quote.dwelling_type}</p>
+                                      <p><span className="text-muted-foreground">Yta:</span> {quote.area_m2} m²</p>
+                                      {quote.rooms && <p><span className="text-muted-foreground">Rum:</span> {quote.rooms}</p>}
+                                    </div>
+                                  </div>
+
+                                  {/* Stairs & Carry Distance */}
+                                  {(quote.stairs_from > 0 || quote.stairs_to > 0 || quote.carry_from_m || quote.carry_to_m) && (
+                                    <div className="space-y-2">
+                                      <h4 className="font-medium text-sm flex items-center gap-2">
+                                        <Building className="h-4 w-4" />
+                                        Trappor & Bäravstånd
+                                      </h4>
+                                      <div className="grid grid-cols-2 gap-2 text-sm pl-6">
+                                        {quote.stairs_from > 0 && <p><span className="text-muted-foreground">Trappor (från):</span> {quote.stairs_from} tr</p>}
+                                        {quote.stairs_to > 0 && <p><span className="text-muted-foreground">Trappor (till):</span> {quote.stairs_to} tr</p>}
+                                        {quote.carry_from_m && quote.carry_from_m > 0 && <p><span className="text-muted-foreground">Bäravstånd (från):</span> {quote.carry_from_m} m</p>}
+                                        {quote.carry_to_m && quote.carry_to_m > 0 && <p><span className="text-muted-foreground">Bäravstånd (till):</span> {quote.carry_to_m} m</p>}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Heavy Items */}
+                                  {formatHeavyItems(quote.heavy_items) && (
+                                    <div className="space-y-2">
+                                      <h4 className="font-medium text-sm flex items-center gap-2">
+                                        <Weight className="h-4 w-4" />
+                                        Tunga föremål
+                                      </h4>
+                                      <p className="text-sm pl-6">{formatHeavyItems(quote.heavy_items)}</p>
+                                    </div>
+                                  )}
+
+                                  {/* Services */}
+                                  {(quote.packing_hours > 0 || quote.assembly_hours > 0) && (
+                                    <div className="space-y-2">
+                                      <h4 className="font-medium text-sm flex items-center gap-2">
+                                        <Package className="h-4 w-4" />
+                                        Tilläggstjänster
+                                      </h4>
+                                      <div className="text-sm pl-6 space-y-1">
+                                        {quote.packing_hours > 0 && <p>Packning: {quote.packing_hours} timmar</p>}
+                                        {quote.assembly_hours > 0 && <p>Montering/Demontering: {quote.assembly_hours} timmar</p>}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Notes */}
+                                  {quote.notes && (
+                                    <div className="space-y-2">
+                                      <h4 className="font-medium text-sm">Kundanteckning</h4>
+                                      <p className="text-sm pl-6 italic">{quote.notes}</p>
+                                    </div>
+                                  )}
+
+                                  {/* Select Button */}
+                                  {!hasOffer && (
+                                    <Button 
+                                      onClick={() => handleSelectQuote(quote)} 
+                                      className="w-full mt-4"
+                                      variant={selectedQuote?.id === quote.id ? "secondary" : "default"}
+                                    >
+                                      {selectedQuote?.id === quote.id ? "Vald - Fyll i offert →" : "Lämna offert på detta jobb"}
+                                    </Button>
+                                  )}
+                                </CollapsibleContent>
+                              </CardContent>
+                            </Collapsible>
+                          </Card>
+                        );
+                      })
                     )}
                   </div>
 
@@ -372,7 +570,7 @@ const PartnerDashboard = () => {
                         <CardHeader>
                           <CardTitle>Lämna offert</CardTitle>
                           <CardDescription>
-                            Flytt {new Date(selectedQuote.move_date).toLocaleDateString('sv-SE')}
+                            Flytt {new Date(selectedQuote.move_date).toLocaleDateString('sv-SE')} • {selectedQuote.from_postal_code} → {selectedQuote.to_postal_code}
                           </CardDescription>
                         </CardHeader>
                         <CardContent>
@@ -442,6 +640,11 @@ const PartnerDashboard = () => {
                               />
                             </div>
 
+                            <div className="bg-muted/50 p-3 rounded-lg text-sm text-muted-foreground">
+                              <Clock className="h-4 w-4 inline mr-2" />
+                              Offerten kan inte ändras efter att den skickats.
+                            </div>
+
                             <Button type="submit" className="w-full" disabled={submitting}>
                               {submitting ? "Skickar..." : "Skicka offert"}
                             </Button>
@@ -452,7 +655,7 @@ const PartnerDashboard = () => {
                       <Card>
                         <CardContent className="pt-6 text-center text-muted-foreground">
                           <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                          <p>Välj ett jobb till vänster för att lämna offert</p>
+                          <p>Expandera ett jobb och klicka "Lämna offert" för att börja</p>
                         </CardContent>
                       </Card>
                     )}
@@ -464,7 +667,7 @@ const PartnerDashboard = () => {
                 <Card>
                   <CardHeader>
                     <CardTitle>Mina offerter</CardTitle>
-                    <CardDescription>Offerter du har skickat</CardDescription>
+                    <CardDescription>Offerter du har skickat (kan inte ändras)</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
@@ -473,33 +676,48 @@ const PartnerDashboard = () => {
                           Du har inte skickat några offerter ännu
                         </p>
                       ) : (
-                        myOffers.map((offer) => (
-                          <div key={offer.id} className="border rounded-lg p-4">
-                            <div className="flex items-start justify-between">
-                              <div>
-                                <p className="font-medium">{offer.quote_requests?.customer_name}</p>
-                                <p className="text-sm text-muted-foreground">
-                                  {offer.quote_requests?.from_address} → {offer.quote_requests?.to_address}
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                  {offer.quote_requests?.move_date && new Date(offer.quote_requests.move_date).toLocaleDateString('sv-SE')}
-                                </p>
-                              </div>
-                              <div className="text-right">
-                                <p className="font-bold">{offer.total_price.toLocaleString('sv-SE')} kr</p>
-                                <Badge className={
-                                  offer.status === 'approved' ? 'bg-green-100 text-green-800' :
-                                  offer.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                                  'bg-yellow-100 text-yellow-800'
-                                }>
-                                  {offer.status === 'pending' ? 'Väntar' : 
-                                   offer.status === 'approved' ? 'Godkänd' : 
-                                   offer.status === 'rejected' ? 'Avvisad' : offer.status}
-                                </Badge>
+                        myOffers.map((offer) => {
+                          const showCustomerDetails = offer.status === 'approved';
+                          
+                          return (
+                            <div key={offer.id} className="border rounded-lg p-4">
+                              <div className="flex items-start justify-between">
+                                <div>
+                                  {showCustomerDetails ? (
+                                    <>
+                                      <p className="font-medium">{offer.quote_requests?.customer_name}</p>
+                                      <p className="text-sm text-muted-foreground">
+                                        {offer.quote_requests?.customer_email}
+                                      </p>
+                                    </>
+                                  ) : (
+                                    <p className="font-medium text-muted-foreground italic">
+                                      Kunduppgifter visas efter godkännande
+                                    </p>
+                                  )}
+                                  <p className="text-sm text-muted-foreground mt-1">
+                                    {offer.quote_requests?.from_address} → {offer.quote_requests?.to_address}
+                                  </p>
+                                  <p className="text-sm text-muted-foreground">
+                                    {offer.quote_requests?.move_date && new Date(offer.quote_requests.move_date).toLocaleDateString('sv-SE')}
+                                  </p>
+                                </div>
+                                <div className="text-right">
+                                  <p className="font-bold">{offer.total_price.toLocaleString('sv-SE')} kr</p>
+                                  <Badge className={
+                                    offer.status === 'approved' ? 'bg-green-100 text-green-800' :
+                                    offer.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                                    'bg-yellow-100 text-yellow-800'
+                                  }>
+                                    {offer.status === 'pending' ? 'Väntar' : 
+                                     offer.status === 'approved' ? 'Godkänd' : 
+                                     offer.status === 'rejected' ? 'Avvisad' : offer.status}
+                                  </Badge>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ))
+                          );
+                        })
                       )}
                     </div>
                   </CardContent>
