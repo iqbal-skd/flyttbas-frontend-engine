@@ -31,14 +31,19 @@ const Auth = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Redirect if already logged in - partners go to /partner, others to /dashboard
+  // Redirect if already logged in - wait for roles to load before redirecting
   useEffect(() => {
+    // Only redirect when we have user AND roles have been checked (roles array exists, even if empty)
     if (!authLoading && user) {
-      if (isPartner) {
-        navigate("/partner");
-      } else {
-        navigate("/dashboard");
-      }
+      // Give a small delay for roles to be fetched
+      const timer = setTimeout(() => {
+        if (isPartner) {
+          navigate("/partner", { replace: true });
+        } else {
+          navigate("/dashboard", { replace: true });
+        }
+      }, 100);
+      return () => clearTimeout(timer);
     }
   }, [user, isPartner, authLoading, navigate]);
 
@@ -83,7 +88,7 @@ const Auth = () => {
             title: "Konto skapat!",
             description: "Du är nu inloggad.",
           });
-          navigate("/dashboard");
+          // Let the useEffect handle the redirect based on roles
         }
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({
@@ -102,7 +107,7 @@ const Auth = () => {
             title: "Inloggad!",
             description: "Välkommen tillbaka.",
           });
-          navigate("/dashboard");
+          // Let the useEffect handle the redirect based on roles
         }
       }
     } catch (err) {
