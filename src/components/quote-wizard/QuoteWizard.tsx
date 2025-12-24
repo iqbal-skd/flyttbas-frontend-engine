@@ -58,7 +58,7 @@ export const QuoteWizard = () => {
       // Check if user is logged in
       const { data: { user } } = await supabase.auth.getUser();
       
-      // Submit to database
+      // Submit to database (recaptcha_token is validated but not stored)
       const { data, error } = await supabase.from('quote_requests').insert({
         customer_name: formData.customer_name,
         customer_email: formData.customer_email,
@@ -84,7 +84,6 @@ export const QuoteWizard = () => {
         assembly_hours: formData.assembly_hours ? parseInt(formData.assembly_hours) : 0,
         home_visit_requested: formData.home_visit_requested || false,
         notes: formData.notes || null,
-        recaptcha_token: recaptchaToken || null,
         status: 'pending',
         expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
       }).select().single();
