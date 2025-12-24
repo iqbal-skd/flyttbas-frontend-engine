@@ -8,6 +8,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  rolesLoaded: boolean;
   roles: UserRole[];
   isAdmin: boolean;
   isPartner: boolean;
@@ -21,6 +22,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [rolesLoaded, setRolesLoaded] = useState(false);
   const [roles, setRoles] = useState<UserRole[]>([]);
 
   useEffect(() => {
@@ -55,6 +57,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const fetchUserRoles = async (userId: string) => {
+    setRolesLoaded(false);
     try {
       const { data, error } = await supabase
         .from('user_roles')
@@ -63,12 +66,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (error) {
         console.error('Error fetching roles:', error);
+        setRolesLoaded(true);
         return;
       }
 
       setRoles((data || []).map(r => r.role as UserRole));
     } catch (err) {
       console.error('Error fetching roles:', err);
+    } finally {
+      setRolesLoaded(true);
     }
   };
 
@@ -90,6 +96,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
     setSession(null);
     setRoles([]);
+    setRolesLoaded(false);
   };
 
   const isAdmin = roles.includes('admin');
@@ -100,6 +107,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       user,
       session,
       loading,
+      rolesLoaded,
       roles,
       isAdmin,
       isPartner,

@@ -27,27 +27,23 @@ const Auth = () => {
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("password");
-  const { user, isPartner, isAdmin, loading: authLoading, signInWithMagicLink } = useAuth();
+  const { user, isPartner, isAdmin, loading: authLoading, rolesLoaded, signInWithMagicLink } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
   // Redirect if already logged in - wait for roles to load before redirecting
   useEffect(() => {
-    // Only redirect when we have user AND roles have been checked (roles array exists, even if empty)
-    if (!authLoading && user) {
-      // Give a small delay for roles to be fetched
-      const timer = setTimeout(() => {
-        if (isAdmin) {
-          navigate("/admin", { replace: true });
-        } else if (isPartner) {
-          navigate("/partner", { replace: true });
-        } else {
-          navigate("/dashboard", { replace: true });
-        }
-      }, 100);
-      return () => clearTimeout(timer);
+    // Only redirect when we have user AND roles have been loaded
+    if (!authLoading && user && rolesLoaded) {
+      if (isAdmin) {
+        navigate("/admin", { replace: true });
+      } else if (isPartner) {
+        navigate("/partner", { replace: true });
+      } else {
+        navigate("/dashboard", { replace: true });
+      }
     }
-  }, [user, isAdmin, isPartner, authLoading, navigate]);
+  }, [user, isAdmin, isPartner, authLoading, rolesLoaded, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
