@@ -129,10 +129,21 @@ const Auth = () => {
     setMagicLinkLoading(true);
     
     try {
-      const { error } = await signInWithMagicLink(magicLinkEmail);
+      // Use signInWithOtp with shouldCreateUser: false to prevent auto-creating users
+      const { error } = await supabase.auth.signInWithOtp({
+        email: magicLinkEmail,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth`,
+          shouldCreateUser: false,
+        },
+      });
       
       if (error) {
-        setError(error.message);
+        if (error.message.includes("Signups not allowed") || error.message.includes("otp_disabled")) {
+          setError("Ingen användare hittades med denna e-postadress. Vänligen skapa ett konto först.");
+        } else {
+          setError(error.message);
+        }
       } else {
         setMagicLinkSent(true);
         toast({
