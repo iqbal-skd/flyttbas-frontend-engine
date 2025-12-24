@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Privatflytt from "./pages/Privatflytt";
 import Kontorsflytt from "./pages/Kontorsflytt";
@@ -46,18 +47,36 @@ const App = () => (
               <Route path="/blogg/:slug" element={<BlogPost />} />
               <Route path="/flyttfirma/:slug" element={<LocalArea />} />
               
-              {/* Auth & User Routes */}
+              {/* Auth & Public Routes */}
               <Route path="/auth" element={<Auth />} />
               <Route path="/setup-password" element={<SetupPassword />} />
               <Route path="/bli-partner" element={<BliPartner />} />
-              <Route path="/mina-offerter" element={<MinaOfferter />} />
-              <Route path="/dashboard" element={<CustomerDashboard />} />
+              
+              {/* Customer Routes - require authentication */}
+              <Route path="/mina-offerter" element={
+                <ProtectedRoute>
+                  <MinaOfferter />
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard" element={
+                <ProtectedRoute>
+                  <CustomerDashboard />
+                </ProtectedRoute>
+              } />
               
               {/* Admin Routes */}
-              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin" element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } />
               
               {/* Partner Routes */}
-              <Route path="/partner" element={<PartnerDashboard />} />
+              <Route path="/partner" element={
+                <ProtectedRoute requiredRole="partner">
+                  <PartnerDashboard />
+                </ProtectedRoute>
+              } />
               
               {/* Legacy routes */}
               <Route path="/om" element={<Index />} />
