@@ -3,6 +3,8 @@ import { z } from "zod";
 export const formSchema = z.object({
   from_address: z.string().trim().max(200).optional(),
   from_postal_code: z.string().trim().max(10).optional(),
+  from_lat: z.number().optional(),
+  from_lng: z.number().optional(),
   to_address: z.string().trim().max(200).optional(),
   to_postal_code: z.string().trim().max(10).optional(),
   area_m2: z.string().optional(),
@@ -32,6 +34,8 @@ export type FormData = z.infer<typeof formSchema>;
 export const initialFormData: FormData = {
   from_address: "",
   from_postal_code: "",
+  from_lat: undefined,
+  from_lng: undefined,
   to_address: "",
   to_postal_code: "",
   area_m2: "",
