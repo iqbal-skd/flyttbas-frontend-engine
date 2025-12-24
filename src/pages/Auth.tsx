@@ -27,16 +27,20 @@ const Auth = () => {
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("password");
-  const { user, signInWithMagicLink } = useAuth();
+  const { user, isPartner, loading: authLoading, signInWithMagicLink } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Redirect if already logged in
+  // Redirect if already logged in - partners go to /partner, others to /dashboard
   useEffect(() => {
-    if (user) {
-      navigate("/dashboard");
+    if (!authLoading && user) {
+      if (isPartner) {
+        navigate("/partner");
+      } else {
+        navigate("/dashboard");
+      }
     }
-  }, [user, navigate]);
+  }, [user, isPartner, authLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
