@@ -95,7 +95,7 @@ interface Offer {
 }
 
 const PartnerDashboard = () => {
-  const { user, isPartner, loading, signOut } = useAuth();
+  const { user, isPartner, loading, rolesLoaded, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -121,16 +121,16 @@ const PartnerDashboard = () => {
   const quotesWithOffers = new Set(myOffers.map(o => o.quote_request_id));
 
   useEffect(() => {
-    if (!loading && (!user || !isPartner)) {
+    if (!loading && rolesLoaded && (!user || !isPartner)) {
       navigate("/bli-partner");
     }
-  }, [user, isPartner, loading, navigate]);
+  }, [user, isPartner, loading, rolesLoaded, navigate]);
 
   useEffect(() => {
-    if (user && isPartner) {
+    if (user && rolesLoaded && isPartner) {
       fetchPartnerData();
     }
-  }, [user, isPartner]);
+  }, [user, isPartner, rolesLoaded]);
 
   const fetchPartnerData = async () => {
     const { data: partnerData } = await supabase
@@ -316,7 +316,7 @@ const PartnerDashboard = () => {
     return items.filter((item: any) => item.quantity > 0).map((item: any) => `${item.name}: ${item.quantity}`).join(', ');
   };
 
-  if (loading) {
+  if (loading || !rolesLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -325,7 +325,35 @@ const PartnerDashboard = () => {
   }
 
   if (!partner) {
-    return null;
+    return (
+      <>
+        <Helmet>
+          <title>Partner Dashboard | Flyttbas</title>
+        </Helmet>
+        <Header />
+        <main className="min-h-screen bg-secondary/30 py-8">
+          <div className="container mx-auto px-4 text-center">
+            <Card className="max-w-md mx-auto">
+              <CardHeader>
+                <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+                  <AlertCircle className="h-8 w-8 text-primary" />
+                </div>
+                <CardTitle>Ingen partnerregistrering hittad</CardTitle>
+                <CardDescription>
+                  Du har partnerrättigheter men ingen registrerad partnerprofil. Vänligen registrera dig som partner.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button onClick={() => navigate("/bli-partner")} className="w-full">
+                  Registrera dig som partner
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
   }
 
   const statusMessages: Record<string, { message: string; variant: 'default' | 'destructive' | 'outline' }> = {
