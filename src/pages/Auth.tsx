@@ -27,7 +27,7 @@ const Auth = () => {
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("password");
-  const { user, isPartner, loading: authLoading, signInWithMagicLink } = useAuth();
+  const { user, isPartner, isAdmin, loading: authLoading, signInWithMagicLink } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -37,7 +37,9 @@ const Auth = () => {
     if (!authLoading && user) {
       // Give a small delay for roles to be fetched
       const timer = setTimeout(() => {
-        if (isPartner) {
+        if (isAdmin) {
+          navigate("/admin", { replace: true });
+        } else if (isPartner) {
           navigate("/partner", { replace: true });
         } else {
           navigate("/dashboard", { replace: true });
@@ -45,7 +47,7 @@ const Auth = () => {
       }, 100);
       return () => clearTimeout(timer);
     }
-  }, [user, isPartner, authLoading, navigate]);
+  }, [user, isAdmin, isPartner, authLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
