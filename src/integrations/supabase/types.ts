@@ -335,6 +335,8 @@ export type Database = {
           dwelling_type: string
           expires_at: string | null
           from_address: string
+          from_lat: number | null
+          from_lng: number | null
           from_postal_code: string
           heavy_items: Json | null
           home_visit_requested: boolean | null
@@ -366,6 +368,8 @@ export type Database = {
           dwelling_type: string
           expires_at?: string | null
           from_address: string
+          from_lat?: number | null
+          from_lng?: number | null
           from_postal_code: string
           heavy_items?: Json | null
           home_visit_requested?: boolean | null
@@ -397,6 +401,8 @@ export type Database = {
           dwelling_type?: string
           expires_at?: string | null
           from_address?: string
+          from_lat?: number | null
+          from_lng?: number | null
           from_postal_code?: string
           heavy_items?: Json | null
           home_visit_requested?: boolean | null
@@ -493,6 +499,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      haversine_distance: {
+        Args: { lat1: number; lat2: number; lng1: number; lng2: number }
+        Returns: number
       }
       promote_to_admin: { Args: { target_email: string }; Returns: undefined }
       promote_to_partner: { Args: { target_email: string }; Returns: undefined }
