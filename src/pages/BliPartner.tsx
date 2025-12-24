@@ -135,8 +135,26 @@ const BliPartner = () => {
     setSubmitting(true);
 
     try {
+      // First, check if a partner already exists with this email
+      const { data: existingPartner } = await supabase
+        .from('partners')
+        .select('id')
+        .eq('contact_email', formData.contact_email)
+        .maybeSingle();
+      
+      if (existingPartner) {
+        toast({
+          variant: "destructive",
+          title: "E-post redan använd",
+          description: "Denna e-postadress används redan av en annan partner. Använd en annan e-postadress.",
+        });
+        setSubmitting(false);
+        return;
+      }
+      
       // Determine userId: check if logged in, or if user exists with this email, or create new user
       let userId: string;
+      let isNewUser = false;
       
       const { data: { user: currentUser } } = await supabase.auth.getUser();
       
@@ -193,7 +211,21 @@ const BliPartner = () => {
         }
         
         userId = signUpData.user.id;
-        // The trigger handle_new_user will automatically create profile and assign 'customer' role
+        isNewUser = true;
+      }
+
+      // For new users, update role to 'partner' immediately (before trigger creates 'customer')
+      // For existing users, also ensure they have partner role
+      const { error: roleError } = await supabase.rpc('set_partner_role', {
+        target_user_id: userId
+      });
+      
+      if (roleError) {
+        console.error('Failed to set partner role:', roleError);
+        // For new users, this is critical - throw error
+        if (isNewUser) {
+          throw new Error("Kunde inte sätta partnerroll. Försök igen.");
+        }
       }
 
       // Insert partner application
@@ -214,17 +246,6 @@ const BliPartner = () => {
       });
 
       if (partnerError) throw partnerError;
-
-      // Update role from 'customer' (auto-created by trigger) to 'partner'
-      // Uses security definer function to bypass RLS
-      const { error: roleError } = await supabase.rpc('set_partner_role', {
-        target_user_id: userId
-      });
-      
-      if (roleError) {
-        console.error('Failed to set partner role:', roleError);
-        // Don't fail the registration if role update fails
-      }
 
       // Send confirmation email with magic link
       try {
