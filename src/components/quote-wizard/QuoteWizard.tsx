@@ -113,6 +113,8 @@ export const QuoteWizard = () => {
         contact_preference: formData.contact_preference,
         from_address: formData.from_address || '',
         from_postal_code: formData.from_postal_code || '',
+        from_lat: formData.from_lat || null,
+        from_lng: formData.from_lng || null,
         to_address: formData.to_address || '',
         to_postal_code: formData.to_postal_code || '',
         dwelling_type: formData.dwelling_type || 'apartment',

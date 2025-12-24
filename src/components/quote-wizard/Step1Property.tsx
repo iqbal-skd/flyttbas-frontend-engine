@@ -21,15 +21,17 @@ export const Step1Property = ({ formData, setFormData }: StepProps) => {
     }
   }, [formData.from_address, formData.to_address, calculateDistance]);
 
-  const handleFromAddressChange = (address: string, postalCode?: string) => {
+  const handleFromAddressChange = (address: string, postalCode?: string, location?: { lat: number; lng: number }) => {
     setFormData({ 
       ...formData, 
       from_address: address,
-      from_postal_code: postalCode || formData.from_postal_code 
+      from_postal_code: postalCode || formData.from_postal_code,
+      from_lat: location?.lat,
+      from_lng: location?.lng,
     });
   };
 
-  const handleToAddressChange = (address: string, postalCode?: string) => {
+  const handleToAddressChange = (address: string, postalCode?: string, location?: { lat: number; lng: number }) => {
     setFormData({ 
       ...formData, 
       to_address: address,
