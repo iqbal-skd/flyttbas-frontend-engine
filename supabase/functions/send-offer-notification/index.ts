@@ -38,7 +38,8 @@ const handler = async (req: Request): Promise<Response> => {
       quoteId 
     }: OfferNotificationRequest = await req.json();
     
-    console.log(`Sending offer notification to ${customerEmail}`);
+    console.log(`Sending offer notification to ${customerEmail} from ${partnerName}`);
+    console.log(`Offer details: price=${offerPrice}, moveDate=${moveDate}, quoteId=${quoteId}`);
 
     const siteUrl = Deno.env.get("SITE_URL") || "https://preview--flyttbas.lovable.app";
     const formattedDate = new Date(moveDate).toLocaleDateString('sv-SE', { 

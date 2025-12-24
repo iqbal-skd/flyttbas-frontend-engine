@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useAuth } from "@/contexts/AuthContext";
@@ -13,7 +13,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   FileText,
   Send,
@@ -24,14 +30,15 @@ import {
   AlertCircle,
   Settings,
   Ruler,
-  ChevronDown,
-  ChevronRight,
   Package,
   Home,
   Building,
   Weight,
   Clock,
   CheckCircle2,
+  ArrowRight,
+  Eye,
+  X,
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 
@@ -95,8 +102,10 @@ const PartnerDashboard = () => {
   const [partner, setPartner] = useState<Partner | null>(null);
   const [quotes, setQuotes] = useState<QuoteRequest[]>([]);
   const [myOffers, setMyOffers] = useState<Offer[]>([]);
-  const [expandedQuotes, setExpandedQuotes] = useState<Set<string>>(new Set());
   const [selectedQuote, setSelectedQuote] = useState<QuoteRequest | null>(null);
+  const [viewingQuote, setViewingQuote] = useState<QuoteRequest | null>(null);
+  const [offerDialogOpen, setOfferDialogOpen] = useState(false);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [offerForm, setOfferForm] = useState({
     total_price: "",
     estimated_hours: "",
@@ -124,7 +133,6 @@ const PartnerDashboard = () => {
   }, [user, isPartner]);
 
   const fetchPartnerData = async () => {
-    // Fetch partner info
     const { data: partnerData } = await supabase
       .from('partners')
       .select('*')
@@ -135,7 +143,6 @@ const PartnerDashboard = () => {
       setPartner(partnerData);
       setMaxDistance(partnerData.max_drive_distance_km || 50);
       if (partnerData.status === 'approved') {
-        // Fetch available quotes
         const { data: quotesData } = await supabase
           .from('quote_requests')
           .select('*')
@@ -146,7 +153,6 @@ const PartnerDashboard = () => {
           setQuotes(quotesData);
         }
 
-        // Fetch my offers
         const { data: offersData } = await supabase
           .from('offers')
           .select('*, quote_requests(customer_name, customer_email, from_address, to_address, move_date)')
@@ -160,18 +166,12 @@ const PartnerDashboard = () => {
     }
   };
 
-  const toggleQuoteExpanded = (quoteId: string) => {
-    const newExpanded = new Set(expandedQuotes);
-    if (newExpanded.has(quoteId)) {
-      newExpanded.delete(quoteId);
-    } else {
-      newExpanded.add(quoteId);
-    }
-    setExpandedQuotes(newExpanded);
+  const handleViewDetails = (quote: QuoteRequest) => {
+    setViewingQuote(quote);
+    setDetailDialogOpen(true);
   };
 
-  const handleSelectQuote = (quote: QuoteRequest) => {
-    // Don't allow selecting if already offered
+  const handleOpenOfferForm = (quote: QuoteRequest) => {
     if (quotesWithOffers.has(quote.id)) {
       toast({
         variant: "destructive",
@@ -181,13 +181,13 @@ const PartnerDashboard = () => {
       return;
     }
     setSelectedQuote(quote);
+    setOfferDialogOpen(true);
   };
 
   const handleSubmitOffer = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedQuote || !partner) return;
 
-    // Double-check no existing offer
     if (quotesWithOffers.has(selectedQuote.id)) {
       toast({
         variant: "destructive",
@@ -220,7 +220,6 @@ const PartnerDashboard = () => {
 
       if (error) throw error;
 
-      // Update quote status
       await supabase
         .from('quote_requests')
         .update({ status: 'offers_received' })
@@ -228,7 +227,7 @@ const PartnerDashboard = () => {
 
       // Send email notification to customer
       try {
-        await supabase.functions.invoke('send-offer-notification', {
+        const { data, error: fnError } = await supabase.functions.invoke('send-offer-notification', {
           body: {
             customerEmail: selectedQuote.customer_email,
             customerName: selectedQuote.customer_name,
@@ -238,9 +237,14 @@ const PartnerDashboard = () => {
             quoteId: selectedQuote.id,
           }
         });
+        
+        if (fnError) {
+          console.error("Failed to send notification email:", fnError);
+        } else {
+          console.log("Notification email sent:", data);
+        }
       } catch (emailError) {
         console.error("Failed to send notification email:", emailError);
-        // Don't fail the whole operation if email fails
       }
 
       toast({
@@ -248,6 +252,7 @@ const PartnerDashboard = () => {
         description: "Kunden har meddelats om din offert.",
       });
 
+      setOfferDialogOpen(false);
       setSelectedQuote(null);
       setOfferForm({
         total_price: "",
@@ -301,10 +306,14 @@ const PartnerDashboard = () => {
     }
   };
 
-  // Check if partner's offer for a quote is approved
   const isOfferApproved = (quoteId: string) => {
     const offer = myOffers.find(o => o.quote_request_id === quoteId);
     return offer?.status === 'approved';
+  };
+
+  const formatHeavyItems = (items: any) => {
+    if (!items || !Array.isArray(items) || items.length === 0) return null;
+    return items.filter((item: any) => item.quantity > 0).map((item: any) => `${item.name}: ${item.quantity}`).join(', ');
   };
 
   if (loading) {
@@ -324,11 +333,6 @@ const PartnerDashboard = () => {
     more_info_requested: { message: "Vi behöver mer information. Kolla din e-post.", variant: "destructive" },
     rejected: { message: "Din ansökan har avslagits. Kontakta oss för mer information.", variant: "destructive" },
     suspended: { message: "Ditt konto är tillfälligt avstängt.", variant: "destructive" },
-  };
-
-  const formatHeavyItems = (items: any) => {
-    if (!items || !Array.isArray(items) || items.length === 0) return null;
-    return items.filter((item: any) => item.quantity > 0).map((item: any) => `${item.name}: ${item.quantity}`).join(', ');
   };
 
   return (
@@ -388,278 +392,122 @@ const PartnerDashboard = () => {
               </TabsList>
 
               <TabsContent value="jobs">
-                <div className="grid lg:grid-cols-2 gap-6">
-                  {/* Job List */}
-                  <div className="space-y-4">
-                    <h2 className="font-semibold">Nya förfrågningar</h2>
-                    {quotes.length === 0 ? (
-                      <Card>
-                        <CardContent className="pt-6 text-center text-muted-foreground">
-                          Inga nya förfrågningar just nu
-                        </CardContent>
-                      </Card>
-                    ) : (
-                      quotes.map((quote) => {
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h2 className="font-semibold text-lg">Nya förfrågningar</h2>
+                    <Badge variant="secondary">{quotes.length} aktiva</Badge>
+                  </div>
+                  
+                  {quotes.length === 0 ? (
+                    <Card>
+                      <CardContent className="pt-6 text-center text-muted-foreground">
+                        <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                        <p>Inga nya förfrågningar just nu</p>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                      {quotes.map((quote) => {
                         const hasOffer = quotesWithOffers.has(quote.id);
-                        const isExpanded = expandedQuotes.has(quote.id);
                         
                         return (
                           <Card 
                             key={quote.id} 
-                            className={`transition-shadow ${hasOffer ? 'opacity-60' : 'hover:shadow-md'} ${selectedQuote?.id === quote.id ? 'ring-2 ring-primary' : ''}`}
+                            className={`relative transition-all hover:shadow-lg ${hasOffer ? 'opacity-70 border-green-200 bg-green-50/30' : 'border-border'}`}
                           >
-                            <Collapsible open={isExpanded} onOpenChange={() => toggleQuoteExpanded(quote.id)}>
-                              <CardContent className="pt-6">
-                                {/* Summary - Always visible */}
-                                <div className="flex items-start justify-between mb-3">
-                                  <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-1">
-                                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                                      <span className="font-medium">
-                                        {new Date(quote.move_date).toLocaleDateString('sv-SE')}
-                                      </span>
-                                      {quote.move_start_time && (
-                                        <span className="text-sm text-muted-foreground">
-                                          kl {quote.move_start_time}
-                                        </span>
-                                      )}
+                            {hasOffer && (
+                              <div className="absolute top-3 right-3">
+                                <Badge className="bg-green-600 text-white">
+                                  <CheckCircle2 className="h-3 w-3 mr-1" />
+                                  Offert skickad
+                                </Badge>
+                              </div>
+                            )}
+                            
+                            <CardHeader className="pb-3">
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                                <Calendar className="h-4 w-4" />
+                                <span className="font-medium text-foreground">
+                                  {new Date(quote.move_date).toLocaleDateString('sv-SE', { 
+                                    weekday: 'short', 
+                                    day: 'numeric', 
+                                    month: 'short' 
+                                  })}
+                                </span>
+                                {quote.move_start_time && (
+                                  <span className="text-muted-foreground">
+                                    kl {quote.move_start_time}
+                                  </span>
+                                )}
+                              </div>
+                              
+                              <div className="space-y-1">
+                                <div className="flex items-start gap-2">
+                                  <MapPin className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                                  <div className="text-sm">
+                                    <p className="font-medium">{quote.from_postal_code}</p>
+                                    <div className="flex items-center gap-1 text-muted-foreground">
+                                      <ArrowRight className="h-3 w-3" />
+                                      <span>{quote.to_postal_code}</span>
                                     </div>
                                   </div>
-                                  <div className="flex items-center gap-2">
-                                    {hasOffer && (
-                                      <Badge className="bg-green-100 text-green-800">
-                                        <CheckCircle2 className="h-3 w-3 mr-1" />
-                                        Offert skickad
-                                      </Badge>
-                                    )}
-                                    <Badge variant="outline">{quote.dwelling_type}</Badge>
-                                  </div>
                                 </div>
-                                
-                                <div className="space-y-1 text-sm mb-3">
-                                  <div className="flex items-start gap-2">
-                                    <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
-                                    <div>
-                                      <p>{quote.from_postal_code}</p>
-                                      <p className="text-muted-foreground">→ {quote.to_postal_code}</p>
-                                    </div>
-                                  </div>
-                                </div>
-
-                                <div className="flex flex-wrap gap-2 text-xs mb-3">
-                                  <Badge variant="secondary">{quote.area_m2} m²</Badge>
-                                  {quote.rooms && <Badge variant="secondary">{quote.rooms} rum</Badge>}
-                                </div>
-
-                                {/* Expand/Collapse Button */}
-                                <CollapsibleTrigger asChild>
-                                  <Button variant="ghost" size="sm" className="w-full mt-2">
-                                    {isExpanded ? (
-                                      <>
-                                        <ChevronDown className="h-4 w-4 mr-2" />
-                                        Dölj detaljer
-                                      </>
-                                    ) : (
-                                      <>
-                                        <ChevronRight className="h-4 w-4 mr-2" />
-                                        Visa alla detaljer
-                                      </>
-                                    )}
+                              </div>
+                            </CardHeader>
+                            
+                            <CardContent className="pt-0">
+                              <div className="flex flex-wrap gap-2 mb-4">
+                                <Badge variant="outline">{quote.dwelling_type}</Badge>
+                                <Badge variant="secondary">{quote.area_m2} m²</Badge>
+                                {quote.rooms && <Badge variant="secondary">{quote.rooms} rum</Badge>}
+                              </div>
+                              
+                              {/* Quick info pills */}
+                              <div className="flex flex-wrap gap-1 text-xs text-muted-foreground mb-4">
+                                {(quote.stairs_from > 0 || quote.stairs_to > 0) && (
+                                  <span className="bg-muted px-2 py-0.5 rounded">
+                                    {quote.stairs_from + quote.stairs_to} tr
+                                  </span>
+                                )}
+                                {quote.packing_hours > 0 && (
+                                  <span className="bg-muted px-2 py-0.5 rounded">
+                                    Packning
+                                  </span>
+                                )}
+                                {quote.assembly_hours > 0 && (
+                                  <span className="bg-muted px-2 py-0.5 rounded">
+                                    Montering
+                                  </span>
+                                )}
+                              </div>
+                              
+                              <div className="flex gap-2">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="flex-1"
+                                  onClick={() => handleViewDetails(quote)}
+                                >
+                                  <Eye className="h-4 w-4 mr-1" />
+                                  Detaljer
+                                </Button>
+                                {!hasOffer && (
+                                  <Button 
+                                    size="sm" 
+                                    className="flex-1"
+                                    onClick={() => handleOpenOfferForm(quote)}
+                                  >
+                                    <Send className="h-4 w-4 mr-1" />
+                                    Offerera
                                   </Button>
-                                </CollapsibleTrigger>
-
-                                {/* Expanded Details */}
-                                <CollapsibleContent className="mt-4 space-y-4 border-t pt-4">
-                                  {/* Full Addresses */}
-                                  <div className="space-y-2">
-                                    <h4 className="font-medium text-sm flex items-center gap-2">
-                                      <MapPin className="h-4 w-4" />
-                                      Adresser
-                                    </h4>
-                                    <div className="text-sm space-y-1 pl-6">
-                                      <p><span className="text-muted-foreground">Från:</span> {quote.from_address}, {quote.from_postal_code}</p>
-                                      <p><span className="text-muted-foreground">Till:</span> {quote.to_address}, {quote.to_postal_code}</p>
-                                    </div>
-                                  </div>
-
-                                  {/* Property Details */}
-                                  <div className="space-y-2">
-                                    <h4 className="font-medium text-sm flex items-center gap-2">
-                                      <Home className="h-4 w-4" />
-                                      Bostadsdetaljer
-                                    </h4>
-                                    <div className="grid grid-cols-2 gap-2 text-sm pl-6">
-                                      <p><span className="text-muted-foreground">Typ:</span> {quote.dwelling_type}</p>
-                                      <p><span className="text-muted-foreground">Yta:</span> {quote.area_m2} m²</p>
-                                      {quote.rooms && <p><span className="text-muted-foreground">Rum:</span> {quote.rooms}</p>}
-                                    </div>
-                                  </div>
-
-                                  {/* Stairs & Carry Distance */}
-                                  {(quote.stairs_from > 0 || quote.stairs_to > 0 || quote.carry_from_m || quote.carry_to_m) && (
-                                    <div className="space-y-2">
-                                      <h4 className="font-medium text-sm flex items-center gap-2">
-                                        <Building className="h-4 w-4" />
-                                        Trappor & Bäravstånd
-                                      </h4>
-                                      <div className="grid grid-cols-2 gap-2 text-sm pl-6">
-                                        {quote.stairs_from > 0 && <p><span className="text-muted-foreground">Trappor (från):</span> {quote.stairs_from} tr</p>}
-                                        {quote.stairs_to > 0 && <p><span className="text-muted-foreground">Trappor (till):</span> {quote.stairs_to} tr</p>}
-                                        {quote.carry_from_m && quote.carry_from_m > 0 && <p><span className="text-muted-foreground">Bäravstånd (från):</span> {quote.carry_from_m} m</p>}
-                                        {quote.carry_to_m && quote.carry_to_m > 0 && <p><span className="text-muted-foreground">Bäravstånd (till):</span> {quote.carry_to_m} m</p>}
-                                      </div>
-                                    </div>
-                                  )}
-
-                                  {/* Heavy Items */}
-                                  {formatHeavyItems(quote.heavy_items) && (
-                                    <div className="space-y-2">
-                                      <h4 className="font-medium text-sm flex items-center gap-2">
-                                        <Weight className="h-4 w-4" />
-                                        Tunga föremål
-                                      </h4>
-                                      <p className="text-sm pl-6">{formatHeavyItems(quote.heavy_items)}</p>
-                                    </div>
-                                  )}
-
-                                  {/* Services */}
-                                  {(quote.packing_hours > 0 || quote.assembly_hours > 0) && (
-                                    <div className="space-y-2">
-                                      <h4 className="font-medium text-sm flex items-center gap-2">
-                                        <Package className="h-4 w-4" />
-                                        Tilläggstjänster
-                                      </h4>
-                                      <div className="text-sm pl-6 space-y-1">
-                                        {quote.packing_hours > 0 && <p>Packning: {quote.packing_hours} timmar</p>}
-                                        {quote.assembly_hours > 0 && <p>Montering/Demontering: {quote.assembly_hours} timmar</p>}
-                                      </div>
-                                    </div>
-                                  )}
-
-                                  {/* Notes */}
-                                  {quote.notes && (
-                                    <div className="space-y-2">
-                                      <h4 className="font-medium text-sm">Kundanteckning</h4>
-                                      <p className="text-sm pl-6 italic">{quote.notes}</p>
-                                    </div>
-                                  )}
-
-                                  {/* Select Button */}
-                                  {!hasOffer && (
-                                    <Button 
-                                      onClick={() => handleSelectQuote(quote)} 
-                                      className="w-full mt-4"
-                                      variant={selectedQuote?.id === quote.id ? "secondary" : "default"}
-                                    >
-                                      {selectedQuote?.id === quote.id ? "Vald - Fyll i offert →" : "Lämna offert på detta jobb"}
-                                    </Button>
-                                  )}
-                                </CollapsibleContent>
-                              </CardContent>
-                            </Collapsible>
+                                )}
+                              </div>
+                            </CardContent>
                           </Card>
                         );
-                      })
-                    )}
-                  </div>
-
-                  {/* Offer Form */}
-                  <div>
-                    {selectedQuote ? (
-                      <Card>
-                        <CardHeader>
-                          <CardTitle>Lämna offert</CardTitle>
-                          <CardDescription>
-                            Flytt {new Date(selectedQuote.move_date).toLocaleDateString('sv-SE')} • {selectedQuote.from_postal_code} → {selectedQuote.to_postal_code}
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <form onSubmit={handleSubmitOffer} className="space-y-4">
-                            <div>
-                              <Label htmlFor="total_price">Totalpris (kr) *</Label>
-                              <Input
-                                id="total_price"
-                                type="number"
-                                value={offerForm.total_price}
-                                onChange={(e) => setOfferForm({ ...offerForm, total_price: e.target.value })}
-                                placeholder="Ex: 8500"
-                                required
-                              />
-                              {offerForm.total_price && (
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  Efter RUT: ca {Math.ceil(parseInt(offerForm.total_price) * 0.5).toLocaleString('sv-SE')} kr
-                                </p>
-                              )}
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                              <div>
-                                <Label htmlFor="estimated_hours">Uppskattad tid (h) *</Label>
-                                <Input
-                                  id="estimated_hours"
-                                  type="number"
-                                  value={offerForm.estimated_hours}
-                                  onChange={(e) => setOfferForm({ ...offerForm, estimated_hours: e.target.value })}
-                                  placeholder="Ex: 4"
-                                  required
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor="team_size">Antal personer *</Label>
-                                <Input
-                                  id="team_size"
-                                  type="number"
-                                  min="1"
-                                  max="10"
-                                  value={offerForm.team_size}
-                                  onChange={(e) => setOfferForm({ ...offerForm, team_size: e.target.value })}
-                                  required
-                                />
-                              </div>
-                            </div>
-
-                            <div>
-                              <Label htmlFor="time_window">Tidsfönster *</Label>
-                              <Input
-                                id="time_window"
-                                value={offerForm.time_window}
-                                onChange={(e) => setOfferForm({ ...offerForm, time_window: e.target.value })}
-                                placeholder="Ex: 08:00-12:00"
-                                required
-                              />
-                            </div>
-
-                            <div>
-                              <Label htmlFor="terms">Villkor / Kommentar</Label>
-                              <Textarea
-                                id="terms"
-                                value={offerForm.terms}
-                                onChange={(e) => setOfferForm({ ...offerForm, terms: e.target.value })}
-                                placeholder="T.ex. inkluderar emballage, körtillägg, etc."
-                                rows={3}
-                              />
-                            </div>
-
-                            <div className="bg-muted/50 p-3 rounded-lg text-sm text-muted-foreground">
-                              <Clock className="h-4 w-4 inline mr-2" />
-                              Offerten kan inte ändras efter att den skickats.
-                            </div>
-
-                            <Button type="submit" className="w-full" disabled={submitting}>
-                              {submitting ? "Skickar..." : "Skicka offert"}
-                            </Button>
-                          </form>
-                        </CardContent>
-                      </Card>
-                    ) : (
-                      <Card>
-                        <CardContent className="pt-6 text-center text-muted-foreground">
-                          <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                          <p>Expandera ett jobb och klicka "Lämna offert" för att börja</p>
-                        </CardContent>
-                      </Card>
-                    )}
-                  </div>
+                      })}
+                    </div>
+                  )}
                 </div>
               </TabsContent>
 
@@ -732,7 +580,7 @@ const PartnerDashboard = () => {
                       Serviceområde
                     </CardTitle>
                     <CardDescription>
-                      Ange hur långt du är villig att köra för uppdrag. Du ser bara förfrågningar inom ditt serviceområde.
+                      Ange hur långt du är villig att köra för uppdrag.
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
@@ -763,13 +611,6 @@ const PartnerDashboard = () => {
                     >
                       {updatingSettings ? "Sparar..." : "Spara inställningar"}
                     </Button>
-
-                    <div className="pt-4 border-t">
-                      <h4 className="font-medium mb-2">Aktuellt serviceområde</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Du ser förfrågningar inom <span className="font-medium">{partner.max_drive_distance_km || 50} km</span> från din registrerade adress.
-                      </p>
-                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -777,6 +618,205 @@ const PartnerDashboard = () => {
           )}
         </div>
       </main>
+      
+      {/* Detail View Dialog */}
+      <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Förfrågningsdetaljer
+            </DialogTitle>
+            {viewingQuote && (
+              <DialogDescription>
+                Flytt den {new Date(viewingQuote.move_date).toLocaleDateString('sv-SE')}
+              </DialogDescription>
+            )}
+          </DialogHeader>
+          
+          {viewingQuote && (
+            <div className="space-y-4 mt-4">
+              {/* Addresses */}
+              <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                <h4 className="font-medium text-sm flex items-center gap-2">
+                  <MapPin className="h-4 w-4" />
+                  Adresser
+                </h4>
+                <div className="text-sm space-y-1 pl-6">
+                  <p><span className="text-muted-foreground">Från:</span> {viewingQuote.from_address}, {viewingQuote.from_postal_code}</p>
+                  <p><span className="text-muted-foreground">Till:</span> {viewingQuote.to_address}, {viewingQuote.to_postal_code}</p>
+                </div>
+              </div>
+
+              {/* Property Details */}
+              <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                <h4 className="font-medium text-sm flex items-center gap-2">
+                  <Home className="h-4 w-4" />
+                  Bostadsdetaljer
+                </h4>
+                <div className="grid grid-cols-2 gap-2 text-sm pl-6">
+                  <p><span className="text-muted-foreground">Typ:</span> {viewingQuote.dwelling_type}</p>
+                  <p><span className="text-muted-foreground">Yta:</span> {viewingQuote.area_m2} m²</p>
+                  {viewingQuote.rooms && <p><span className="text-muted-foreground">Rum:</span> {viewingQuote.rooms}</p>}
+                </div>
+              </div>
+
+              {/* Stairs & Carry Distance */}
+              {(viewingQuote.stairs_from > 0 || viewingQuote.stairs_to > 0 || viewingQuote.carry_from_m || viewingQuote.carry_to_m) && (
+                <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                  <h4 className="font-medium text-sm flex items-center gap-2">
+                    <Building className="h-4 w-4" />
+                    Trappor & Bäravstånd
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2 text-sm pl-6">
+                    {viewingQuote.stairs_from > 0 && <p><span className="text-muted-foreground">Trappor (från):</span> {viewingQuote.stairs_from} tr</p>}
+                    {viewingQuote.stairs_to > 0 && <p><span className="text-muted-foreground">Trappor (till):</span> {viewingQuote.stairs_to} tr</p>}
+                    {viewingQuote.carry_from_m && viewingQuote.carry_from_m > 0 && <p><span className="text-muted-foreground">Bäravstånd (från):</span> {viewingQuote.carry_from_m} m</p>}
+                    {viewingQuote.carry_to_m && viewingQuote.carry_to_m > 0 && <p><span className="text-muted-foreground">Bäravstånd (till):</span> {viewingQuote.carry_to_m} m</p>}
+                  </div>
+                </div>
+              )}
+
+              {/* Heavy Items */}
+              {formatHeavyItems(viewingQuote.heavy_items) && (
+                <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                  <h4 className="font-medium text-sm flex items-center gap-2">
+                    <Weight className="h-4 w-4" />
+                    Tunga föremål
+                  </h4>
+                  <p className="text-sm pl-6">{formatHeavyItems(viewingQuote.heavy_items)}</p>
+                </div>
+              )}
+
+              {/* Services */}
+              {(viewingQuote.packing_hours > 0 || viewingQuote.assembly_hours > 0) && (
+                <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                  <h4 className="font-medium text-sm flex items-center gap-2">
+                    <Package className="h-4 w-4" />
+                    Tilläggstjänster
+                  </h4>
+                  <div className="text-sm pl-6 space-y-1">
+                    {viewingQuote.packing_hours > 0 && <p>Packning: {viewingQuote.packing_hours} timmar</p>}
+                    {viewingQuote.assembly_hours > 0 && <p>Montering/Demontering: {viewingQuote.assembly_hours} timmar</p>}
+                  </div>
+                </div>
+              )}
+
+              {/* Notes */}
+              {viewingQuote.notes && (
+                <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                  <h4 className="font-medium text-sm">Kundanteckning</h4>
+                  <p className="text-sm pl-6 italic text-muted-foreground">{viewingQuote.notes}</p>
+                </div>
+              )}
+
+              {/* Action Button */}
+              {!quotesWithOffers.has(viewingQuote.id) && (
+                <Button 
+                  className="w-full mt-4"
+                  onClick={() => {
+                    setDetailDialogOpen(false);
+                    handleOpenOfferForm(viewingQuote);
+                  }}
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  Lämna offert på detta jobb
+                </Button>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Offer Form Dialog */}
+      <Dialog open={offerDialogOpen} onOpenChange={setOfferDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Lämna offert</DialogTitle>
+            {selectedQuote && (
+              <DialogDescription>
+                Flytt {new Date(selectedQuote.move_date).toLocaleDateString('sv-SE')} • {selectedQuote.from_postal_code} → {selectedQuote.to_postal_code}
+              </DialogDescription>
+            )}
+          </DialogHeader>
+          
+          <form onSubmit={handleSubmitOffer} className="space-y-4 mt-4">
+            <div>
+              <Label htmlFor="total_price">Totalpris (kr) *</Label>
+              <Input
+                id="total_price"
+                type="number"
+                value={offerForm.total_price}
+                onChange={(e) => setOfferForm({ ...offerForm, total_price: e.target.value })}
+                placeholder="Ex: 8500"
+                required
+              />
+              {offerForm.total_price && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Efter RUT: ca {Math.ceil(parseInt(offerForm.total_price) * 0.5).toLocaleString('sv-SE')} kr
+                </p>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="estimated_hours">Uppskattad tid (h) *</Label>
+                <Input
+                  id="estimated_hours"
+                  type="number"
+                  value={offerForm.estimated_hours}
+                  onChange={(e) => setOfferForm({ ...offerForm, estimated_hours: e.target.value })}
+                  placeholder="Ex: 4"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="team_size">Antal personer *</Label>
+                <Input
+                  id="team_size"
+                  type="number"
+                  min="1"
+                  max="10"
+                  value={offerForm.team_size}
+                  onChange={(e) => setOfferForm({ ...offerForm, team_size: e.target.value })}
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="time_window">Tidsfönster *</Label>
+              <Input
+                id="time_window"
+                value={offerForm.time_window}
+                onChange={(e) => setOfferForm({ ...offerForm, time_window: e.target.value })}
+                placeholder="Ex: 08:00-12:00"
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="terms">Villkor / Kommentar</Label>
+              <Textarea
+                id="terms"
+                value={offerForm.terms}
+                onChange={(e) => setOfferForm({ ...offerForm, terms: e.target.value })}
+                placeholder="T.ex. inkluderar emballage, körtillägg, etc."
+                rows={3}
+              />
+            </div>
+
+            <div className="bg-amber-50 border border-amber-200 p-3 rounded-lg text-sm text-amber-800">
+              <Clock className="h-4 w-4 inline mr-2" />
+              Offerten kan inte ändras efter att den skickats.
+            </div>
+
+            <Button type="submit" className="w-full" disabled={submitting}>
+              {submitting ? "Skickar..." : "Skicka offert"}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
       
       <Footer />
     </>

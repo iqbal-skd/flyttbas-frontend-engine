@@ -11,7 +11,7 @@ interface AuthContextType {
   roles: UserRole[];
   isAdmin: boolean;
   isPartner: boolean;
-  signInWithMagicLink: (email: string) => Promise<{ error: Error | null }>;
+  signInWithMagicLink: (email: string, redirectPath?: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -72,8 +72,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const signInWithMagicLink = async (email: string) => {
-    const redirectUrl = `${window.location.origin}/`;
+  const signInWithMagicLink = async (email: string, redirectPath?: string) => {
+    const redirectUrl = `${window.location.origin}${redirectPath || '/auth'}`;
     
     const { error } = await supabase.auth.signInWithOtp({
       email,
