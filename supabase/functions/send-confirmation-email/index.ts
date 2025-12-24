@@ -15,7 +15,7 @@ const corsHeaders = {
 };
 
 interface EmailRequest {
-  type: "partner_application" | "quote_request";
+  type: "partner_application" | "quote_request" | "partner_approved";
   email: string;
   name: string;
   companyName?: string;
@@ -48,7 +48,88 @@ const handler = async (req: Request): Promise<Response> => {
     let subject: string;
     let htmlContent: string;
     
-    if (type === "partner_application") {
+    if (type === "partner_approved") {
+      // Partner approval notification - no magic link needed
+      redirectTo = `${siteUrl}/partner`;
+      subject = "Din partneransökan har godkänts! - Flyttbas";
+      
+      htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #1a365d; margin: 0;">Flyttbas</h1>
+          </div>
+          
+          <div style="background-color: #dcfce7; border-radius: 8px; padding: 20px; margin-bottom: 30px; text-align: center;">
+            <h2 style="color: #166534; margin: 0;">🎉 Grattis, ${name}!</h2>
+            <p style="color: #166534; margin: 10px 0 0 0; font-size: 18px;">Din partneransökan har godkänts!</p>
+          </div>
+          
+          <p>Vi är glada att meddela att <strong>${companyName}</strong> nu är en godkänd partner på Flyttbas!</p>
+          
+          <div style="background-color: #f7fafc; border-radius: 8px; padding: 20px; margin: 30px 0;">
+            <h3 style="color: #1a365d; margin-top: 0;">Vad händer nu?</h3>
+            <ul style="padding-left: 20px; margin: 0;">
+              <li style="margin-bottom: 10px;">Du kommer nu att börja ta emot offertförfrågningar från kunder i ditt område</li>
+              <li style="margin-bottom: 10px;">Logga in på din partnerpanel för att se och svara på förfrågningar</li>
+              <li style="margin-bottom: 10px;">Ju snabbare du svarar, desto större chans att vinna kunden!</li>
+            </ul>
+          </div>
+          
+          <p style="text-align: center; margin: 30px 0;">
+            <a href="${siteUrl}/partner" style="display: inline-block; background-color: #2563eb; color: white; text-decoration: none; padding: 14px 35px; border-radius: 6px; font-weight: bold; font-size: 16px;">Gå till partnerpanelen</a>
+          </p>
+          
+          <p style="color: #666; font-size: 14px;">
+            Har du frågor? Kontakta oss på <a href="mailto:support@flyttbas.se" style="color: #2563eb;">support@flyttbas.se</a>
+          </p>
+          
+          <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
+          
+          <p style="color: #999; font-size: 12px; text-align: center;">
+            © ${new Date().getFullYear()} Flyttbas. Sveriges ledande marknadsplats för flyttjänster.
+          </p>
+        </body>
+        </html>
+      `;
+      
+      // For partner_approved, send email directly without magic link
+      const resendResponse = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${RESEND_API_KEY}`,
+        },
+        body: JSON.stringify({
+          from: FROM_EMAIL,
+          to: [email],
+          subject: subject,
+          html: htmlContent,
+        }),
+      });
+
+      if (!resendResponse.ok) {
+        const errorData = await resendResponse.text();
+        console.error("Resend API error:", errorData);
+        throw new Error(`Failed to send email: ${errorData}`);
+      }
+
+      const emailResponse = await resendResponse.json();
+      console.log("Partner approval email sent successfully:", emailResponse);
+
+      return new Response(JSON.stringify({ success: true, emailId: emailResponse.id }), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders,
+        },
+      });
+    } else if (type === "partner_application") {
       redirectTo = `${siteUrl}/partner`;
       subject = "Verifiera din e-post - Flyttbas";
       

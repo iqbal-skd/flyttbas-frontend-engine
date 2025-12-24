@@ -153,22 +153,44 @@ export const PartnerDetailDialog = ({
         title: "Fel",
         description: "Kunde inte uppdatera status.",
       });
-    } else {
-      const statusLabels: Record<string, string> = {
-        pending: "väntande",
-        approved: "godkänd",
-        rejected: "avvisad",
-        more_info_requested: "begärt mer info",
-        suspended: "avstängd",
-      };
-      toast({
-        title: "Status uppdaterad",
-        description: `Partner har markerats som ${statusLabels[newStatus]}.`,
-      });
-      setStatusReason("");
-      onUpdate();
-      onOpenChange(false);
+      return;
     }
+    
+    // Send approval notification email when partner is approved
+    if (newStatus === "approved") {
+      try {
+        const { error: emailError } = await supabase.functions.invoke("send-confirmation-email", {
+          body: {
+            type: "partner_approved",
+            email: partner.contact_email,
+            name: partner.contact_name,
+            companyName: partner.company_name,
+          },
+        });
+        
+        if (emailError) {
+          console.error("Failed to send approval email:", emailError);
+          // Don't fail the status update if email fails
+        }
+      } catch (emailErr) {
+        console.error("Error sending approval email:", emailErr);
+      }
+    }
+    
+    const statusLabels: Record<string, string> = {
+      pending: "väntande",
+      approved: "godkänd",
+      rejected: "avvisad",
+      more_info_requested: "begärt mer info",
+      suspended: "avstängd",
+    };
+    toast({
+      title: "Status uppdaterad",
+      description: `Partner har markerats som ${statusLabels[newStatus]}.`,
+    });
+    setStatusReason("");
+    onUpdate();
+    onOpenChange(false);
   };
 
   if (!partner) return null;
