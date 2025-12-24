@@ -55,8 +55,50 @@ export const QuoteWizard = () => {
       // Get reCAPTCHA token
       const recaptchaToken = await getRecaptchaToken("quote_submission");
       
-      // Check if user is logged in
-      const { data: { user } } = await supabase.auth.getUser();
+      // Determine customer_id: check if logged in, or if a user exists with this email, or create a new user
+      let customerId: string | null = null;
+      
+      // First check if user is logged in
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      
+      if (currentUser) {
+        customerId = currentUser.id;
+      } else {
+        // Check if a user already exists with this email by checking profiles table
+        const { data: existingProfile } = await supabase
+          .from('profiles')
+          .select('user_id')
+          .eq('email', formData.customer_email)
+          .maybeSingle();
+        
+        if (existingProfile) {
+          // User exists, use their ID
+          customerId = existingProfile.user_id;
+        } else {
+          // No user exists, create a new one with a random password (they'll use magic link to login)
+          const tempPassword = crypto.randomUUID() + crypto.randomUUID();
+          
+          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+            email: formData.customer_email,
+            password: tempPassword,
+            options: {
+              emailRedirectTo: `${window.location.origin}/dashboard`,
+              data: {
+                full_name: formData.customer_name,
+              }
+            }
+          });
+          
+          if (signUpError) {
+            // If signup fails (e.g., user already registered but not in profiles yet), log and continue
+            console.error('User creation failed:', signUpError);
+            // Continue without customer_id - they can still access via email matching
+          } else if (signUpData.user) {
+            customerId = signUpData.user.id;
+            // The trigger handle_new_user will automatically create profile and assign 'customer' role
+          }
+        }
+      }
       
       // Generate a quote ID on the client side to avoid needing SELECT permission
       const quoteId = crypto.randomUUID();
@@ -67,7 +109,7 @@ export const QuoteWizard = () => {
         customer_name: formData.customer_name,
         customer_email: formData.customer_email,
         customer_phone: formData.customer_phone || null,
-        customer_id: user?.id || null,
+        customer_id: customerId,
         contact_preference: formData.contact_preference,
         from_address: formData.from_address || '',
         from_postal_code: formData.from_postal_code || '',
