@@ -58,8 +58,12 @@ export const QuoteWizard = () => {
       // Check if user is logged in
       const { data: { user } } = await supabase.auth.getUser();
       
+      // Generate a quote ID on the client side to avoid needing SELECT permission
+      const quoteId = crypto.randomUUID();
+      
       // Submit to database (recaptcha_token is validated but not stored)
-      const { data, error } = await supabase.from('quote_requests').insert({
+      const { error } = await supabase.from('quote_requests').insert({
+        id: quoteId,
         customer_name: formData.customer_name,
         customer_email: formData.customer_email,
         customer_phone: formData.customer_phone || null,
@@ -86,7 +90,7 @@ export const QuoteWizard = () => {
         notes: formData.notes || null,
         status: 'pending',
         expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
-      }).select().single();
+      });
 
       if (error) throw error;
 
@@ -97,7 +101,7 @@ export const QuoteWizard = () => {
             type: 'quote_request',
             email: formData.customer_email,
             name: formData.customer_name,
-            quoteId: data?.id,
+            quoteId: quoteId,
           }
         });
       } catch (emailError) {
