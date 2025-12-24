@@ -46,6 +46,7 @@ interface Partner {
   id: string;
   company_name: string;
   status: string;
+  status_reason: string | null;
   average_rating: number;
   total_reviews: number;
   completed_jobs: number;
@@ -390,12 +391,30 @@ const PartnerDashboard = () => {
           </div>
 
           {partner.status !== 'approved' && statusMessages[partner.status] && (
-            <div className="mb-8">
-              <Card className="border-yellow-200 bg-yellow-50">
+            <div className="mb-8 space-y-4">
+              <Card className={partner.status === 'more_info_requested' ? 'border-blue-200 bg-blue-50' : 'border-yellow-200 bg-yellow-50'}>
                 <CardContent className="pt-6">
-                  <div className="flex items-center gap-3">
-                    <AlertCircle className="h-5 w-5 text-yellow-600" />
-                    <p className="text-yellow-800">{statusMessages[partner.status].message}</p>
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className={`h-5 w-5 mt-0.5 ${partner.status === 'more_info_requested' ? 'text-blue-600' : 'text-yellow-600'}`} />
+                    <div className="flex-1">
+                      <p className={partner.status === 'more_info_requested' ? 'text-blue-800' : 'text-yellow-800'}>
+                        {statusMessages[partner.status].message}
+                      </p>
+                      {partner.status === 'more_info_requested' && partner.status_reason && (
+                        <div className="mt-4 p-4 bg-white/50 rounded-lg border border-blue-200">
+                          <p className="text-sm font-medium text-blue-900 mb-1">Meddelande från administratören:</p>
+                          <p className="text-blue-800">{partner.status_reason}</p>
+                        </div>
+                      )}
+                      {partner.status === 'more_info_requested' && (
+                        <Button 
+                          className="mt-4" 
+                          onClick={() => navigate('/bli-partner?edit=true')}
+                        >
+                          Uppdatera din ansökan
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
