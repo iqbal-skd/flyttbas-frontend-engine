@@ -20,6 +20,7 @@ import Auth from "./pages/Auth";
 import BliPartner from "./pages/BliPartner";
 import MinaOfferter from "./pages/MinaOfferter";
 import CustomerDashboard from "./pages/CustomerDashboard";
+import SetupPassword from "./pages/SetupPassword";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import PartnerDashboard from "./pages/partner/PartnerDashboard";
 
@@ -47,6 +48,7 @@ const App = () => (
               
               {/* Auth & User Routes */}
               <Route path="/auth" element={<Auth />} />
+              <Route path="/setup-password" element={<SetupPassword />} />
               <Route path="/bli-partner" element={<BliPartner />} />
               <Route path="/mina-offerter" element={<MinaOfferter />} />
               <Route path="/dashboard" element={<CustomerDashboard />} />

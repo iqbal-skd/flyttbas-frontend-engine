@@ -92,10 +92,10 @@ const handler = async (req: Request): Promise<Response> => {
         </html>
       `;
     } else {
-      // Quote request
+      // Quote request - redirect to setup password page
       redirectTo = quoteId 
-        ? `${siteUrl}/dashboard?quote=${quoteId}`
-        : `${siteUrl}/dashboard`;
+        ? `${siteUrl}/setup-password?quote=${quoteId}`
+        : `${siteUrl}/setup-password`;
       subject = "Din offertförfrågan har mottagits - Flyttbas";
       
       htmlContent = `
@@ -125,14 +125,15 @@ const handler = async (req: Request): Promise<Response> => {
           
           <div style="background-color: #f7fafc; border-radius: 8px; padding: 20px; margin: 30px 0;">
             <h3 style="color: #1a365d; margin-top: 0;">Se dina offerter online</h3>
-            <p>Du kan se alla dina offerter och detaljer i din kundportal.</p>
+            <p>Klicka på knappen nedan för att skapa ditt konto och se dina offerter. Du kommer att kunna välja ett lösenord så du enkelt kan logga in nästa gång.</p>
             
-            <p><strong>Alternativ 1:</strong> Skapa ett konto</p>
-            <p style="text-align: center;">
-              <a href="{{MAGIC_LINK}}" style="display: inline-block; background-color: #2563eb; color: white; text-decoration: none; padding: 12px 30px; border-radius: 6px; font-weight: bold;">Skapa konto & se offerter</a>
+            <p style="text-align: center; margin: 20px 0;">
+              <a href="{{MAGIC_LINK}}" style="display: inline-block; background-color: #2563eb; color: white; text-decoration: none; padding: 14px 35px; border-radius: 6px; font-weight: bold; font-size: 16px;">Skapa konto</a>
             </p>
             
-            <p style="font-size: 14px; color: #666; margin-top: 20px;"><strong>Alternativ 2:</strong> Logga in med magisk länk varje gång du vill se dina offerter.</p>
+            <p style="font-size: 13px; color: #666; margin-top: 20px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
+              <strong>Tips:</strong> Om du inte vill skapa ett lösenord kan du alltid begära en ny inloggningslänk via <a href="${siteUrl}/auth" style="color: #2563eb;">inloggningssidan</a>.
+            </p>
           </div>
           
           <p style="color: #666; font-size: 14px;">
