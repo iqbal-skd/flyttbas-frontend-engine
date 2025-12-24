@@ -21,6 +21,9 @@ import {
   ChevronRight,
   Users,
   Truck,
+  Phone,
+  Mail,
+  XCircle,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -35,6 +38,9 @@ interface QuoteRequest {
   area_m2: number;
   status: string;
   created_at: string;
+  customer_name: string;
+  customer_email: string;
+  customer_phone: string | null;
 }
 
 interface Offer {
@@ -48,6 +54,9 @@ interface Offer {
   created_at: string;
   partners: {
     company_name: string;
+    contact_name: string;
+    contact_email: string;
+    contact_phone: string;
     average_rating: number;
     total_reviews: number;
   } | null;
@@ -108,8 +117,9 @@ const CustomerDashboard = () => {
   const fetchOffers = async (quoteId: string) => {
     const { data: offersData } = await supabase
       .from('offers')
-      .select('*, partners(company_name, average_rating, total_reviews)')
+      .select('*, partners(company_name, contact_name, contact_email, contact_phone, average_rating, total_reviews)')
       .eq('quote_request_id', quoteId)
+      .in('status', ['pending', 'approved', 'rejected'])
       .order('created_at', { ascending: false });
 
     if (offersData) {
@@ -124,6 +134,11 @@ const CustomerDashboard = () => {
 
   const handleApproveOffer = async (offerId: string) => {
     try {
+      const approvedOffer = offers.find(o => o.id === offerId);
+      if (!approvedOffer || !approvedOffer.partners) {
+        throw new Error("Kunde inte hitta offertinformation");
+      }
+
       await supabase
         .from('offers')
         .update({ status: 'approved' })
@@ -141,11 +156,35 @@ const CustomerDashboard = () => {
           .from('quote_requests')
           .update({ status: 'offer_approved' })
           .eq('id', selectedQuote.id);
+
+        // Send email notification to partner
+        try {
+          const { error: fnError } = await supabase.functions.invoke('send-offer-accepted', {
+            body: {
+              partnerEmail: approvedOffer.partners.contact_email,
+              partnerName: approvedOffer.partners.contact_name,
+              companyName: approvedOffer.partners.company_name,
+              customerName: selectedQuote.customer_name,
+              customerEmail: selectedQuote.customer_email,
+              customerPhone: selectedQuote.customer_phone || '',
+              offerPrice: approvedOffer.total_price,
+              moveDate: selectedQuote.move_date,
+              fromAddress: selectedQuote.from_address,
+              toAddress: selectedQuote.to_address,
+            }
+          });
+          
+          if (fnError) {
+            console.error("Failed to send notification to partner:", fnError);
+          }
+        } catch (emailError) {
+          console.error("Failed to send notification to partner:", emailError);
+        }
       }
 
       toast({
         title: "Offert godkänd!",
-        description: "Flyttfirman kommer kontakta dig inom kort.",
+        description: "Flyttfirman har meddelats och kommer kontakta dig.",
       });
 
       fetchQuotes();
@@ -312,7 +351,8 @@ const CustomerDashboard = () => {
                             <div 
                               key={offer.id} 
                               className={`border rounded-lg p-4 ${
-                                offer.status === 'approved' ? 'border-green-500 bg-green-50' : ''
+                                offer.status === 'approved' ? 'border-green-500 bg-green-50' :
+                                offer.status === 'rejected' ? 'border-gray-300 bg-gray-50 opacity-60' : ''
                               }`}
                             >
                               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
@@ -349,6 +389,36 @@ const CustomerDashboard = () => {
                                       </p>
                                     </div>
                                   </div>
+
+                                  {/* Show partner contact info when offer is approved */}
+                                  {offer.status === 'approved' && offer.partners && (
+                                    <div className="mt-4 p-4 bg-green-100 border border-green-300 rounded-lg">
+                                      <h4 className="font-semibold text-green-800 mb-3 flex items-center gap-2">
+                                        <Phone className="h-4 w-4" />
+                                        Kontaktuppgifter till {offer.partners.company_name}
+                                      </h4>
+                                      <div className="space-y-2 text-sm">
+                                        <p className="flex items-center gap-2">
+                                          <span className="text-muted-foreground">Kontaktperson:</span>
+                                          <span className="font-medium">{offer.partners.contact_name}</span>
+                                        </p>
+                                        <p className="flex items-center gap-2">
+                                          <Mail className="h-4 w-4 text-muted-foreground" />
+                                          <a href={`mailto:${offer.partners.contact_email}`} className="text-primary hover:underline">
+                                            {offer.partners.contact_email}
+                                          </a>
+                                        </p>
+                                        {offer.partners.contact_phone && (
+                                          <p className="flex items-center gap-2">
+                                            <Phone className="h-4 w-4 text-muted-foreground" />
+                                            <a href={`tel:${offer.partners.contact_phone}`} className="text-primary hover:underline">
+                                              {offer.partners.contact_phone}
+                                            </a>
+                                          </p>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
 
                                 <div className="text-right">
@@ -372,6 +442,13 @@ const CustomerDashboard = () => {
                                     <Badge className="bg-green-100 text-green-800 mt-3">
                                       <CheckCircle className="h-4 w-4 mr-1" />
                                       Godkänd
+                                    </Badge>
+                                  )}
+
+                                  {offer.status === 'rejected' && (
+                                    <Badge className="bg-gray-100 text-gray-600 mt-3">
+                                      <XCircle className="h-4 w-4 mr-1" />
+                                      Ej vald
                                     </Badge>
                                   )}
                                 </div>

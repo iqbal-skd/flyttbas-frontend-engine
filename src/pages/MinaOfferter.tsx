@@ -17,6 +17,8 @@ import {
   Users,
   Truck,
   Shield,
+  Phone,
+  Mail,
 } from "lucide-react";
 
 interface Offer {
@@ -34,6 +36,9 @@ interface Offer {
   partners: {
     id: string;
     company_name: string;
+    contact_name: string;
+    contact_email: string;
+    contact_phone: string;
     average_rating: number;
     total_reviews: number;
     completed_jobs: number;
@@ -44,6 +49,8 @@ interface Offer {
 interface QuoteRequest {
   id: string;
   customer_name: string;
+  customer_email: string;
+  customer_phone: string | null;
   from_address: string;
   to_address: string;
   move_date: string;
@@ -91,12 +98,12 @@ const MinaOfferter = () => {
 
       setQuote(quoteData);
 
-      // Fetch offers
+      // Fetch offers (include all statuses to show approved offers)
       const { data: offersData } = await supabase
         .from('offers')
-        .select('*, partners(id, company_name, average_rating, total_reviews, completed_jobs, is_sponsored)')
+        .select('*, partners(id, company_name, contact_name, contact_email, contact_phone, average_rating, total_reviews, completed_jobs, is_sponsored)')
         .eq('quote_request_id', quoteId)
-        .eq('status', 'pending')
+        .in('status', ['pending', 'approved'])
         .order('ranking_score', { ascending: false });
 
       if (offersData) {
@@ -119,6 +126,12 @@ const MinaOfferter = () => {
     setApproving(offerId);
 
     try {
+      // Find the offer being approved
+      const approvedOffer = offers.find(o => o.id === offerId);
+      if (!approvedOffer || !approvedOffer.partners) {
+        throw new Error("Kunde inte hitta offertinformation");
+      }
+
       // Update offer status
       const { error: offerError } = await supabase
         .from('offers')
@@ -140,9 +153,33 @@ const MinaOfferter = () => {
         .update({ status: 'offer_approved' })
         .eq('id', quoteId);
 
+      // Send email notification to partner
+      try {
+        const { error: fnError } = await supabase.functions.invoke('send-offer-accepted', {
+          body: {
+            partnerEmail: approvedOffer.partners.contact_email,
+            partnerName: approvedOffer.partners.contact_name,
+            companyName: approvedOffer.partners.company_name,
+            customerName: quote?.customer_name,
+            customerEmail: quote?.customer_email,
+            customerPhone: quote?.customer_phone || '',
+            offerPrice: approvedOffer.total_price,
+            moveDate: quote?.move_date,
+            fromAddress: quote?.from_address,
+            toAddress: quote?.to_address,
+          }
+        });
+        
+        if (fnError) {
+          console.error("Failed to send notification to partner:", fnError);
+        }
+      } catch (emailError) {
+        console.error("Failed to send notification to partner:", emailError);
+      }
+
       toast({
         title: "Offert godkänd!",
-        description: "Flyttfirman kommer kontakta dig inom kort.",
+        description: "Flyttfirman har meddelats och kommer kontakta dig.",
       });
 
       // Refresh
@@ -308,6 +345,36 @@ const MinaOfferter = () => {
                             <p className="text-sm">{offer.terms}</p>
                           </div>
                         )}
+
+                        {/* Show partner contact info when offer is approved */}
+                        {offer.status === 'approved' && offer.partners && (
+                          <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                            <h4 className="font-semibold text-green-800 mb-3 flex items-center gap-2">
+                              <Phone className="h-4 w-4" />
+                              Kontaktuppgifter till {offer.partners.company_name}
+                            </h4>
+                            <div className="space-y-2 text-sm">
+                              <p className="flex items-center gap-2">
+                                <span className="text-muted-foreground">Kontaktperson:</span>
+                                <span className="font-medium">{offer.partners.contact_name}</span>
+                              </p>
+                              <p className="flex items-center gap-2">
+                                <Mail className="h-4 w-4 text-muted-foreground" />
+                                <a href={`mailto:${offer.partners.contact_email}`} className="text-primary hover:underline">
+                                  {offer.partners.contact_email}
+                                </a>
+                              </p>
+                              {offer.partners.contact_phone && (
+                                <p className="flex items-center gap-2">
+                                  <Phone className="h-4 w-4 text-muted-foreground" />
+                                  <a href={`tel:${offer.partners.contact_phone}`} className="text-primary hover:underline">
+                                    {offer.partners.contact_phone}
+                                  </a>
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       {/* Price & Action */}
@@ -321,7 +388,7 @@ const MinaOfferter = () => {
                           </p>
                         </div>
 
-                        {quote.status !== 'offer_approved' && (
+                        {quote.status !== 'offer_approved' && offer.status === 'pending' && (
                           <Button
                             className="w-full lg:w-auto"
                             onClick={() => handleApproveOffer(offer.id)}
