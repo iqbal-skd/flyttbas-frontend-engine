@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useRecaptcha } from "@/hooks/useRecaptcha";
 import { Calculator, ChevronLeft, ChevronRight, Send, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { FormData, initialFormData, WIZARD_STEPS, formSchema } from "./types";
@@ -13,6 +14,7 @@ import { Step4Quote } from "./Step4Quote";
 
 export const QuoteWizard = () => {
   const { toast } = useToast();
+  const { getRecaptchaToken } = useRecaptcha();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -50,6 +52,9 @@ export const QuoteWizard = () => {
     setIsSubmitting(true);
 
     try {
+      // Get reCAPTCHA token
+      const recaptchaToken = await getRecaptchaToken("quote_submission");
+      
       // Check if user is logged in
       const { data: { user } } = await supabase.auth.getUser();
       
@@ -79,6 +84,7 @@ export const QuoteWizard = () => {
         assembly_hours: formData.assembly_hours ? parseInt(formData.assembly_hours) : 0,
         home_visit_requested: formData.home_visit_requested || false,
         notes: formData.notes || null,
+        recaptcha_token: recaptchaToken || null,
         status: 'pending',
         expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
       }).select().single();

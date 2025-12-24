@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { PageViewTracker } from "@/components/PageViewTracker";
+import { RecaptchaProvider } from "@/components/RecaptchaProvider";
 import Index from "./pages/Index";
 import Privatflytt from "./pages/Privatflytt";
 import Kontorsflytt from "./pages/Kontorsflytt";
@@ -30,11 +32,13 @@ const queryClient = new QueryClient();
 const App = () => (
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
+      <RecaptchaProvider>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
           <BrowserRouter>
+            <PageViewTracker />
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/privatflytt" element={<Privatflytt />} />
@@ -86,6 +90,7 @@ const App = () => (
           </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>
+    </RecaptchaProvider>
     </QueryClientProvider>
   </HelmetProvider>
 );
