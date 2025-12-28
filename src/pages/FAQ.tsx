@@ -172,7 +172,7 @@ const faqData: FAQCategory[] = [
       {
         id: "gar-sonder",
         question: "Vad händer om något går sönder?",
-        answer: "Om något skadas bör du dokumentera med bilder och kontakta flyttfirman så snart som möjligt. Hur ärendet hanteras beror på försäkring och villkor. Offerten och avtalet ska beskriva hur reklamation går till."
+        answer: "Anmäl skadan till flyttfirman så snart som möjligt. Flyttfirman ansvarar för skador som uppstår i samband med uppdraget och hanterar ärendet enligt sina villkor och via sin försäkring. Flyttbas är en förmedlingstjänst och inte part i avtalet mellan dig och flyttfirman – eventuella anspråk riktas därför direkt mot den utförare som åtog sig uppdraget."
       },
       {
         id: "kundskydd",

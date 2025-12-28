@@ -1,4 +1,5 @@
 import { Helmet } from "react-helmet-async";
+import { Link } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 
@@ -106,8 +107,8 @@ const AllmannaVillkor = () => {
 
             <h2 className="text-2xl font-semibold text-foreground mt-10 mb-4">12. Personuppgifter</h2>
             <ol className="list-decimal pl-6 space-y-2 text-foreground/90">
-              <li>Flyttbas behandlar personuppgifter i enlighet med tillämplig dataskyddslagstiftning och i enlighet med Flyttbas <strong>Integritetspolicy</strong>.</li>
-              <li>För information om vilka uppgifter som behandlas, ändamål, rättslig grund, lagringstid och dina rättigheter, se Integritetspolicyn.</li>
+              <li>Flyttbas behandlar personuppgifter i enlighet med tillämplig dataskyddslagstiftning och i enlighet med Flyttbas <Link to="/integritetspolicy" className="text-accent hover:underline font-medium">Integritetspolicy</Link>.</li>
+              <li>För information om vilka uppgifter som behandlas, ändamål, rättslig grund, lagringstid och dina rättigheter, se <Link to="/integritetspolicy" className="text-accent hover:underline">Integritetspolicyn</Link>.</li>
             </ol>
 
             <h2 className="text-2xl font-semibold text-foreground mt-10 mb-4">13. Ansvar och ansvarsfriskrivning</h2>

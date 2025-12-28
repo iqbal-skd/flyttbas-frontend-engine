@@ -71,6 +71,16 @@ export const Footer = () => {
                   Allmänna villkor
                 </Link>
               </li>
+              <li>
+                <Link to="/integritetspolicy" className="text-white/80 hover:text-white transition-colors">
+                  Integritetspolicy
+                </Link>
+              </li>
+              <li>
+                <Link to="/cookiepolicy" className="text-white/80 hover:text-white transition-colors">
+                  Cookiepolicy
+                </Link>
+              </li>
             </ul>
           </div>
 
