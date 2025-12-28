@@ -62,8 +62,13 @@ export const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/partner" className="text-white/80 hover:text-white transition-colors">
+                <Link to="/bli-partner" className="text-white/80 hover:text-white transition-colors">
                   Bli partner
+                </Link>
+              </li>
+              <li>
+                <Link to="/allmanna-villkor" className="text-white/80 hover:text-white transition-colors">
+                  Allmänna villkor
                 </Link>
               </li>
             </ul>
