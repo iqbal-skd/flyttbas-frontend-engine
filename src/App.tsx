@@ -27,6 +27,8 @@ import SetupPassword from "./pages/SetupPassword";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import PartnerDashboard from "./pages/partner/PartnerDashboard";
 import AllmannaVillkor from "./pages/AllmannaVillkor";
+import Integritetspolicy from "./pages/Integritetspolicy";
+import Cookiepolicy from "./pages/Cookiepolicy";
 
 const queryClient = new QueryClient();
 
@@ -85,6 +87,8 @@ const App = () => (
               
               {/* Legal */}
               <Route path="/allmanna-villkor" element={<AllmannaVillkor />} />
+              <Route path="/integritetspolicy" element={<Integritetspolicy />} />
+              <Route path="/cookiepolicy" element={<Cookiepolicy />} />
               
               {/* Legacy routes */}
               <Route path="/om" element={<Index />} />
