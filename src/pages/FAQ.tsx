@@ -34,7 +34,7 @@ const faqData: FAQCategory[] = [
       {
         id: "vad-ar-flyttbas",
         question: "Vad är Flyttbas?",
-        answer: "Flyttbas är en marknadsplats där du kan jämföra offerter från verifierade flyttfirmor och boka den lösning som passar dig bäst. Du beskriver din flytt eller flyttstädning, får prisförslag och väljer i lugn och ro.",
+        answer: "Flyttbas är en jämförelsetjänst för flytt och flyttstäd där du jämför offerter från verifierade flyttfirmor och bokar den lösning som passar dig bäst. Du beskriver din flytt eller flyttstädning, får prisförslag och väljer i lugn och ro.",
         microCta: { text: "Jämför offerter gratis", link: "/#quote-wizard" }
       },
       {

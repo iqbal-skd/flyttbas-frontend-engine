@@ -11,7 +11,7 @@ export const Footer = () => {
           <div>
             <img src={logo} alt="Flyttbas" className="h-8 w-auto mb-4" />
             <p className="text-sm text-white/80">
-              Sveriges ledande marknadsplats för flyttjänster. Jämför offerter från verifierade flyttfirmor och hitta bästa priset för din flytt.
+              Flyttbas är en jämförelsetjänst för flytt och flyttstäd där du jämför offerter från verifierade flyttfirmor.
             </p>
           </div>
 
