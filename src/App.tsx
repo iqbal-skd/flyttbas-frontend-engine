@@ -26,6 +26,7 @@ import CustomerDashboard from "./pages/CustomerDashboard";
 import SetupPassword from "./pages/SetupPassword";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import PartnerDashboard from "./pages/partner/PartnerDashboard";
+import AllmannaVillkor from "./pages/AllmannaVillkor";
 
 const queryClient = new QueryClient();
 
@@ -82,9 +83,12 @@ const App = () => (
                 </ProtectedRoute>
               } />
               
+              {/* Legal */}
+              <Route path="/allmanna-villkor" element={<AllmannaVillkor />} />
+              
               {/* Legacy routes */}
               <Route path="/om" element={<Index />} />
-              <Route path="/juridik" element={<Index />} />
+              <Route path="/juridik" element={<AllmannaVillkor />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
