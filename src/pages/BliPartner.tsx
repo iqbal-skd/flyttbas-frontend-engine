@@ -361,7 +361,7 @@ const BliPartner = () => {
   return (
     <>
       <Helmet>
-        <title>Bli Partner | Flyttbas - Sveriges Flyttmarknadsplats</title>
+        <title>Bli Partner | Flyttbas - Jämför Flyttfirmor</title>
         <meta name="description" content="Anslut ditt flyttföretag till Flyttbas och få fler kunder. Vi matchar dig med flyttjobb i ditt område." />
       </Helmet>
       <Header />

@@ -70,7 +70,7 @@ const Index = () => {
             "@context": "https://schema.org",
             "@type": "WebSite",
             "name": "Flyttbas",
-            "description": "Marknadsplats för flyttjänster i Sverige",
+            "description": "Jämförelsetjänst för flytt och flyttstäd i Sverige",
             "url": "https://flyttbas.se",
             "potentialAction": {
               "@type": "SearchAction",
