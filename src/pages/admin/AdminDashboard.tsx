@@ -93,6 +93,7 @@ interface CommissionFee {
 }
 
 type OfferStatus = "pending" | "approved" | "rejected" | "expired" | "withdrawn";
+type JobStatus = "confirmed" | "scheduled" | "in_progress" | "completed" | "cancelled";
 
 interface Offer {
   id: string;
@@ -108,6 +109,9 @@ interface Offer {
   terms: string | null;
   valid_until: string;
   status: OfferStatus | null;
+  job_status: JobStatus | null;
+  job_status_updated_at: string | null;
+  job_notes: string | null;
   distance_km: number | null;
   drive_time_minutes: number | null;
   ranking_score: number | null;

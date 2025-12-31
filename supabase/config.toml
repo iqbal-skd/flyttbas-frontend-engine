@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.send-offer-accepted]
 verify_jwt = false
+
+[functions.send-job-status-notification]
+verify_jwt = false
