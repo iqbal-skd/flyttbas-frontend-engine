@@ -121,6 +121,9 @@ export type Database = {
           drive_time_minutes: number | null
           estimated_hours: number
           id: string
+          job_notes: string | null
+          job_status: Database["public"]["Enums"]["job_status"] | null
+          job_status_updated_at: string | null
           partner_id: string
           price_before_rut: number
           quote_request_id: string
@@ -141,6 +144,9 @@ export type Database = {
           drive_time_minutes?: number | null
           estimated_hours: number
           id?: string
+          job_notes?: string | null
+          job_status?: Database["public"]["Enums"]["job_status"] | null
+          job_status_updated_at?: string | null
           partner_id: string
           price_before_rut: number
           quote_request_id: string
@@ -161,6 +167,9 @@ export type Database = {
           drive_time_minutes?: number | null
           estimated_hours?: number
           id?: string
+          job_notes?: string | null
+          job_status?: Database["public"]["Enums"]["job_status"] | null
+          job_status_updated_at?: string | null
           partner_id?: string
           price_before_rut?: number
           quote_request_id?: string
@@ -510,6 +519,12 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "partner" | "customer"
+      job_status:
+        | "confirmed"
+        | "scheduled"
+        | "in_progress"
+        | "completed"
+        | "cancelled"
       offer_status:
         | "pending"
         | "approved"
@@ -657,6 +672,13 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "partner", "customer"],
+      job_status: [
+        "confirmed",
+        "scheduled",
+        "in_progress",
+        "completed",
+        "cancelled",
+      ],
       offer_status: ["pending", "approved", "rejected", "expired", "withdrawn"],
       partner_status: [
         "pending",

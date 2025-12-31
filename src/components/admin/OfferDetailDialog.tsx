@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 
 type OfferStatus = "pending" | "approved" | "rejected" | "expired" | "withdrawn";
+type JobStatus = "confirmed" | "scheduled" | "in_progress" | "completed" | "cancelled";
 
 interface Offer {
   id: string;
@@ -49,6 +50,9 @@ interface Offer {
   terms: string | null;
   valid_until: string;
   status: OfferStatus | null;
+  job_status: JobStatus | null;
+  job_status_updated_at: string | null;
+  job_notes: string | null;
   distance_km: number | null;
   drive_time_minutes: number | null;
   ranking_score: number | null;
@@ -71,6 +75,7 @@ interface QuoteRequest {
   id: string;
   customer_name: string;
   customer_email: string;
+  customer_phone?: string | null;
   from_address: string;
   to_address: string;
   move_date: string;
@@ -107,7 +112,8 @@ export function OfferDetailDialog({
     ranking_score: 0,
   });
   const [status, setStatus] = useState<OfferStatus>("pending");
-
+  const [jobStatus, setJobStatus] = useState<JobStatus | null>(null);
+  const [jobNotes, setJobNotes] = useState("");
   useEffect(() => {
     if (offer) {
       setFormData({
@@ -125,6 +131,8 @@ export function OfferDetailDialog({
         ranking_score: offer.ranking_score || 0,
       });
       setStatus((offer.status as OfferStatus) || "pending");
+      setJobStatus(offer.job_status as JobStatus | null);
+      setJobNotes(offer.job_notes || "");
       fetchRelatedData();
     }
   }, [offer]);
@@ -146,13 +154,60 @@ export function OfferDetailDialog({
     // Fetch quote request details
     const { data: quoteData } = await supabase
       .from("quote_requests")
-      .select("id, customer_name, customer_email, from_address, to_address, move_date")
+      .select("id, customer_name, customer_email, customer_phone, from_address, to_address, move_date")
       .eq("id", offer.quote_request_id)
       .single();
 
     if (quoteData) {
       setQuoteRequest(quoteData);
     }
+  };
+
+  const handleJobStatusChange = async (newJobStatus: JobStatus) => {
+    if (!offer || !quoteRequest || !partner) return;
+
+    const { error } = await supabase
+      .from("offers")
+      .update({
+        job_status: newJobStatus,
+        job_status_updated_at: new Date().toISOString(),
+        job_notes: jobNotes || null,
+      })
+      .eq("id", offer.id);
+
+    if (error) {
+      toast({
+        title: "Fel",
+        description: "Kunde inte uppdatera jobbstatus",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Send email notification
+    try {
+      await supabase.functions.invoke('send-job-status-notification', {
+        body: {
+          customerEmail: quoteRequest.customer_email,
+          customerName: quoteRequest.customer_name,
+          companyName: partner.company_name,
+          newStatus: newJobStatus,
+          moveDate: quoteRequest.move_date,
+          fromAddress: quoteRequest.from_address,
+          toAddress: quoteRequest.to_address,
+          jobNotes: jobNotes || undefined,
+        }
+      });
+    } catch (emailError) {
+      console.error("Failed to send notification:", emailError);
+    }
+
+    setJobStatus(newJobStatus);
+    toast({
+      title: "Jobbstatus uppdaterad",
+      description: `Kunden har notifierats via e-post`,
+    });
+    onUpdate();
   };
 
   const handleSave = async () => {
@@ -237,6 +292,22 @@ export function OfferDetailDialog({
     rejected: "Avvisad",
     expired: "Utgången",
     withdrawn: "Återkallad",
+  };
+
+  const jobStatusLabels: Record<string, string> = {
+    confirmed: "Bekräftad",
+    scheduled: "Schemalagd",
+    in_progress: "Pågående",
+    completed: "Genomförd",
+    cancelled: "Avbokad",
+  };
+
+  const jobStatusColors: Record<string, string> = {
+    confirmed: "bg-green-100 text-green-800",
+    scheduled: "bg-blue-100 text-blue-800",
+    in_progress: "bg-yellow-100 text-yellow-800",
+    completed: "bg-green-200 text-green-900",
+    cancelled: "bg-red-100 text-red-800",
   };
 
   return (
