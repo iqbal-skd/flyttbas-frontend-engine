@@ -1,6 +1,5 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Helmet } from "react-helmet-async";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -11,8 +10,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
+import { Slider } from "@/components/ui/slider";
+import {
+  DashboardLayout,
+  DashboardHeader,
+  LoadingSpinner,
+  EmptyState,
+  StatusBadge,
+  JobDetailsCard,
+} from "@/components/dashboard";
 import {
   Dialog,
   DialogContent,
@@ -21,19 +27,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   FileText,
   Send,
   MapPin,
   Calendar,
   Star,
-  LogOut,
   AlertCircle,
   Settings,
   Ruler,
@@ -45,13 +43,11 @@ import {
   CheckCircle2,
   ArrowRight,
   Eye,
-  X,
   User,
   Mail,
   Phone,
   Truck,
 } from "lucide-react";
-import { Slider } from "@/components/ui/slider";
 
 interface Partner {
   id: string;
@@ -128,6 +124,22 @@ interface Offer {
   } | null;
 }
 
+const jobStatusLabels: Record<string, string> = {
+  confirmed: "Bekräftad",
+  scheduled: "Schemalagd",
+  in_progress: "Pågående",
+  completed: "Genomförd",
+  cancelled: "Avbokad",
+};
+
+const jobStatusColors: Record<string, string> = {
+  confirmed: "bg-green-100 text-green-800",
+  scheduled: "bg-blue-100 text-blue-800",
+  in_progress: "bg-yellow-100 text-yellow-800",
+  completed: "bg-green-200 text-green-900",
+  cancelled: "bg-red-100 text-red-800",
+};
+
 const PartnerDashboard = () => {
   const { user, isPartner, loading, rolesLoaded, signOut } = useAuth();
   const navigate = useNavigate();
@@ -155,7 +167,6 @@ const PartnerDashboard = () => {
   const [updatingJobStatus, setUpdatingJobStatus] = useState(false);
   const [jobStatusNote, setJobStatusNote] = useState("");
 
-  // Get IDs of quotes the partner has already made offers on
   const quotesWithOffers = new Set(myOffers.map(o => o.quote_request_id));
 
   useEffect(() => {
@@ -242,7 +253,7 @@ const PartnerDashboard = () => {
     const priceBeforeRut = totalPrice;
 
     try {
-      const { data: offerData, error } = await supabase.from('offers').insert({
+      const { error } = await supabase.from('offers').insert({
         quote_request_id: selectedQuote.id,
         partner_id: partner.id,
         total_price: totalPrice,
@@ -263,9 +274,8 @@ const PartnerDashboard = () => {
         .update({ status: 'offers_received' })
         .eq('id', selectedQuote.id);
 
-      // Send email notification to customer
       try {
-        const { data, error: fnError } = await supabase.functions.invoke('send-offer-notification', {
+        await supabase.functions.invoke('send-offer-notification', {
           body: {
             customerEmail: selectedQuote.customer_email,
             customerName: selectedQuote.customer_name,
@@ -275,12 +285,6 @@ const PartnerDashboard = () => {
             quoteId: selectedQuote.id,
           }
         });
-        
-        if (fnError) {
-          console.error("Failed to send notification email:", fnError);
-        } else {
-          console.log("Notification email sent:", data);
-        }
       } catch (emailError) {
         console.error("Failed to send notification email:", emailError);
       }
@@ -344,11 +348,6 @@ const PartnerDashboard = () => {
     }
   };
 
-  const isOfferApproved = (quoteId: string) => {
-    const offer = myOffers.find(o => o.quote_request_id === quoteId);
-    return offer?.status === 'approved';
-  };
-
   const formatHeavyItems = (items: any) => {
     if (!items || !Array.isArray(items) || items.length === 0) return null;
     return items.filter((item: any) => item.quantity > 0).map((item: any) => `${item.name}: ${item.quantity}`).join(', ');
@@ -376,7 +375,6 @@ const PartnerDashboard = () => {
 
       if (error) throw error;
 
-      // Send email notification to customer
       if (selectedApprovedOffer.quote_requests) {
         try {
           await supabase.functions.invoke('send-job-status-notification', {
@@ -391,7 +389,6 @@ const PartnerDashboard = () => {
               jobNotes: jobStatusNote || undefined,
             }
           });
-          console.log("Job status notification sent to customer");
         } catch (emailError) {
           console.error("Failed to send job status notification:", emailError);
         }
@@ -415,59 +412,32 @@ const PartnerDashboard = () => {
     }
   };
 
-  const jobStatusLabels: Record<string, string> = {
-    confirmed: "Bekräftad",
-    scheduled: "Schemalagd",
-    in_progress: "Pågående",
-    completed: "Genomförd",
-    cancelled: "Avbokad",
-  };
-
-  const jobStatusColors: Record<string, string> = {
-    confirmed: "bg-green-100 text-green-800",
-    scheduled: "bg-blue-100 text-blue-800",
-    in_progress: "bg-yellow-100 text-yellow-800",
-    completed: "bg-green-200 text-green-900",
-    cancelled: "bg-red-100 text-red-800",
-  };
-
   if (loading || !rolesLoaded) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   if (!partner) {
     return (
-      <>
-        <Helmet>
-          <title>Partner Dashboard | Flyttbas</title>
-        </Helmet>
-        <Header />
-        <main className="min-h-screen bg-secondary/30 py-8">
-          <div className="container mx-auto px-4 text-center">
-            <Card className="max-w-md mx-auto">
-              <CardHeader>
-                <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-                  <AlertCircle className="h-8 w-8 text-primary" />
-                </div>
-                <CardTitle>Ingen partnerregistrering hittad</CardTitle>
-                <CardDescription>
-                  Du har partnerrättigheter men ingen registrerad partnerprofil. Vänligen registrera dig som partner.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button onClick={() => navigate("/bli-partner")} className="w-full">
-                  Registrera dig som partner
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        </main>
-        <Footer />
-      </>
+      <DashboardLayout title="Partner Dashboard">
+        <div className="max-w-md mx-auto text-center">
+          <Card>
+            <CardHeader>
+              <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+                <AlertCircle className="h-8 w-8 text-primary" />
+              </div>
+              <CardTitle>Ingen partnerregistrering hittad</CardTitle>
+              <CardDescription>
+                Du har partnerrättigheter men ingen registrerad partnerprofil. Vänligen registrera dig som partner.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={() => navigate("/bli-partner")} className="w-full">
+                Registrera dig som partner
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </DashboardLayout>
     );
   }
 
@@ -479,372 +449,338 @@ const PartnerDashboard = () => {
   };
 
   return (
-    <>
-      <Helmet>
-        <title>Partner Dashboard | Flyttbas</title>
-      </Helmet>
-      <Header />
-      
-      <main className="min-h-screen bg-secondary/30 py-8">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h1 className="text-2xl font-bold">{partner.company_name}</h1>
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <Star className="h-4 w-4 text-yellow-500" />
-                  {partner.average_rating.toFixed(1)} ({partner.total_reviews} omdömen)
-                </span>
-                <span>{partner.completed_jobs} genomförda jobb</span>
-              </div>
-            </div>
-            <Button variant="outline" onClick={handleSignOut}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Logga ut
-            </Button>
-          </div>
+    <DashboardLayout title="Partner Dashboard">
+      <DashboardHeader
+        title={partner.company_name}
+        subtitle={`★ ${partner.average_rating.toFixed(1)} (${partner.total_reviews} omdömen) • ${partner.completed_jobs} genomförda jobb`}
+        onSignOut={handleSignOut}
+      />
 
-          {partner.status !== 'approved' && statusMessages[partner.status] && (
-            <div className="mb-8 space-y-4">
-              <Card className={partner.status === 'more_info_requested' ? 'border-blue-200 bg-blue-50' : 'border-yellow-200 bg-yellow-50'}>
-                <CardContent className="pt-6">
-                  <div className="flex items-start gap-3">
-                    <AlertCircle className={`h-5 w-5 mt-0.5 ${partner.status === 'more_info_requested' ? 'text-blue-600' : 'text-yellow-600'}`} />
-                    <div className="flex-1">
-                      <p className={partner.status === 'more_info_requested' ? 'text-blue-800' : 'text-yellow-800'}>
-                        {statusMessages[partner.status].message}
-                      </p>
-                      {partner.status === 'more_info_requested' && partner.status_reason && (
-                        <div className="mt-4 p-4 bg-white/50 rounded-lg border border-blue-200">
-                          <p className="text-sm font-medium text-blue-900 mb-1">Meddelande från administratören:</p>
-                          <p className="text-blue-800">{partner.status_reason}</p>
-                        </div>
-                      )}
-                      {partner.status === 'more_info_requested' && (
-                        <Button 
-                          className="mt-4" 
-                          onClick={() => navigate('/bli-partner?edit=true')}
-                        >
-                          Uppdatera din ansökan
-                        </Button>
-                      )}
+      {partner.status !== 'approved' && statusMessages[partner.status] && (
+        <div className="mb-8 space-y-4">
+          <Card className={partner.status === 'more_info_requested' ? 'border-blue-200 bg-blue-50' : 'border-yellow-200 bg-yellow-50'}>
+            <CardContent className="pt-6">
+              <div className="flex items-start gap-3">
+                <AlertCircle className={`h-5 w-5 mt-0.5 ${partner.status === 'more_info_requested' ? 'text-blue-600' : 'text-yellow-600'}`} />
+                <div className="flex-1">
+                  <p className={partner.status === 'more_info_requested' ? 'text-blue-800' : 'text-yellow-800'}>
+                    {statusMessages[partner.status].message}
+                  </p>
+                  {partner.status === 'more_info_requested' && partner.status_reason && (
+                    <div className="mt-4 p-4 bg-white/50 rounded-lg border border-blue-200">
+                      <p className="text-sm font-medium text-blue-900 mb-1">Meddelande från administratören:</p>
+                      <p className="text-blue-800">{partner.status_reason}</p>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
+                  )}
+                  {partner.status === 'more_info_requested' && (
+                    <Button 
+                      className="mt-4" 
+                      onClick={() => navigate('/bli-partner?edit=true')}
+                    >
+                      Uppdatera din ansökan
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
-          {partner.status === 'approved' && (
-            <Tabs defaultValue="jobs">
-              <TabsList className="mb-4">
-                <TabsTrigger value="jobs" className="gap-2">
-                  <FileText className="h-4 w-4" />
-                  Tillgängliga jobb
-                </TabsTrigger>
-                <TabsTrigger value="offers" className="gap-2">
-                  <Send className="h-4 w-4" />
-                  Mina offerter
-                </TabsTrigger>
-                <TabsTrigger value="settings" className="gap-2">
-                  <Settings className="h-4 w-4" />
-                  Inställningar
-                </TabsTrigger>
-              </TabsList>
+      {partner.status === 'approved' && (
+        <Tabs defaultValue="jobs">
+          <TabsList className="mb-4">
+            <TabsTrigger value="jobs" className="gap-2">
+              <FileText className="h-4 w-4" />
+              Tillgängliga jobb
+            </TabsTrigger>
+            <TabsTrigger value="offers" className="gap-2">
+              <Send className="h-4 w-4" />
+              Mina offerter
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="gap-2">
+              <Settings className="h-4 w-4" />
+              Inställningar
+            </TabsTrigger>
+          </TabsList>
 
-              <TabsContent value="jobs">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h2 className="font-semibold text-lg">Nya förfrågningar</h2>
-                    <Badge variant="secondary">{quotes.length} aktiva</Badge>
-                  </div>
-                  
-                  {quotes.length === 0 ? (
-                    <Card>
-                      <CardContent className="pt-6 text-center text-muted-foreground">
-                        <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                        <p>Inga nya förfrågningar just nu</p>
-                      </CardContent>
-                    </Card>
-                  ) : (
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                      {quotes.map((quote) => {
-                        const hasOffer = quotesWithOffers.has(quote.id);
+          <TabsContent value="jobs">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="font-semibold text-lg">Nya förfrågningar</h2>
+                <Badge variant="secondary">{quotes.length} aktiva</Badge>
+              </div>
+              
+              {quotes.length === 0 ? (
+                <EmptyState
+                  icon={FileText}
+                  title="Inga nya förfrågningar just nu"
+                  description="Nya jobb visas här när kunder skickar in förfrågningar som matchar ditt serviceområde."
+                />
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {quotes.map((quote) => {
+                    const hasOffer = quotesWithOffers.has(quote.id);
+                    
+                    return (
+                      <Card 
+                        key={quote.id} 
+                        className={`relative transition-all hover:shadow-lg ${hasOffer ? 'opacity-70 border-green-200 bg-green-50/30' : 'border-border'}`}
+                      >
+                        {hasOffer && (
+                          <div className="absolute top-3 right-3">
+                            <Badge className="bg-green-600 text-white">
+                              <CheckCircle2 className="h-3 w-3 mr-1" />
+                              Offert skickad
+                            </Badge>
+                          </div>
+                        )}
                         
-                        return (
-                          <Card 
-                            key={quote.id} 
-                            className={`relative transition-all hover:shadow-lg ${hasOffer ? 'opacity-70 border-green-200 bg-green-50/30' : 'border-border'}`}
-                          >
-                            {hasOffer && (
-                              <div className="absolute top-3 right-3">
-                                <Badge className="bg-green-600 text-white">
-                                  <CheckCircle2 className="h-3 w-3 mr-1" />
-                                  Offert skickad
-                                </Badge>
-                              </div>
+                        <CardHeader className="pb-3">
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                            <Calendar className="h-4 w-4" />
+                            <span className="font-medium text-foreground">
+                              {new Date(quote.move_date).toLocaleDateString('sv-SE', { 
+                                weekday: 'short', 
+                                day: 'numeric', 
+                                month: 'short' 
+                              })}
+                            </span>
+                            {quote.move_start_time && (
+                              <span className="text-muted-foreground">
+                                kl {quote.move_start_time}
+                              </span>
                             )}
-                            
-                            <CardHeader className="pb-3">
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                                <Calendar className="h-4 w-4" />
-                                <span className="font-medium text-foreground">
-                                  {new Date(quote.move_date).toLocaleDateString('sv-SE', { 
-                                    weekday: 'short', 
-                                    day: 'numeric', 
-                                    month: 'short' 
-                                  })}
-                                </span>
-                                {quote.move_start_time && (
-                                  <span className="text-muted-foreground">
-                                    kl {quote.move_start_time}
-                                  </span>
-                                )}
+                          </div>
+                          
+                          <div className="space-y-1">
+                            <div className="flex items-start gap-2">
+                              <MapPin className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                              <div className="text-sm">
+                                <p className="font-medium">{quote.from_postal_code}</p>
+                                <div className="flex items-center gap-1 text-muted-foreground">
+                                  <ArrowRight className="h-3 w-3" />
+                                  <span>{quote.to_postal_code}</span>
+                                </div>
                               </div>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        
+                        <CardContent className="pt-0">
+                          <div className="flex flex-wrap gap-2 mb-4">
+                            <Badge variant="outline">{quote.dwelling_type}</Badge>
+                            <Badge variant="secondary">{quote.area_m2} m²</Badge>
+                            {quote.rooms && <Badge variant="secondary">{quote.rooms} rum</Badge>}
+                          </div>
+                          
+                          <div className="flex flex-wrap gap-1 text-xs text-muted-foreground mb-4">
+                            {(quote.stairs_from > 0 || quote.stairs_to > 0) && (
+                              <span className="bg-muted px-2 py-0.5 rounded">
+                                {quote.stairs_from + quote.stairs_to} tr
+                              </span>
+                            )}
+                            {quote.packing_hours > 0 && (
+                              <span className="bg-muted px-2 py-0.5 rounded">
+                                Packning
+                              </span>
+                            )}
+                            {quote.assembly_hours > 0 && (
+                              <span className="bg-muted px-2 py-0.5 rounded">
+                                Montering
+                              </span>
+                            )}
+                          </div>
+                          
+                          <div className="flex gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="flex-1"
+                              onClick={() => handleViewDetails(quote)}
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              Detaljer
+                            </Button>
+                            {!hasOffer && (
+                              <Button 
+                                size="sm" 
+                                className="flex-1"
+                                onClick={() => handleOpenOfferForm(quote)}
+                              >
+                                <Send className="h-4 w-4 mr-1" />
+                                Offerera
+                              </Button>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="offers">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="font-semibold text-lg">Mina offerter</h2>
+                <Badge variant="secondary">{myOffers.filter(o => o.status === 'approved').length} godkända</Badge>
+              </div>
+              
+              {myOffers.length === 0 ? (
+                <EmptyState
+                  icon={Send}
+                  title="Du har inte skickat några offerter ännu"
+                  description="Gå till 'Tillgängliga jobb' för att lämna offerter på nya förfrågningar."
+                />
+              ) : (
+                <div className="space-y-4">
+                  {myOffers.map((offer) => {
+                    const isApproved = offer.status === 'approved';
+                    
+                    return (
+                      <Card 
+                        key={offer.id} 
+                        className={isApproved ? 'border-green-200 bg-green-50/30' : ''}
+                      >
+                        <CardContent className="pt-6">
+                          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                            <div className="flex-1 space-y-3">
+                              {isApproved && offer.quote_requests ? (
+                                <div className="bg-white rounded-lg p-4 border border-green-200 space-y-2">
+                                  <h4 className="font-semibold flex items-center gap-2 text-green-800">
+                                    <User className="h-4 w-4" />
+                                    Kunduppgifter
+                                  </h4>
+                                  <div className="grid sm:grid-cols-2 gap-2 text-sm">
+                                    <div className="flex items-center gap-2">
+                                      <User className="h-3 w-3 text-muted-foreground" />
+                                      <span className="font-medium">{offer.quote_requests.customer_name}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <Mail className="h-3 w-3 text-muted-foreground" />
+                                      <a href={`mailto:${offer.quote_requests.customer_email}`} className="text-primary hover:underline">
+                                        {offer.quote_requests.customer_email}
+                                      </a>
+                                    </div>
+                                    {offer.quote_requests.customer_phone && (
+                                      <div className="flex items-center gap-2">
+                                        <Phone className="h-3 w-3 text-muted-foreground" />
+                                        <a href={`tel:${offer.quote_requests.customer_phone}`} className="text-primary hover:underline">
+                                          {offer.quote_requests.customer_phone}
+                                        </a>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              ) : (
+                                <p className="text-sm text-muted-foreground italic">
+                                  Kunduppgifter visas efter godkännande
+                                </p>
+                              )}
                               
                               <div className="space-y-1">
-                                <div className="flex items-start gap-2">
-                                  <MapPin className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                                  <div className="text-sm">
-                                    <p className="font-medium">{quote.from_postal_code}</p>
-                                    <div className="flex items-center gap-1 text-muted-foreground">
-                                      <ArrowRight className="h-3 w-3" />
-                                      <span>{quote.to_postal_code}</span>
-                                    </div>
-                                  </div>
+                                <div className="flex items-center gap-2 text-sm">
+                                  <MapPin className="h-4 w-4 text-primary" />
+                                  <span>{offer.quote_requests?.from_address} → {offer.quote_requests?.to_address}</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                  <Calendar className="h-4 w-4" />
+                                  <span>
+                                    {offer.quote_requests?.move_date && new Date(offer.quote_requests.move_date).toLocaleDateString('sv-SE', { 
+                                      weekday: 'long', 
+                                      year: 'numeric', 
+                                      month: 'long', 
+                                      day: 'numeric' 
+                                    })}
+                                    {offer.quote_requests?.move_start_time && ` kl ${offer.quote_requests.move_start_time}`}
+                                  </span>
                                 </div>
                               </div>
-                            </CardHeader>
+                              
+                              {isApproved && (
+                                <div className="flex items-center gap-2">
+                                  <Truck className="h-4 w-4 text-muted-foreground" />
+                                  <span className="text-sm text-muted-foreground">Jobbstatus:</span>
+                                  <Badge className={jobStatusColors[offer.job_status || 'confirmed'] || 'bg-gray-100 text-gray-800'}>
+                                    {jobStatusLabels[offer.job_status || 'confirmed'] || 'Bekräftad'}
+                                  </Badge>
+                                </div>
+                              )}
+                            </div>
                             
-                            <CardContent className="pt-0">
-                              <div className="flex flex-wrap gap-2 mb-4">
-                                <Badge variant="outline">{quote.dwelling_type}</Badge>
-                                <Badge variant="secondary">{quote.area_m2} m²</Badge>
-                                {quote.rooms && <Badge variant="secondary">{quote.rooms} rum</Badge>}
-                              </div>
+                            <div className="text-right space-y-2">
+                              <p className="text-2xl font-bold">{offer.total_price.toLocaleString('sv-SE')} kr</p>
+                              <StatusBadge status={offer.status} />
                               
-                              {/* Quick info pills */}
-                              <div className="flex flex-wrap gap-1 text-xs text-muted-foreground mb-4">
-                                {(quote.stairs_from > 0 || quote.stairs_to > 0) && (
-                                  <span className="bg-muted px-2 py-0.5 rounded">
-                                    {quote.stairs_from + quote.stairs_to} tr
-                                  </span>
-                                )}
-                                {quote.packing_hours > 0 && (
-                                  <span className="bg-muted px-2 py-0.5 rounded">
-                                    Packning
-                                  </span>
-                                )}
-                                {quote.assembly_hours > 0 && (
-                                  <span className="bg-muted px-2 py-0.5 rounded">
-                                    Montering
-                                  </span>
-                                )}
-                              </div>
-                              
-                              <div className="flex gap-2">
+                              {isApproved && (
                                 <Button 
-                                  variant="outline" 
-                                  size="sm" 
-                                  className="flex-1"
-                                  onClick={() => handleViewDetails(quote)}
+                                  onClick={() => handleOpenJobDetails(offer)}
+                                  className="w-full mt-2"
+                                  size="sm"
                                 >
                                   <Eye className="h-4 w-4 mr-1" />
-                                  Detaljer
+                                  Hantera jobb
                                 </Button>
-                                {!hasOffer && (
-                                  <Button 
-                                    size="sm" 
-                                    className="flex-1"
-                                    onClick={() => handleOpenOfferForm(quote)}
-                                  >
-                                    <Send className="h-4 w-4 mr-1" />
-                                    Offerera
-                                  </Button>
-                                )}
-                              </div>
-                            </CardContent>
-                          </Card>
-                        );
-                      })}
-                    </div>
-                  )}
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                 </div>
-              </TabsContent>
+              )}
+            </div>
+          </TabsContent>
 
-              <TabsContent value="offers">
+          <TabsContent value="settings">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Ruler className="h-5 w-5" />
+                  Serviceområde
+                </CardTitle>
+                <CardDescription>
+                  Ange hur långt du är villig att köra för uppdrag.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h2 className="font-semibold text-lg">Mina offerter</h2>
-                    <Badge variant="secondary">{myOffers.filter(o => o.status === 'approved').length} godkända</Badge>
+                  <div className="flex justify-between items-center">
+                    <Label>Max körsträcka</Label>
+                    <span className="text-lg font-semibold text-primary">{maxDistance} km</span>
                   </div>
-                  
-                  {myOffers.length === 0 ? (
-                    <Card>
-                      <CardContent className="pt-6 text-center text-muted-foreground">
-                        <Send className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                        <p>Du har inte skickat några offerter ännu</p>
-                      </CardContent>
-                    </Card>
-                  ) : (
-                    <div className="space-y-4">
-                      {myOffers.map((offer) => {
-                        const isApproved = offer.status === 'approved';
-                        
-                        return (
-                          <Card 
-                            key={offer.id} 
-                            className={isApproved ? 'border-green-200 bg-green-50/30' : ''}
-                          >
-                            <CardContent className="pt-6">
-                              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                                <div className="flex-1 space-y-3">
-                                  {/* Customer info - only for approved offers */}
-                                  {isApproved && offer.quote_requests ? (
-                                    <div className="bg-white rounded-lg p-4 border border-green-200 space-y-2">
-                                      <h4 className="font-semibold flex items-center gap-2 text-green-800">
-                                        <User className="h-4 w-4" />
-                                        Kunduppgifter
-                                      </h4>
-                                      <div className="grid sm:grid-cols-2 gap-2 text-sm">
-                                        <div className="flex items-center gap-2">
-                                          <User className="h-3 w-3 text-muted-foreground" />
-                                          <span className="font-medium">{offer.quote_requests.customer_name}</span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                          <Mail className="h-3 w-3 text-muted-foreground" />
-                                          <a href={`mailto:${offer.quote_requests.customer_email}`} className="text-primary hover:underline">
-                                            {offer.quote_requests.customer_email}
-                                          </a>
-                                        </div>
-                                        {offer.quote_requests.customer_phone && (
-                                          <div className="flex items-center gap-2">
-                                            <Phone className="h-3 w-3 text-muted-foreground" />
-                                            <a href={`tel:${offer.quote_requests.customer_phone}`} className="text-primary hover:underline">
-                                              {offer.quote_requests.customer_phone}
-                                            </a>
-                                          </div>
-                                        )}
-                                      </div>
-                                    </div>
-                                  ) : (
-                                    <p className="text-sm text-muted-foreground italic">
-                                      Kunduppgifter visas efter godkännande
-                                    </p>
-                                  )}
-                                  
-                                  {/* Move details */}
-                                  <div className="space-y-1">
-                                    <div className="flex items-center gap-2 text-sm">
-                                      <MapPin className="h-4 w-4 text-primary" />
-                                      <span>{offer.quote_requests?.from_address} → {offer.quote_requests?.to_address}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                      <Calendar className="h-4 w-4" />
-                                      <span>
-                                        {offer.quote_requests?.move_date && new Date(offer.quote_requests.move_date).toLocaleDateString('sv-SE', { 
-                                          weekday: 'long', 
-                                          year: 'numeric', 
-                                          month: 'long', 
-                                          day: 'numeric' 
-                                        })}
-                                        {offer.quote_requests?.move_start_time && ` kl ${offer.quote_requests.move_start_time}`}
-                                      </span>
-                                    </div>
-                                  </div>
-                                  
-                                  {/* Job status for approved offers */}
-                                  {isApproved && (
-                                    <div className="flex items-center gap-2">
-                                      <Truck className="h-4 w-4 text-muted-foreground" />
-                                      <span className="text-sm text-muted-foreground">Jobbstatus:</span>
-                                      <Badge className={jobStatusColors[offer.job_status || 'confirmed'] || 'bg-gray-100 text-gray-800'}>
-                                        {jobStatusLabels[offer.job_status || 'confirmed'] || 'Bekräftad'}
-                                      </Badge>
-                                    </div>
-                                  )}
-                                </div>
-                                
-                                <div className="text-right space-y-2">
-                                  <p className="text-2xl font-bold">{offer.total_price.toLocaleString('sv-SE')} kr</p>
-                                  <Badge className={
-                                    offer.status === 'approved' ? 'bg-green-100 text-green-800' :
-                                    offer.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                                    'bg-yellow-100 text-yellow-800'
-                                  }>
-                                    {offer.status === 'pending' ? 'Väntar på svar' : 
-                                     offer.status === 'approved' ? 'Offert godkänd' : 
-                                     offer.status === 'rejected' ? 'Avvisad' : offer.status}
-                                  </Badge>
-                                  
-                                  {isApproved && (
-                                    <Button 
-                                      onClick={() => handleOpenJobDetails(offer)}
-                                      className="w-full mt-2"
-                                      size="sm"
-                                    >
-                                      <Eye className="h-4 w-4 mr-1" />
-                                      Hantera jobb
-                                    </Button>
-                                  )}
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        );
-                      })}
-                    </div>
-                  )}
+                  <Slider
+                    value={[maxDistance]}
+                    onValueChange={(value) => setMaxDistance(value[0])}
+                    min={10}
+                    max={200}
+                    step={10}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>10 km</span>
+                    <span>100 km</span>
+                    <span>200 km</span>
+                  </div>
                 </div>
-              </TabsContent>
 
-              <TabsContent value="settings">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Ruler className="h-5 w-5" />
-                      Serviceområde
-                    </CardTitle>
-                    <CardDescription>
-                      Ange hur långt du är villig att köra för uppdrag.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <Label>Max körsträcka</Label>
-                        <span className="text-lg font-semibold text-primary">{maxDistance} km</span>
-                      </div>
-                      <Slider
-                        value={[maxDistance]}
-                        onValueChange={(value) => setMaxDistance(value[0])}
-                        min={10}
-                        max={200}
-                        step={10}
-                        className="w-full"
-                      />
-                      <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>10 km</span>
-                        <span>100 km</span>
-                        <span>200 km</span>
-                      </div>
-                    </div>
+                <Button 
+                  onClick={() => handleUpdateProximity(maxDistance)}
+                  disabled={updatingSettings || maxDistance === partner.max_drive_distance_km}
+                  className="w-full"
+                >
+                  {updatingSettings ? "Sparar..." : "Spara inställningar"}
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      )}
 
-                    <Button 
-                      onClick={() => handleUpdateProximity(maxDistance)}
-                      disabled={updatingSettings || maxDistance === partner.max_drive_distance_km}
-                      className="w-full"
-                    >
-                      {updatingSettings ? "Sparar..." : "Spara inställningar"}
-                    </Button>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
-          )}
-        </div>
-      </main>
-      
       {/* Detail View Dialog */}
       <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
@@ -862,7 +798,6 @@ const PartnerDashboard = () => {
           
           {viewingQuote && (
             <div className="space-y-4 mt-4">
-              {/* Addresses */}
               <div className="bg-muted/50 rounded-lg p-4 space-y-2">
                 <h4 className="font-medium text-sm flex items-center gap-2">
                   <MapPin className="h-4 w-4" />
@@ -874,7 +809,6 @@ const PartnerDashboard = () => {
                 </div>
               </div>
 
-              {/* Property Details */}
               <div className="bg-muted/50 rounded-lg p-4 space-y-2">
                 <h4 className="font-medium text-sm flex items-center gap-2">
                   <Home className="h-4 w-4" />
@@ -887,7 +821,6 @@ const PartnerDashboard = () => {
                 </div>
               </div>
 
-              {/* Stairs & Carry Distance */}
               {(viewingQuote.stairs_from > 0 || viewingQuote.stairs_to > 0 || viewingQuote.carry_from_m || viewingQuote.carry_to_m) && (
                 <div className="bg-muted/50 rounded-lg p-4 space-y-2">
                   <h4 className="font-medium text-sm flex items-center gap-2">
@@ -903,7 +836,6 @@ const PartnerDashboard = () => {
                 </div>
               )}
 
-              {/* Heavy Items */}
               {formatHeavyItems(viewingQuote.heavy_items) && (
                 <div className="bg-muted/50 rounded-lg p-4 space-y-2">
                   <h4 className="font-medium text-sm flex items-center gap-2">
@@ -914,7 +846,6 @@ const PartnerDashboard = () => {
                 </div>
               )}
 
-              {/* Services */}
               {(viewingQuote.packing_hours > 0 || viewingQuote.assembly_hours > 0) && (
                 <div className="bg-muted/50 rounded-lg p-4 space-y-2">
                   <h4 className="font-medium text-sm flex items-center gap-2">
@@ -928,7 +859,6 @@ const PartnerDashboard = () => {
                 </div>
               )}
 
-              {/* Notes */}
               {viewingQuote.notes && (
                 <div className="bg-muted/50 rounded-lg p-4 space-y-2">
                   <h4 className="font-medium text-sm">Kundanteckning</h4>
@@ -936,7 +866,6 @@ const PartnerDashboard = () => {
                 </div>
               )}
 
-              {/* Action Button */}
               {!quotesWithOffers.has(viewingQuote.id) && (
                 <Button 
                   className="w-full mt-4"
@@ -1061,131 +990,27 @@ const PartnerDashboard = () => {
           
           {selectedApprovedOffer?.quote_requests && (
             <div className="space-y-6 mt-4">
-              {/* Customer Contact Info */}
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-3">
-                <h4 className="font-semibold flex items-center gap-2 text-green-800">
-                  <User className="h-4 w-4" />
-                  Kundens kontaktuppgifter
-                </h4>
-                <div className="grid sm:grid-cols-2 gap-3">
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-medium">{selectedApprovedOffer.quote_requests.customer_name}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    <a href={`mailto:${selectedApprovedOffer.quote_requests.customer_email}`} className="text-primary hover:underline">
-                      {selectedApprovedOffer.quote_requests.customer_email}
-                    </a>
-                  </div>
-                  {selectedApprovedOffer.quote_requests.customer_phone && (
-                    <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-muted-foreground" />
-                      <a href={`tel:${selectedApprovedOffer.quote_requests.customer_phone}`} className="text-primary hover:underline font-medium">
-                        {selectedApprovedOffer.quote_requests.customer_phone}
-                      </a>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Full Job Details */}
-              <div className="space-y-4">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <Package className="h-4 w-4" />
-                  Jobbdetaljer
-                </h4>
-                
-                {/* Addresses */}
-                <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-                  <div className="flex items-center gap-2 text-sm">
-                    <MapPin className="h-4 w-4 text-primary" />
-                    <span className="text-muted-foreground">Från:</span>
-                    <span className="font-medium">{selectedApprovedOffer.quote_requests.from_address}, {selectedApprovedOffer.quote_requests.from_postal_code}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <MapPin className="h-4 w-4 text-primary" />
-                    <span className="text-muted-foreground">Till:</span>
-                    <span className="font-medium">{selectedApprovedOffer.quote_requests.to_address}, {selectedApprovedOffer.quote_requests.to_postal_code}</span>
-                  </div>
-                </div>
-
-                {/* Property Details */}
-                <div className="grid sm:grid-cols-3 gap-4 text-sm">
-                  <div className="bg-muted/50 rounded-lg p-3">
-                    <p className="text-muted-foreground mb-1">Bostadstyp</p>
-                    <p className="font-medium">{selectedApprovedOffer.quote_requests.dwelling_type}</p>
-                  </div>
-                  <div className="bg-muted/50 rounded-lg p-3">
-                    <p className="text-muted-foreground mb-1">Yta</p>
-                    <p className="font-medium">{selectedApprovedOffer.quote_requests.area_m2} m²</p>
-                  </div>
-                  {selectedApprovedOffer.quote_requests.rooms && (
-                    <div className="bg-muted/50 rounded-lg p-3">
-                      <p className="text-muted-foreground mb-1">Rum</p>
-                      <p className="font-medium">{selectedApprovedOffer.quote_requests.rooms}</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Stairs and Carry Distance */}
-                {((selectedApprovedOffer.quote_requests.stairs_from ?? 0) > 0 || 
-                  (selectedApprovedOffer.quote_requests.stairs_to ?? 0) > 0 || 
-                  (selectedApprovedOffer.quote_requests.carry_from_m ?? 0) > 0 ||
-                  (selectedApprovedOffer.quote_requests.carry_to_m ?? 0) > 0) && (
-                  <div className="grid sm:grid-cols-2 gap-4 text-sm">
-                    {((selectedApprovedOffer.quote_requests.stairs_from ?? 0) > 0 || (selectedApprovedOffer.quote_requests.stairs_to ?? 0) > 0) && (
-                      <div className="bg-muted/50 rounded-lg p-3">
-                        <p className="text-muted-foreground mb-1">Trappor</p>
-                        <p className="font-medium">
-                          Från: {selectedApprovedOffer.quote_requests.stairs_from ?? 0} tr, 
-                          Till: {selectedApprovedOffer.quote_requests.stairs_to ?? 0} tr
-                        </p>
-                      </div>
-                    )}
-                    {((selectedApprovedOffer.quote_requests.carry_from_m ?? 0) > 0 || (selectedApprovedOffer.quote_requests.carry_to_m ?? 0) > 0) && (
-                      <div className="bg-muted/50 rounded-lg p-3">
-                        <p className="text-muted-foreground mb-1">Bäravstånd</p>
-                        <p className="font-medium">
-                          Från: {selectedApprovedOffer.quote_requests.carry_from_m ?? 0} m, 
-                          Till: {selectedApprovedOffer.quote_requests.carry_to_m ?? 0} m
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Heavy Items */}
-                {formatHeavyItems(selectedApprovedOffer.quote_requests.heavy_items) && (
-                  <div className="bg-muted/50 rounded-lg p-3">
-                    <p className="text-muted-foreground mb-1 text-sm">Tunga föremål</p>
-                    <p className="font-medium text-sm">{formatHeavyItems(selectedApprovedOffer.quote_requests.heavy_items)}</p>
-                  </div>
-                )}
-
-                {/* Services */}
-                {((selectedApprovedOffer.quote_requests.packing_hours ?? 0) > 0 || (selectedApprovedOffer.quote_requests.assembly_hours ?? 0) > 0) && (
-                  <div className="bg-muted/50 rounded-lg p-3">
-                    <p className="text-muted-foreground mb-1 text-sm">Tilläggstjänster</p>
-                    <div className="flex gap-2 flex-wrap">
-                      {(selectedApprovedOffer.quote_requests.packing_hours ?? 0) > 0 && (
-                        <Badge variant="secondary">Packning: {selectedApprovedOffer.quote_requests.packing_hours}h</Badge>
-                      )}
-                      {(selectedApprovedOffer.quote_requests.assembly_hours ?? 0) > 0 && (
-                        <Badge variant="secondary">Montering: {selectedApprovedOffer.quote_requests.assembly_hours}h</Badge>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Notes */}
-                {selectedApprovedOffer.quote_requests.notes && (
-                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                    <p className="text-amber-800 text-sm font-medium mb-1">Kundanteckning</p>
-                    <p className="text-sm italic">{selectedApprovedOffer.quote_requests.notes}</p>
-                  </div>
-                )}
-              </div>
+              <JobDetailsCard
+                customerName={selectedApprovedOffer.quote_requests.customer_name}
+                customerEmail={selectedApprovedOffer.quote_requests.customer_email}
+                customerPhone={selectedApprovedOffer.quote_requests.customer_phone}
+                fromAddress={`${selectedApprovedOffer.quote_requests.from_address}, ${selectedApprovedOffer.quote_requests.from_postal_code}`}
+                toAddress={`${selectedApprovedOffer.quote_requests.to_address}, ${selectedApprovedOffer.quote_requests.to_postal_code}`}
+                moveDate={selectedApprovedOffer.quote_requests.move_date}
+                moveStartTime={selectedApprovedOffer.quote_requests.move_start_time}
+                dwellingType={selectedApprovedOffer.quote_requests.dwelling_type}
+                areaM2={selectedApprovedOffer.quote_requests.area_m2}
+                rooms={selectedApprovedOffer.quote_requests.rooms}
+                stairsFrom={selectedApprovedOffer.quote_requests.stairs_from}
+                stairsTo={selectedApprovedOffer.quote_requests.stairs_to}
+                carryFromM={selectedApprovedOffer.quote_requests.carry_from_m}
+                carryToM={selectedApprovedOffer.quote_requests.carry_to_m}
+                heavyItems={selectedApprovedOffer.quote_requests.heavy_items}
+                packingHours={selectedApprovedOffer.quote_requests.packing_hours}
+                assemblyHours={selectedApprovedOffer.quote_requests.assembly_hours}
+                notes={selectedApprovedOffer.quote_requests.notes}
+                showCustomerContact={true}
+              />
 
               {/* Your Offer */}
               <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
@@ -1255,9 +1080,7 @@ const PartnerDashboard = () => {
           )}
         </DialogContent>
       </Dialog>
-      
-      <Footer />
-    </>
+    </DashboardLayout>
   );
 };
 
