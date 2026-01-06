@@ -130,7 +130,7 @@ interface Offer {
 }
 
 const AdminDashboard = () => {
-  const { user, isAdmin, loading, signOut } = useAuth();
+  const { user, isAdmin, loading, signOut, rolesLoaded } = useAuth();
   const navigate = useNavigate();
 
   const [partners, setPartners] = useState<Partner[]>([]);
@@ -178,16 +178,16 @@ const AdminDashboard = () => {
   };
 
   useEffect(() => {
-    if (!loading && (!user || !isAdmin)) {
+    if (!loading && rolesLoaded && (!user || !isAdmin)) {
       navigate("/auth");
     }
-  }, [user, isAdmin, loading, navigate]);
+  }, [user, isAdmin, loading, rolesLoaded, navigate]);
 
   useEffect(() => {
-    if (isAdmin) {
+    if (rolesLoaded && isAdmin) {
       fetchData();
     }
-  }, [isAdmin]);
+  }, [isAdmin, rolesLoaded]);
 
   const fetchData = async () => {
     const { data: partnersData } = await supabase
