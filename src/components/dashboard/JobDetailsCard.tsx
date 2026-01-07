@@ -29,9 +29,9 @@ interface JobDetailsCardProps {
   rooms?: number | null;
   stairsFrom?: number | null;
   stairsTo?: number | null;
-  carryFromM?: number | null;
-  carryToM?: number | null;
-  heavyItems?: HeavyItem[] | null;
+  elevatorFrom?: boolean;
+  elevatorTo?: boolean;
+  heavyItems?: HeavyItem[] | string[] | null;
   packingHours?: number | null;
   assemblyHours?: number | null;
   notes?: string | null;
@@ -51,17 +51,23 @@ export const JobDetailsCard = ({
   rooms,
   stairsFrom,
   stairsTo,
-  carryFromM,
-  carryToM,
+  elevatorFrom,
+  elevatorTo,
   heavyItems,
   packingHours,
   assemblyHours,
   notes,
   showCustomerContact = false,
 }: JobDetailsCardProps) => {
-  const formatHeavyItems = (items: HeavyItem[] | null | undefined) => {
+  const formatHeavyItems = (items: HeavyItem[] | string[] | null | undefined) => {
     if (!items || !Array.isArray(items) || items.length === 0) return null;
-    return items
+    
+    // Handle both object array and string array formats
+    if (typeof items[0] === 'string') {
+      return (items as string[]).join(", ");
+    }
+    
+    return (items as HeavyItem[])
       .filter((item) => item.quantity > 0)
       .map((item) => `${item.name}: ${item.quantity}`)
       .join(", ");
@@ -109,12 +115,11 @@ export const JobDetailsCard = ({
             <div>
               <p className="text-sm text-muted-foreground">Från</p>
               <p className="font-medium">{fromAddress}</p>
-              {(stairsFrom !== null && stairsFrom !== undefined && stairsFrom > 0) && (
+              {elevatorFrom ? (
+                <p className="text-sm text-muted-foreground">Hiss finns</p>
+              ) : (stairsFrom !== null && stairsFrom !== undefined && stairsFrom > 0) ? (
                 <p className="text-sm text-muted-foreground">{stairsFrom} trappor</p>
-              )}
-              {(carryFromM !== null && carryFromM !== undefined && carryFromM > 0) && (
-                <p className="text-sm text-muted-foreground">{carryFromM}m bärväg</p>
-              )}
+              ) : null}
             </div>
           </div>
 
@@ -123,12 +128,11 @@ export const JobDetailsCard = ({
             <div>
               <p className="text-sm text-muted-foreground">Till</p>
               <p className="font-medium">{toAddress}</p>
-              {(stairsTo !== null && stairsTo !== undefined && stairsTo > 0) && (
+              {elevatorTo ? (
+                <p className="text-sm text-muted-foreground">Hiss finns</p>
+              ) : (stairsTo !== null && stairsTo !== undefined && stairsTo > 0) ? (
                 <p className="text-sm text-muted-foreground">{stairsTo} trappor</p>
-              )}
-              {(carryToM !== null && carryToM !== undefined && carryToM > 0) && (
-                <p className="text-sm text-muted-foreground">{carryToM}m bärväg</p>
-              )}
+              ) : null}
             </div>
           </div>
         </div>
@@ -181,13 +185,13 @@ export const JobDetailsCard = ({
               {packingHours && packingHours > 0 && (
                 <span className="flex items-center gap-1">
                   <Package className="h-4 w-4 text-muted-foreground" />
-                  Packning: {packingHours}h
+                  Packning: Ja
                 </span>
               )}
               {assemblyHours && assemblyHours > 0 && (
                 <span className="flex items-center gap-1">
                   <Package className="h-4 w-4 text-muted-foreground" />
-                  Montering: {assemblyHours}h
+                  Montering: Ja
                 </span>
               )}
             </div>

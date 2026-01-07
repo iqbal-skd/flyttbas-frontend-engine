@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { MapPin, Home, Calendar, Route } from "lucide-react";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import { useDistanceCalculation } from "@/hooks/useDistanceCalculation";
@@ -170,13 +171,13 @@ export const Step1Property = ({ formData, setFormData }: StepProps) => {
         </div>
       </div>
 
-      {/* Date & Time */}
+      {/* Date */}
       <div className="flex items-center gap-2 text-primary mt-6 mb-4">
         <Calendar className="h-5 w-5" aria-hidden="true" />
         <h3 className="font-semibold text-base sm:text-lg">När vill du flytta?</h3>
       </div>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="space-y-4">
         <div>
           <Label htmlFor="date" className="text-sm font-medium">
             Önskat datum
@@ -189,17 +190,21 @@ export const Step1Property = ({ formData, setFormData }: StepProps) => {
             className="mt-1.5"
           />
         </div>
-        <div>
-          <Label htmlFor="start_time" className="text-sm font-medium">
-            Starttid
-          </Label>
-          <Input
-            id="start_time"
-            type="time"
-            value={formData.start_time}
-            onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
-            className="mt-1.5"
+        
+        <div className="flex items-start gap-3 p-3 sm:p-4 bg-muted/50 rounded-lg">
+          <Checkbox
+            id="flexible_time"
+            checked={formData.flexible_time}
+            onCheckedChange={(checked) => 
+              setFormData({ ...formData, flexible_time: checked as boolean })
+            }
           />
+          <Label 
+            htmlFor="flexible_time" 
+            className="text-sm font-normal cursor-pointer leading-relaxed"
+          >
+            Flexibel starttid (flyttfirman föreslår tid)
+          </Label>
         </div>
       </div>
     </fieldset>

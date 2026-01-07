@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Slider } from "@/components/ui/slider";
 import {
   DashboardLayout,
   DashboardHeader,
@@ -31,10 +30,7 @@ import {
   Send,
   MapPin,
   Calendar,
-  Star,
   AlertCircle,
-  Settings,
-  Ruler,
   Package,
   Home,
   Building,
@@ -160,8 +156,6 @@ const PartnerDashboard = () => {
     terms: "",
   });
   const [submitting, setSubmitting] = useState(false);
-  const [updatingSettings, setUpdatingSettings] = useState(false);
-  const [maxDistance, setMaxDistance] = useState<number>(50);
   const [selectedApprovedOffer, setSelectedApprovedOffer] = useState<Offer | null>(null);
   const [jobDetailDialogOpen, setJobDetailDialogOpen] = useState(false);
   const [updatingJobStatus, setUpdatingJobStatus] = useState(false);
@@ -190,7 +184,6 @@ const PartnerDashboard = () => {
 
     if (partnerData) {
       setPartner(partnerData);
-      setMaxDistance(partnerData.max_drive_distance_km || 50);
       if (partnerData.status === 'approved') {
         const { data: quotesData } = await supabase
           .from('quote_requests')
@@ -319,35 +312,6 @@ const PartnerDashboard = () => {
     await signOut();
     navigate("/");
   };
-
-  const handleUpdateProximity = async (newDistance: number) => {
-    if (!partner) return;
-    
-    setUpdatingSettings(true);
-    try {
-      const { error } = await supabase
-        .from('partners')
-        .update({ max_drive_distance_km: newDistance })
-        .eq('id', partner.id);
-
-      if (error) throw error;
-
-      setPartner({ ...partner, max_drive_distance_km: newDistance });
-      toast({
-        title: "Inställningar uppdaterade",
-        description: `Ditt serviceområde är nu ${newDistance} km`,
-      });
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Fel",
-        description: error.message || "Kunde inte uppdatera inställningar.",
-      });
-    } finally {
-      setUpdatingSettings(false);
-    }
-  };
-
   const formatHeavyItems = (items: any) => {
     if (!items || !Array.isArray(items) || items.length === 0) return null;
     return items.filter((item: any) => item.quantity > 0).map((item: any) => `${item.name}: ${item.quantity}`).join(', ');
@@ -497,10 +461,6 @@ const PartnerDashboard = () => {
             <TabsTrigger value="offers" className="gap-2">
               <Send className="h-4 w-4" />
               Mina offerter
-            </TabsTrigger>
-            <TabsTrigger value="settings" className="gap-2">
-              <Settings className="h-4 w-4" />
-              Inställningar
             </TabsTrigger>
           </TabsList>
 
@@ -736,48 +696,6 @@ const PartnerDashboard = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="settings">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Ruler className="h-5 w-5" />
-                  Serviceområde
-                </CardTitle>
-                <CardDescription>
-                  Ange hur långt du är villig att köra för uppdrag.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <Label>Max körsträcka</Label>
-                    <span className="text-lg font-semibold text-primary">{maxDistance} km</span>
-                  </div>
-                  <Slider
-                    value={[maxDistance]}
-                    onValueChange={(value) => setMaxDistance(value[0])}
-                    min={10}
-                    max={200}
-                    step={10}
-                    className="w-full"
-                  />
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>10 km</span>
-                    <span>100 km</span>
-                    <span>200 km</span>
-                  </div>
-                </div>
-
-                <Button 
-                  onClick={() => handleUpdateProximity(maxDistance)}
-                  disabled={updatingSettings || maxDistance === partner.max_drive_distance_km}
-                  className="w-full"
-                >
-                  {updatingSettings ? "Sparar..." : "Spara inställningar"}
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
         </Tabs>
       )}
 
@@ -821,17 +739,15 @@ const PartnerDashboard = () => {
                 </div>
               </div>
 
-              {(viewingQuote.stairs_from > 0 || viewingQuote.stairs_to > 0 || viewingQuote.carry_from_m || viewingQuote.carry_to_m) && (
+              {(viewingQuote.stairs_from > 0 || viewingQuote.stairs_to > 0) && (
                 <div className="bg-muted/50 rounded-lg p-4 space-y-2">
                   <h4 className="font-medium text-sm flex items-center gap-2">
                     <Building className="h-4 w-4" />
-                    Trappor & Bäravstånd
+                    Trappor
                   </h4>
                   <div className="grid grid-cols-2 gap-2 text-sm pl-6">
                     {viewingQuote.stairs_from > 0 && <p><span className="text-muted-foreground">Trappor (från):</span> {viewingQuote.stairs_from} tr</p>}
                     {viewingQuote.stairs_to > 0 && <p><span className="text-muted-foreground">Trappor (till):</span> {viewingQuote.stairs_to} tr</p>}
-                    {viewingQuote.carry_from_m && viewingQuote.carry_from_m > 0 && <p><span className="text-muted-foreground">Bäravstånd (från):</span> {viewingQuote.carry_from_m} m</p>}
-                    {viewingQuote.carry_to_m && viewingQuote.carry_to_m > 0 && <p><span className="text-muted-foreground">Bäravstånd (till):</span> {viewingQuote.carry_to_m} m</p>}
                   </div>
                 </div>
               )}
@@ -853,8 +769,8 @@ const PartnerDashboard = () => {
                     Tilläggstjänster
                   </h4>
                   <div className="text-sm pl-6 space-y-1">
-                    {viewingQuote.packing_hours > 0 && <p>Packning: {viewingQuote.packing_hours} timmar</p>}
-                    {viewingQuote.assembly_hours > 0 && <p>Montering/Demontering: {viewingQuote.assembly_hours} timmar</p>}
+                    {viewingQuote.packing_hours > 0 && <p>Packning: Ja</p>}
+                    {viewingQuote.assembly_hours > 0 && <p>Montering/Demontering: Ja</p>}
                   </div>
                 </div>
               )}
@@ -1003,8 +919,6 @@ const PartnerDashboard = () => {
                 rooms={selectedApprovedOffer.quote_requests.rooms}
                 stairsFrom={selectedApprovedOffer.quote_requests.stairs_from}
                 stairsTo={selectedApprovedOffer.quote_requests.stairs_to}
-                carryFromM={selectedApprovedOffer.quote_requests.carry_from_m}
-                carryToM={selectedApprovedOffer.quote_requests.carry_to_m}
                 heavyItems={selectedApprovedOffer.quote_requests.heavy_items}
                 packingHours={selectedApprovedOffer.quote_requests.packing_hours}
                 assemblyHours={selectedApprovedOffer.quote_requests.assembly_hours}
