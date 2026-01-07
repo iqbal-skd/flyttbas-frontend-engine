@@ -1,7 +1,8 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Building, Footprints, Car, Weight } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Building, Car, Weight } from "lucide-react";
 import type { StepProps } from "./types";
 
 export const Step2Details = ({ formData, setFormData }: StepProps) => {
@@ -16,100 +17,140 @@ export const Step2Details = ({ formData, setFormData }: StepProps) => {
 
   return (
     <fieldset className="space-y-5">
-      <legend className="sr-only">Steg 2: Trappor, bärväg och tunga föremål</legend>
+      <legend className="sr-only">Steg 2: Hiss, trappor och tunga föremål</legend>
       
-      {/* Stairs */}
+      {/* Elevator - From address */}
       <div className="flex items-center gap-2 text-primary mb-4">
         <Building className="h-5 w-5" aria-hidden="true" />
-        <h3 className="font-semibold text-base sm:text-lg">Trappor utan hiss</h3>
+        <h3 className="font-semibold text-base sm:text-lg">Hiss & Trappor (från-adress)</h3>
       </div>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="stairs_from" className="text-sm font-medium">
-            Våningar (från-adress)
-          </Label>
-          <Input
-            id="stairs_from"
-            type="number"
-            inputMode="numeric"
-            min="0"
-            placeholder="0"
-            value={formData.stairs_from}
-            onChange={(e) => setFormData({ ...formData, stairs_from: e.target.value })}
-            className="mt-1.5"
-            aria-describedby="stairs-from-hint"
+      <div className="space-y-4">
+        <div className="flex items-start gap-3 p-3 sm:p-4 bg-muted/50 rounded-lg">
+          <Checkbox
+            id="elevator_from"
+            checked={formData.elevator_from}
+            onCheckedChange={(checked) => 
+              setFormData({ 
+                ...formData, 
+                elevator_from: checked as boolean,
+                elevator_from_size: checked ? formData.elevator_from_size : undefined,
+                stairs_from: checked ? "" : formData.stairs_from 
+              })
+            }
           />
-          <p id="stairs-from-hint" className="text-xs text-muted-foreground mt-1">
-            Antal våningar utan hiss
-          </p>
-        </div>
-        <div>
-          <Label htmlFor="stairs_to" className="text-sm font-medium">
-            Våningar (till-adress)
+          <Label 
+            htmlFor="elevator_from" 
+            className="text-sm font-normal cursor-pointer leading-relaxed"
+          >
+            Det finns hiss
           </Label>
-          <Input
-            id="stairs_to"
-            type="number"
-            inputMode="numeric"
-            min="0"
-            placeholder="0"
-            value={formData.stairs_to}
-            onChange={(e) => setFormData({ ...formData, stairs_to: e.target.value })}
-            className="mt-1.5"
-            aria-describedby="stairs-to-hint"
-          />
-          <p id="stairs-to-hint" className="text-xs text-muted-foreground mt-1">
-            Antal våningar utan hiss
-          </p>
         </div>
+
+        {formData.elevator_from && (
+          <div className="pl-6 space-y-2">
+            <Label className="text-sm font-medium">Hissstorlek</Label>
+            <RadioGroup
+              value={formData.elevator_from_size || ""}
+              onValueChange={(value) => setFormData({ ...formData, elevator_from_size: value as 'small' | 'big' })}
+              className="flex gap-4"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="small" id="elevator_from_small" />
+                <Label htmlFor="elevator_from_small" className="font-normal cursor-pointer">Liten hiss</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="big" id="elevator_from_big" />
+                <Label htmlFor="elevator_from_big" className="font-normal cursor-pointer">Stor hiss</Label>
+              </div>
+            </RadioGroup>
+          </div>
+        )}
+
+        {!formData.elevator_from && (
+          <div>
+            <Label htmlFor="stairs_from" className="text-sm font-medium">
+              Antal våningar utan hiss
+            </Label>
+            <Input
+              id="stairs_from"
+              type="number"
+              inputMode="numeric"
+              min="0"
+              placeholder="0"
+              value={formData.stairs_from}
+              onChange={(e) => setFormData({ ...formData, stairs_from: e.target.value })}
+              className="mt-1.5"
+            />
+          </div>
+        )}
       </div>
 
-      {/* Carry distance */}
+      {/* Elevator - To address */}
       <div className="flex items-center gap-2 text-primary mt-6 mb-4">
-        <Footprints className="h-5 w-5" aria-hidden="true" />
-        <h3 className="font-semibold text-base sm:text-lg">Bärväg till fordon</h3>
+        <Building className="h-5 w-5" aria-hidden="true" />
+        <h3 className="font-semibold text-base sm:text-lg">Hiss & Trappor (till-adress)</h3>
       </div>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="carry_from_m" className="text-sm font-medium">
-            Meter (från-adress)
-          </Label>
-          <Input
-            id="carry_from_m"
-            type="number"
-            inputMode="numeric"
-            min="0"
-            placeholder="35"
-            value={formData.carry_from_m}
-            onChange={(e) => setFormData({ ...formData, carry_from_m: e.target.value })}
-            className="mt-1.5"
-            aria-describedby="carry-from-hint"
+      <div className="space-y-4">
+        <div className="flex items-start gap-3 p-3 sm:p-4 bg-muted/50 rounded-lg">
+          <Checkbox
+            id="elevator_to"
+            checked={formData.elevator_to}
+            onCheckedChange={(checked) => 
+              setFormData({ 
+                ...formData, 
+                elevator_to: checked as boolean,
+                elevator_to_size: checked ? formData.elevator_to_size : undefined,
+                stairs_to: checked ? "" : formData.stairs_to 
+              })
+            }
           />
-          <p id="carry-from-hint" className="text-xs text-muted-foreground mt-1">
-            Första 35 m ingår
-          </p>
-        </div>
-        <div>
-          <Label htmlFor="carry_to_m" className="text-sm font-medium">
-            Meter (till-adress)
+          <Label 
+            htmlFor="elevator_to" 
+            className="text-sm font-normal cursor-pointer leading-relaxed"
+          >
+            Det finns hiss
           </Label>
-          <Input
-            id="carry_to_m"
-            type="number"
-            inputMode="numeric"
-            min="0"
-            placeholder="35"
-            value={formData.carry_to_m}
-            onChange={(e) => setFormData({ ...formData, carry_to_m: e.target.value })}
-            className="mt-1.5"
-            aria-describedby="carry-to-hint"
-          />
-          <p id="carry-to-hint" className="text-xs text-muted-foreground mt-1">
-            Första 35 m ingår
-          </p>
         </div>
+
+        {formData.elevator_to && (
+          <div className="pl-6 space-y-2">
+            <Label className="text-sm font-medium">Hissstorlek</Label>
+            <RadioGroup
+              value={formData.elevator_to_size || ""}
+              onValueChange={(value) => setFormData({ ...formData, elevator_to_size: value as 'small' | 'big' })}
+              className="flex gap-4"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="small" id="elevator_to_small" />
+                <Label htmlFor="elevator_to_small" className="font-normal cursor-pointer">Liten hiss</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="big" id="elevator_to_big" />
+                <Label htmlFor="elevator_to_big" className="font-normal cursor-pointer">Stor hiss</Label>
+              </div>
+            </RadioGroup>
+          </div>
+        )}
+
+        {!formData.elevator_to && (
+          <div>
+            <Label htmlFor="stairs_to" className="text-sm font-medium">
+              Antal våningar utan hiss
+            </Label>
+            <Input
+              id="stairs_to"
+              type="number"
+              inputMode="numeric"
+              min="0"
+              placeholder="0"
+              value={formData.stairs_to}
+              onChange={(e) => setFormData({ ...formData, stairs_to: e.target.value })}
+              className="mt-1.5"
+            />
+          </div>
+        )}
       </div>
 
       {/* Parking */}
@@ -154,7 +195,7 @@ export const Step2Details = ({ formData, setFormData }: StepProps) => {
             onCheckedChange={(checked) => handleHeavyItemChange('piano', checked as boolean)}
           />
           <Label htmlFor="heavy_piano" className="text-sm font-normal cursor-pointer flex-1">
-            Piano <span className="text-muted-foreground">(+1 995 kr)</span>
+            Piano
           </Label>
         </div>
         <div className="flex items-center gap-3 p-3 sm:p-4 bg-muted/50 rounded-lg">
@@ -164,7 +205,7 @@ export const Step2Details = ({ formData, setFormData }: StepProps) => {
             onCheckedChange={(checked) => handleHeavyItemChange('flygel', checked as boolean)}
           />
           <Label htmlFor="heavy_flygel" className="text-sm font-normal cursor-pointer flex-1">
-            Flygel <span className="text-muted-foreground">(+3 995 kr)</span>
+            Flygel
           </Label>
         </div>
         <div className="flex items-center gap-3 p-3 sm:p-4 bg-muted/50 rounded-lg">
@@ -174,7 +215,7 @@ export const Step2Details = ({ formData, setFormData }: StepProps) => {
             onCheckedChange={(checked) => handleHeavyItemChange('safe150', checked as boolean)}
           />
           <Label htmlFor="heavy_safe" className="text-sm font-normal cursor-pointer flex-1">
-            Kassaskåp &gt;150 kg <span className="text-muted-foreground">(+2 995 kr)</span>
+            Kassaskåp &gt;150 kg
           </Label>
         </div>
       </div>

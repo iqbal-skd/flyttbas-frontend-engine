@@ -1,4 +1,3 @@
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Package, Wrench, Home } from "lucide-react";
@@ -22,25 +21,26 @@ export const Step3Services = ({ formData, setFormData }: StepProps) => {
         <h3 className="font-semibold text-base sm:text-lg">Packning (RUT-berättigat)</h3>
       </div>
       
-      <div>
-        <Label htmlFor="packing_hours" className="text-sm font-medium">
-          Antal packningstimmar
-        </Label>
-        <Input
-          id="packing_hours"
-          type="number"
-          inputMode="decimal"
-          min="0"
-          step="0.5"
-          placeholder="0"
-          value={formData.packing_hours}
-          onChange={(e) => setFormData({ ...formData, packing_hours: e.target.value })}
-          className="mt-1.5"
-          aria-describedby="packing-hint"
+      <div className="flex items-start gap-3 p-3 sm:p-4 bg-secondary rounded-lg">
+        <Checkbox
+          id="packing_help"
+          checked={formData.packing_help}
+          onCheckedChange={(checked) => 
+            setFormData({ ...formData, packing_help: checked as boolean })
+          }
+          aria-describedby="packing-desc"
         />
-        <p id="packing-hint" className="text-xs text-muted-foreground mt-1.5">
-          Vi hjälper dig att packa och skydda dina ägodelar. Timpris per person enligt offert.
-        </p>
+        <div>
+          <Label 
+            htmlFor="packing_help" 
+            className="text-sm font-medium cursor-pointer"
+          >
+            Ja, jag vill ha hjälp med packning
+          </Label>
+          <p id="packing-desc" className="text-xs text-muted-foreground mt-1">
+            Vi hjälper dig att packa och skydda dina ägodelar.
+          </p>
+        </div>
       </div>
 
       {/* Assembly */}
@@ -49,25 +49,26 @@ export const Step3Services = ({ formData, setFormData }: StepProps) => {
         <h3 className="font-semibold text-base sm:text-lg">Montering (RUT-berättigat)</h3>
       </div>
       
-      <div>
-        <Label htmlFor="assembly_hours" className="text-sm font-medium">
-          Antal monteringstimmar
-        </Label>
-        <Input
-          id="assembly_hours"
-          type="number"
-          inputMode="decimal"
-          min="0"
-          step="0.5"
-          placeholder="0"
-          value={formData.assembly_hours}
-          onChange={(e) => setFormData({ ...formData, assembly_hours: e.target.value })}
-          className="mt-1.5"
-          aria-describedby="assembly-hint"
+      <div className="flex items-start gap-3 p-3 sm:p-4 bg-secondary rounded-lg">
+        <Checkbox
+          id="assembly_help"
+          checked={formData.assembly_help}
+          onCheckedChange={(checked) => 
+            setFormData({ ...formData, assembly_help: checked as boolean })
+          }
+          aria-describedby="assembly-desc"
         />
-        <p id="assembly-hint" className="text-xs text-muted-foreground mt-1.5">
-          Demontering och montering av möbler, sängar, skåp m.m.
-        </p>
+        <div>
+          <Label 
+            htmlFor="assembly_help" 
+            className="text-sm font-medium cursor-pointer"
+          >
+            Ja, jag vill ha hjälp med montering/demontering
+          </Label>
+          <p id="assembly-desc" className="text-xs text-muted-foreground mt-1">
+            Demontering och montering av möbler, sängar, skåp m.m.
+          </p>
+        </div>
       </div>
 
       {/* Home visit */}
