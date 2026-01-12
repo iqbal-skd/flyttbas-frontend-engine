@@ -70,8 +70,8 @@ interface QuoteRequest {
   rooms: number | null;
   stairs_from: number | null;
   stairs_to: number | null;
-  carry_from_m: number | null;
-  carry_to_m: number | null;
+  elevator_from_size: string | null;
+  elevator_to_size: string | null;
   packing_hours: number | null;
   assembly_hours: number | null;
   heavy_items: unknown;
