@@ -60,8 +60,8 @@ interface QuoteRequest {
   rooms: number | null;
   stairs_from: number | null;
   stairs_to: number | null;
-  carry_from_m: number | null;
-  carry_to_m: number | null;
+  elevator_from_size: string | null;
+  elevator_to_size: string | null;
   packing_hours: number | null;
   assembly_hours: number | null;
   heavy_items: unknown;
@@ -179,8 +179,8 @@ export const QuoteDetailDialog = ({
         rooms: formData.rooms,
         stairs_from: formData.stairs_from,
         stairs_to: formData.stairs_to,
-        carry_from_m: formData.carry_from_m,
-        carry_to_m: formData.carry_to_m,
+        elevator_from_size: formData.elevator_from_size,
+        elevator_to_size: formData.elevator_to_size,
         packing_hours: formData.packing_hours,
         assembly_hours: formData.assembly_hours,
         notes: formData.notes,
@@ -538,32 +538,48 @@ export const QuoteDetailDialog = ({
               </div>
             </div>
 
-            {/* Carry Distances */}
+            {/* Elevator & Parking */}
             <div className="space-y-4">
               <h3 className="font-semibold flex items-center gap-2">
                 <Truck className="h-4 w-4" />
-                Bärvägar & Parkering
+                Hiss & Parkering
               </h3>
               <div className="grid sm:grid-cols-4 gap-4">
                 <div>
-                  <Label>Bärväg från (meter)</Label>
-                  <Input
-                    type="number"
-                    value={formData.carry_from_m || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, carry_from_m: parseInt(e.target.value) || 0 })
+                  <Label>Hiss (från)</Label>
+                  <Select
+                    value={formData.elevator_from_size || "none"}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, elevator_from_size: value === "none" ? null : value })
                     }
-                  />
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Ingen hiss</SelectItem>
+                      <SelectItem value="small">Liten hiss</SelectItem>
+                      <SelectItem value="big">Stor hiss</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
-                  <Label>Bärväg till (meter)</Label>
-                  <Input
-                    type="number"
-                    value={formData.carry_to_m || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, carry_to_m: parseInt(e.target.value) || 0 })
+                  <Label>Hiss (till)</Label>
+                  <Select
+                    value={formData.elevator_to_size || "none"}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, elevator_to_size: value === "none" ? null : value })
                     }
-                  />
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Ingen hiss</SelectItem>
+                      <SelectItem value="small">Liten hiss</SelectItem>
+                      <SelectItem value="big">Stor hiss</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="flex items-end gap-2">
                   <div className="flex items-center space-x-2">

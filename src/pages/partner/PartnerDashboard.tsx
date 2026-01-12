@@ -73,8 +73,8 @@ interface QuoteRequest {
   dwelling_type: string;
   stairs_from: number;
   stairs_to: number;
-  carry_from_m: number | null;
-  carry_to_m: number | null;
+  elevator_from_size: string | null;
+  elevator_to_size: string | null;
   heavy_items: any;
   packing_hours: number;
   assembly_hours: number;
@@ -111,8 +111,8 @@ interface Offer {
     rooms: number | null;
     stairs_from: number | null;
     stairs_to: number | null;
-    carry_from_m: number | null;
-    carry_to_m: number | null;
+    elevator_from_size: string | null;
+    elevator_to_size: string | null;
     heavy_items: any;
     packing_hours: number | null;
     assembly_hours: number | null;
@@ -197,7 +197,7 @@ const PartnerDashboard = () => {
 
         const { data: offersData } = await supabase
           .from('offers')
-          .select('*, quote_requests(id, customer_name, customer_email, customer_phone, from_address, from_postal_code, to_address, to_postal_code, move_date, move_start_time, dwelling_type, area_m2, rooms, stairs_from, stairs_to, carry_from_m, carry_to_m, heavy_items, packing_hours, assembly_hours, notes)')
+          .select('*, quote_requests(id, customer_name, customer_email, customer_phone, from_address, from_postal_code, to_address, to_postal_code, move_date, move_start_time, dwelling_type, area_m2, rooms, stairs_from, stairs_to, elevator_from_size, elevator_to_size, heavy_items, packing_hours, assembly_hours, notes)')
           .eq('partner_id', partnerData.id)
           .order('created_at', { ascending: false });
 
@@ -919,6 +919,8 @@ const PartnerDashboard = () => {
                 rooms={selectedApprovedOffer.quote_requests.rooms}
                 stairsFrom={selectedApprovedOffer.quote_requests.stairs_from}
                 stairsTo={selectedApprovedOffer.quote_requests.stairs_to}
+                elevatorFromSize={selectedApprovedOffer.quote_requests.elevator_from_size}
+                elevatorToSize={selectedApprovedOffer.quote_requests.elevator_to_size}
                 heavyItems={selectedApprovedOffer.quote_requests.heavy_items}
                 packingHours={selectedApprovedOffer.quote_requests.packing_hours}
                 assemblyHours={selectedApprovedOffer.quote_requests.assembly_hours}

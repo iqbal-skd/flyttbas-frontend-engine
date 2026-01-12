@@ -342,6 +342,8 @@ export type Database = {
           customer_name: string
           customer_phone: string | null
           dwelling_type: string
+          elevator_from_size: string | null
+          elevator_to_size: string | null
           expires_at: string | null
           from_address: string
           from_lat: number | null
@@ -375,6 +377,8 @@ export type Database = {
           customer_name: string
           customer_phone?: string | null
           dwelling_type: string
+          elevator_from_size?: string | null
+          elevator_to_size?: string | null
           expires_at?: string | null
           from_address: string
           from_lat?: number | null
@@ -408,6 +412,8 @@ export type Database = {
           customer_name?: string
           customer_phone?: string | null
           dwelling_type?: string
+          elevator_from_size?: string | null
+          elevator_to_size?: string | null
           expires_at?: string | null
           from_address?: string
           from_lat?: number | null

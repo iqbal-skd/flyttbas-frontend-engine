@@ -31,6 +31,8 @@ interface JobDetailsCardProps {
   stairsTo?: number | null;
   elevatorFrom?: boolean;
   elevatorTo?: boolean;
+  elevatorFromSize?: string | null;
+  elevatorToSize?: string | null;
   heavyItems?: HeavyItem[] | string[] | null;
   packingHours?: number | null;
   assemblyHours?: number | null;
@@ -53,6 +55,8 @@ export const JobDetailsCard = ({
   stairsTo,
   elevatorFrom,
   elevatorTo,
+  elevatorFromSize,
+  elevatorToSize,
   heavyItems,
   packingHours,
   assemblyHours,
@@ -115,10 +119,12 @@ export const JobDetailsCard = ({
             <div>
               <p className="text-sm text-muted-foreground">Från</p>
               <p className="font-medium">{fromAddress}</p>
-              {elevatorFrom ? (
-                <p className="text-sm text-muted-foreground">Hiss finns</p>
+              {elevatorFrom || elevatorFromSize ? (
+                <p className="text-sm text-muted-foreground">
+                  Hiss: {elevatorFromSize === 'big' ? 'Stor' : elevatorFromSize === 'small' ? 'Liten' : 'Ja'}
+                </p>
               ) : (stairsFrom !== null && stairsFrom !== undefined && stairsFrom > 0) ? (
-                <p className="text-sm text-muted-foreground">{stairsFrom} trappor</p>
+                <p className="text-sm text-muted-foreground">{stairsFrom} trappor (ingen hiss)</p>
               ) : null}
             </div>
           </div>
@@ -128,10 +134,12 @@ export const JobDetailsCard = ({
             <div>
               <p className="text-sm text-muted-foreground">Till</p>
               <p className="font-medium">{toAddress}</p>
-              {elevatorTo ? (
-                <p className="text-sm text-muted-foreground">Hiss finns</p>
+              {elevatorTo || elevatorToSize ? (
+                <p className="text-sm text-muted-foreground">
+                  Hiss: {elevatorToSize === 'big' ? 'Stor' : elevatorToSize === 'small' ? 'Liten' : 'Ja'}
+                </p>
               ) : (stairsTo !== null && stairsTo !== undefined && stairsTo > 0) ? (
-                <p className="text-sm text-muted-foreground">{stairsTo} trappor</p>
+                <p className="text-sm text-muted-foreground">{stairsTo} trappor (ingen hiss)</p>
               ) : null}
             </div>
           </div>
