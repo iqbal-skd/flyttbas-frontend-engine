@@ -519,6 +519,7 @@ export type Database = {
         Args: { lat1: number; lat2: number; lng1: number; lng2: number }
         Returns: number
       }
+      is_approved_partner: { Args: { _user_id: string }; Returns: boolean }
       promote_to_admin: { Args: { target_email: string }; Returns: undefined }
       promote_to_partner: { Args: { target_email: string }; Returns: undefined }
       set_partner_role: { Args: { target_user_id: string }; Returns: undefined }
