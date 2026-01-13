@@ -508,6 +508,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      customer_owns_quote: {
+        Args: { _quote_request_id: string; _user_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -520,6 +524,10 @@ export type Database = {
         Returns: number
       }
       is_approved_partner: { Args: { _user_id: string }; Returns: boolean }
+      partner_has_approved_offer_for_quote: {
+        Args: { _quote_request_id: string; _user_id: string }
+        Returns: boolean
+      }
       promote_to_admin: { Args: { target_email: string }; Returns: undefined }
       promote_to_partner: { Args: { target_email: string }; Returns: undefined }
       set_partner_role: { Args: { target_user_id: string }; Returns: undefined }
