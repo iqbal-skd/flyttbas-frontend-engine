@@ -43,6 +43,7 @@ import {
   Mail,
   Phone,
   Truck,
+  Car,
 } from "lucide-react";
 
 interface Partner {
@@ -322,7 +323,27 @@ const PartnerDashboard = () => {
   };
   const formatHeavyItems = (items: any) => {
     if (!items || !Array.isArray(items) || items.length === 0) return null;
-    return items.filter((item: any) => item.quantity > 0).map((item: any) => `${item.name}: ${item.quantity}`).join(', ');
+    
+    // Map item keys to readable Swedish names
+    const itemLabels: Record<string, string> = {
+      'piano': 'Piano',
+      'flygel': 'Flygel',
+      'safe150': 'Kassaskåp >150 kg',
+    };
+    
+    // Handle both string array format and object array format
+    return items
+      .filter((item: any) => {
+        if (typeof item === 'string') return true;
+        return item.quantity > 0;
+      })
+      .map((item: any) => {
+        if (typeof item === 'string') {
+          return itemLabels[item] || item;
+        }
+        return `${item.name}: ${item.quantity}`;
+      })
+      .join(', ');
   };
 
   const handleOpenJobDetails = (offer: Offer) => {
@@ -771,95 +792,100 @@ const PartnerDashboard = () => {
                 </div>
               </div>
 
-              {/* Access Details: Stairs, Elevator, Carry Distance */}
-              {(viewingQuote.stairs_from > 0 || viewingQuote.stairs_to > 0 || 
-                viewingQuote.elevator_from_size || viewingQuote.elevator_to_size ||
-                (viewingQuote.carry_from_m && viewingQuote.carry_from_m > 0) || 
-                (viewingQuote.carry_to_m && viewingQuote.carry_to_m > 0)) && (
-                <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-                  <h4 className="font-medium text-sm flex items-center gap-2">
-                    <Building className="h-4 w-4" />
-                    Tillgänglighet
-                  </h4>
-                  <div className="text-sm pl-6 space-y-2">
-                    {/* From location */}
-                    <div>
-                      <p className="font-medium text-muted-foreground mb-1">Från-adress:</p>
-                      <div className="grid grid-cols-2 gap-1 pl-2">
-                        {viewingQuote.stairs_from > 0 && (
-                          <p>Trappor: {viewingQuote.stairs_from} tr</p>
-                        )}
-                        {viewingQuote.elevator_from_size && (
-                          <p>Hiss: {viewingQuote.elevator_from_size === 'large' ? 'Stor (möbelhiss)' : viewingQuote.elevator_from_size === 'small' ? 'Liten (personhiss)' : 'Ingen'}</p>
-                        )}
-                        {viewingQuote.carry_from_m && viewingQuote.carry_from_m > 0 && (
-                          <p>Bäravstånd: {viewingQuote.carry_from_m} m</p>
-                        )}
-                      </div>
+              {/* Access Details: Stairs, Elevator - Always show this section */}
+              <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                <h4 className="font-medium text-sm flex items-center gap-2">
+                  <Building className="h-4 w-4" />
+                  Hiss & Trappor
+                </h4>
+                <div className="text-sm pl-6 space-y-3">
+                  {/* From location */}
+                  <div>
+                    <p className="font-medium text-muted-foreground mb-1">Från-adress:</p>
+                    <div className="pl-2 space-y-1">
+                      {viewingQuote.elevator_from_size ? (
+                        <p>✓ Hiss finns ({viewingQuote.elevator_from_size === 'big' || viewingQuote.elevator_from_size === 'large' ? 'Stor möbelhiss' : 'Liten personhiss'})</p>
+                      ) : (
+                        <p>✗ Ingen hiss</p>
+                      )}
+                      <p>Våningar utan hiss: {viewingQuote.stairs_from || 0} tr</p>
+                      {viewingQuote.carry_from_m && viewingQuote.carry_from_m > 0 && (
+                        <p>Bäravstånd: {viewingQuote.carry_from_m} m</p>
+                      )}
                     </div>
-                    {/* To location */}
-                    <div>
-                      <p className="font-medium text-muted-foreground mb-1">Till-adress:</p>
-                      <div className="grid grid-cols-2 gap-1 pl-2">
-                        {viewingQuote.stairs_to > 0 && (
-                          <p>Trappor: {viewingQuote.stairs_to} tr</p>
-                        )}
-                        {viewingQuote.elevator_to_size && (
-                          <p>Hiss: {viewingQuote.elevator_to_size === 'large' ? 'Stor (möbelhiss)' : viewingQuote.elevator_to_size === 'small' ? 'Liten (personhiss)' : 'Ingen'}</p>
-                        )}
-                        {viewingQuote.carry_to_m && viewingQuote.carry_to_m > 0 && (
-                          <p>Bäravstånd: {viewingQuote.carry_to_m} m</p>
-                        )}
-                      </div>
+                  </div>
+                  {/* To location */}
+                  <div>
+                    <p className="font-medium text-muted-foreground mb-1">Till-adress:</p>
+                    <div className="pl-2 space-y-1">
+                      {viewingQuote.elevator_to_size ? (
+                        <p>✓ Hiss finns ({viewingQuote.elevator_to_size === 'big' || viewingQuote.elevator_to_size === 'large' ? 'Stor möbelhiss' : 'Liten personhiss'})</p>
+                      ) : (
+                        <p>✗ Ingen hiss</p>
+                      )}
+                      <p>Våningar utan hiss: {viewingQuote.stairs_to || 0} tr</p>
+                      {viewingQuote.carry_to_m && viewingQuote.carry_to_m > 0 && (
+                        <p>Bäravstånd: {viewingQuote.carry_to_m} m</p>
+                      )}
                     </div>
                   </div>
                 </div>
-              )}
+              </div>
 
-              {/* Parking restrictions */}
-              {viewingQuote.parking_restrictions && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 space-y-2">
-                  <h4 className="font-medium text-sm flex items-center gap-2 text-yellow-800">
-                    <AlertCircle className="h-4 w-4" />
-                    Parkeringsrestriktioner
-                  </h4>
-                  <p className="text-sm pl-6 text-yellow-700">
-                    Det finns parkeringsrestriktioner att ta hänsyn till vid denna flytt.
-                  </p>
+              {/* Parking */}
+              <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                <h4 className="font-medium text-sm flex items-center gap-2">
+                  <Car className="h-4 w-4" />
+                  Parkering
+                </h4>
+                <div className="text-sm pl-6">
+                  {viewingQuote.parking_restrictions ? (
+                    <p className="text-yellow-700">⚠️ Svår parkering (begränsade parkeringsmöjligheter)</p>
+                  ) : (
+                    <p className="text-green-700">✓ Inga parkeringsproblem angivna</p>
+                  )}
                 </div>
-              )}
+              </div>
 
               {/* Heavy items */}
-              {formatHeavyItems(viewingQuote.heavy_items) && (
-                <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-                  <h4 className="font-medium text-sm flex items-center gap-2">
-                    <Weight className="h-4 w-4" />
-                    Tunga föremål
-                  </h4>
-                  <p className="text-sm pl-6">{formatHeavyItems(viewingQuote.heavy_items)}</p>
+              <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                <h4 className="font-medium text-sm flex items-center gap-2">
+                  <Weight className="h-4 w-4" />
+                  Tunga föremål
+                </h4>
+                <div className="text-sm pl-6">
+                  {formatHeavyItems(viewingQuote.heavy_items) ? (
+                    <p>{formatHeavyItems(viewingQuote.heavy_items)}</p>
+                  ) : (
+                    <p className="text-muted-foreground">Inga tunga föremål angivna</p>
+                  )}
                 </div>
-              )}
+              </div>
 
               {/* Additional services */}
-              {(viewingQuote.packing_hours > 0 || viewingQuote.assembly_hours > 0 || viewingQuote.home_visit_requested) && (
-                <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-                  <h4 className="font-medium text-sm flex items-center gap-2">
-                    <Package className="h-4 w-4" />
-                    Tilläggstjänster
-                  </h4>
-                  <div className="text-sm pl-6 space-y-1">
-                    {viewingQuote.packing_hours > 0 && (
-                      <p>✓ Packning ({viewingQuote.packing_hours} timmar önskas)</p>
-                    )}
-                    {viewingQuote.assembly_hours > 0 && (
-                      <p>✓ Montering/Demontering ({viewingQuote.assembly_hours} timmar önskas)</p>
-                    )}
-                    {viewingQuote.home_visit_requested && (
-                      <p>✓ Hembesök önskas för exakt prisuppskattning</p>
-                    )}
-                  </div>
+              <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                <h4 className="font-medium text-sm flex items-center gap-2">
+                  <Package className="h-4 w-4" />
+                  Tilläggstjänster (RUT-berättigat)
+                </h4>
+                <div className="text-sm pl-6 space-y-1">
+                  {viewingQuote.packing_hours > 0 ? (
+                    <p className="text-green-700">✓ Packning önskas</p>
+                  ) : (
+                    <p className="text-muted-foreground">✗ Packning: Nej</p>
+                  )}
+                  {viewingQuote.assembly_hours > 0 ? (
+                    <p className="text-green-700">✓ Montering/Demontering önskas</p>
+                  ) : (
+                    <p className="text-muted-foreground">✗ Montering/Demontering: Nej</p>
+                  )}
+                  {viewingQuote.home_visit_requested ? (
+                    <p className="text-green-700">✓ Hembesök önskas för exakt prisuppskattning</p>
+                  ) : (
+                    <p className="text-muted-foreground">✗ Hembesök: Nej</p>
+                  )}
                 </div>
-              )}
+              </div>
 
               {/* Customer notes */}
               {viewingQuote.notes && (

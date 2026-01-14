@@ -124,6 +124,8 @@ export const QuoteWizard = () => {
         move_start_time: formData.flexible_time ? 'Flexibel' : null,
         stairs_from: formData.stairs_from ? parseInt(formData.stairs_from) : 0,
         stairs_to: formData.stairs_to ? parseInt(formData.stairs_to) : 0,
+        elevator_from_size: formData.elevator_from ? (formData.elevator_from_size || 'small') : null,
+        elevator_to_size: formData.elevator_to ? (formData.elevator_to_size || 'small') : null,
         carry_from_m: 0,
         carry_to_m: 0,
         parking_restrictions: formData.parking_restrictions || false,
