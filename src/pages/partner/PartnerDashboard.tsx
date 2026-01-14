@@ -75,6 +75,10 @@ interface QuoteRequest {
   stairs_to: number;
   elevator_from_size: string | null;
   elevator_to_size: string | null;
+  carry_from_m: number | null;
+  carry_to_m: number | null;
+  parking_restrictions: boolean | null;
+  home_visit_requested: boolean | null;
   heavy_items: any;
   packing_hours: number;
   assembly_hours: number;
@@ -113,6 +117,10 @@ interface Offer {
     stairs_to: number | null;
     elevator_from_size: string | null;
     elevator_to_size: string | null;
+    carry_from_m: number | null;
+    carry_to_m: number | null;
+    parking_restrictions: boolean | null;
+    home_visit_requested: boolean | null;
     heavy_items: any;
     packing_hours: number | null;
     assembly_hours: number | null;
@@ -197,7 +205,7 @@ const PartnerDashboard = () => {
 
         const { data: offersData } = await supabase
           .from('offers')
-          .select('*, quote_requests(id, customer_name, customer_email, customer_phone, from_address, from_postal_code, to_address, to_postal_code, move_date, move_start_time, dwelling_type, area_m2, rooms, stairs_from, stairs_to, elevator_from_size, elevator_to_size, heavy_items, packing_hours, assembly_hours, notes)')
+          .select('*, quote_requests(id, customer_name, customer_email, customer_phone, from_address, from_postal_code, to_address, to_postal_code, move_date, move_start_time, dwelling_type, area_m2, rooms, stairs_from, stairs_to, elevator_from_size, elevator_to_size, carry_from_m, carry_to_m, parking_restrictions, home_visit_requested, heavy_items, packing_hours, assembly_hours, notes)')
           .eq('partner_id', partnerData.id)
           .order('created_at', { ascending: false });
 
@@ -716,6 +724,29 @@ const PartnerDashboard = () => {
           
           {viewingQuote && (
             <div className="space-y-4 mt-4">
+              {/* Date and Time */}
+              <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                <h4 className="font-medium text-sm flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  Datum & Tid
+                </h4>
+                <div className="text-sm pl-6 space-y-1">
+                  <p>
+                    <span className="text-muted-foreground">Flyttdatum:</span>{' '}
+                    {new Date(viewingQuote.move_date).toLocaleDateString('sv-SE', { 
+                      weekday: 'long', 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </p>
+                  {viewingQuote.move_start_time && (
+                    <p><span className="text-muted-foreground">Önskad starttid:</span> {viewingQuote.move_start_time}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Addresses */}
               <div className="bg-muted/50 rounded-lg p-4 space-y-2">
                 <h4 className="font-medium text-sm flex items-center gap-2">
                   <MapPin className="h-4 w-4" />
@@ -727,6 +758,7 @@ const PartnerDashboard = () => {
                 </div>
               </div>
 
+              {/* Dwelling Details */}
               <div className="bg-muted/50 rounded-lg p-4 space-y-2">
                 <h4 className="font-medium text-sm flex items-center gap-2">
                   <Home className="h-4 w-4" />
@@ -739,19 +771,65 @@ const PartnerDashboard = () => {
                 </div>
               </div>
 
-              {(viewingQuote.stairs_from > 0 || viewingQuote.stairs_to > 0) && (
+              {/* Access Details: Stairs, Elevator, Carry Distance */}
+              {(viewingQuote.stairs_from > 0 || viewingQuote.stairs_to > 0 || 
+                viewingQuote.elevator_from_size || viewingQuote.elevator_to_size ||
+                (viewingQuote.carry_from_m && viewingQuote.carry_from_m > 0) || 
+                (viewingQuote.carry_to_m && viewingQuote.carry_to_m > 0)) && (
                 <div className="bg-muted/50 rounded-lg p-4 space-y-2">
                   <h4 className="font-medium text-sm flex items-center gap-2">
                     <Building className="h-4 w-4" />
-                    Trappor
+                    Tillgänglighet
                   </h4>
-                  <div className="grid grid-cols-2 gap-2 text-sm pl-6">
-                    {viewingQuote.stairs_from > 0 && <p><span className="text-muted-foreground">Trappor (från):</span> {viewingQuote.stairs_from} tr</p>}
-                    {viewingQuote.stairs_to > 0 && <p><span className="text-muted-foreground">Trappor (till):</span> {viewingQuote.stairs_to} tr</p>}
+                  <div className="text-sm pl-6 space-y-2">
+                    {/* From location */}
+                    <div>
+                      <p className="font-medium text-muted-foreground mb-1">Från-adress:</p>
+                      <div className="grid grid-cols-2 gap-1 pl-2">
+                        {viewingQuote.stairs_from > 0 && (
+                          <p>Trappor: {viewingQuote.stairs_from} tr</p>
+                        )}
+                        {viewingQuote.elevator_from_size && (
+                          <p>Hiss: {viewingQuote.elevator_from_size === 'large' ? 'Stor (möbelhiss)' : viewingQuote.elevator_from_size === 'small' ? 'Liten (personhiss)' : 'Ingen'}</p>
+                        )}
+                        {viewingQuote.carry_from_m && viewingQuote.carry_from_m > 0 && (
+                          <p>Bäravstånd: {viewingQuote.carry_from_m} m</p>
+                        )}
+                      </div>
+                    </div>
+                    {/* To location */}
+                    <div>
+                      <p className="font-medium text-muted-foreground mb-1">Till-adress:</p>
+                      <div className="grid grid-cols-2 gap-1 pl-2">
+                        {viewingQuote.stairs_to > 0 && (
+                          <p>Trappor: {viewingQuote.stairs_to} tr</p>
+                        )}
+                        {viewingQuote.elevator_to_size && (
+                          <p>Hiss: {viewingQuote.elevator_to_size === 'large' ? 'Stor (möbelhiss)' : viewingQuote.elevator_to_size === 'small' ? 'Liten (personhiss)' : 'Ingen'}</p>
+                        )}
+                        {viewingQuote.carry_to_m && viewingQuote.carry_to_m > 0 && (
+                          <p>Bäravstånd: {viewingQuote.carry_to_m} m</p>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
 
+              {/* Parking restrictions */}
+              {viewingQuote.parking_restrictions && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 space-y-2">
+                  <h4 className="font-medium text-sm flex items-center gap-2 text-yellow-800">
+                    <AlertCircle className="h-4 w-4" />
+                    Parkeringsrestriktioner
+                  </h4>
+                  <p className="text-sm pl-6 text-yellow-700">
+                    Det finns parkeringsrestriktioner att ta hänsyn till vid denna flytt.
+                  </p>
+                </div>
+              )}
+
+              {/* Heavy items */}
               {formatHeavyItems(viewingQuote.heavy_items) && (
                 <div className="bg-muted/50 rounded-lg p-4 space-y-2">
                   <h4 className="font-medium text-sm flex items-center gap-2">
@@ -762,19 +840,28 @@ const PartnerDashboard = () => {
                 </div>
               )}
 
-              {(viewingQuote.packing_hours > 0 || viewingQuote.assembly_hours > 0) && (
+              {/* Additional services */}
+              {(viewingQuote.packing_hours > 0 || viewingQuote.assembly_hours > 0 || viewingQuote.home_visit_requested) && (
                 <div className="bg-muted/50 rounded-lg p-4 space-y-2">
                   <h4 className="font-medium text-sm flex items-center gap-2">
                     <Package className="h-4 w-4" />
                     Tilläggstjänster
                   </h4>
                   <div className="text-sm pl-6 space-y-1">
-                    {viewingQuote.packing_hours > 0 && <p>Packning: Ja</p>}
-                    {viewingQuote.assembly_hours > 0 && <p>Montering/Demontering: Ja</p>}
+                    {viewingQuote.packing_hours > 0 && (
+                      <p>✓ Packning ({viewingQuote.packing_hours} timmar önskas)</p>
+                    )}
+                    {viewingQuote.assembly_hours > 0 && (
+                      <p>✓ Montering/Demontering ({viewingQuote.assembly_hours} timmar önskas)</p>
+                    )}
+                    {viewingQuote.home_visit_requested && (
+                      <p>✓ Hembesök önskas för exakt prisuppskattning</p>
+                    )}
                   </div>
                 </div>
               )}
 
+              {/* Customer notes */}
               {viewingQuote.notes && (
                 <div className="bg-muted/50 rounded-lg p-4 space-y-2">
                   <h4 className="font-medium text-sm">Kundanteckning</h4>
