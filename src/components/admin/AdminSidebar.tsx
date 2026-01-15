@@ -36,9 +36,11 @@ interface AdminSidebarProps {
     pendingQuotes?: number;
     pendingOffers?: number;
   };
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
 }
 
-export const AdminSidebar = ({ stats }: AdminSidebarProps) => {
+export const AdminSidebar = ({ stats, mobileOpen, onMobileClose }: AdminSidebarProps) => {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
 
@@ -135,12 +137,23 @@ export const AdminSidebar = ({ stats }: AdminSidebarProps) => {
   };
 
   return (
-    <aside
-      className={cn(
-        "fixed left-0 top-0 z-40 h-screen bg-background border-r transition-all duration-300",
-        collapsed ? "w-16" : "w-64"
+    <>
+      {/* Mobile backdrop */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+          onClick={onMobileClose}
+        />
       )}
-    >
+      <aside
+        className={cn(
+          "fixed left-0 top-0 z-40 h-screen bg-background border-r transition-all duration-300",
+          collapsed ? "w-16" : "w-64",
+          // Mobile: hidden by default, shown when mobileOpen
+          "lg:translate-x-0",
+          mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        )}
+      >
       {/* Logo */}
       <div className="flex items-center justify-between h-16 px-4 border-b">
         {!collapsed && (
@@ -189,6 +202,7 @@ export const AdminSidebar = ({ stats }: AdminSidebarProps) => {
                     collapsed && "justify-center px-2"
                   )}
                   title={collapsed ? item.label : undefined}
+                  onClick={onMobileClose}
                 >
                   <Icon className={cn("h-5 w-5 shrink-0", active && "text-primary")} />
                   {!collapsed && (
@@ -211,5 +225,6 @@ export const AdminSidebar = ({ stats }: AdminSidebarProps) => {
         ))}
       </nav>
     </aside>
+    </>
   );
 };

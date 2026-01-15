@@ -33,7 +33,7 @@ export const AdminLayout = ({ children, title }: AdminLayoutProps) => {
     pendingQuotes: 0,
     pendingOffers: 0,
   });
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && rolesLoaded && (!user || !isAdmin)) {
@@ -90,10 +90,14 @@ export const AdminLayout = ({ children, title }: AdminLayoutProps) => {
   return (
     <div className="min-h-screen bg-muted/30">
       {/* Sidebar */}
-      <AdminSidebar stats={stats} />
+      <AdminSidebar
+        stats={stats}
+        mobileOpen={sidebarOpen}
+        onMobileClose={() => setSidebarOpen(false)}
+      />
 
       {/* Main Content */}
-      <div className={cn("transition-all duration-300 ml-64")}>
+      <div className={cn("transition-all duration-300 lg:ml-64")}>
         {/* Top Header */}
         <header className="sticky top-0 z-30 h-16 bg-background border-b flex items-center justify-between px-6">
           <div className="flex items-center gap-4">

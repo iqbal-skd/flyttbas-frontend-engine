@@ -260,14 +260,16 @@ export const OfferDetailSheet = ({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-2xl p-0 flex flex-col h-full">
         <SheetHeader className="p-6 pb-0">
-          <div className="flex items-start justify-between gap-4">
-            <div>
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4">
+            <div className="min-w-0">
               <SheetTitle className="text-xl flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Offert
+                <FileText className="h-5 w-5 shrink-0" />
+                <span className="truncate">
+                  Offert – {partner?.company_name || "Laddar..."}
+                </span>
               </SheetTitle>
-              <SheetDescription className="mt-1">
-                {partner?.company_name || "Laddar..."}
+              <SheetDescription className="mt-1 sr-only">
+                Offertdetaljer
               </SheetDescription>
             </div>
             <AdminStatusBadge status={status} type="offer" />
@@ -300,7 +302,7 @@ export const OfferDetailSheet = ({
               )}
 
               {/* Quick Stats */}
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <StatsCard
                   value={formatCurrency(offer.total_price).replace(" kr", "")}
                   label="kr totalt"

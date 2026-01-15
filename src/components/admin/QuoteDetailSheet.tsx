@@ -246,11 +246,11 @@ export const QuoteDetailSheet = ({
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent className="w-full sm:max-w-2xl p-0 flex flex-col h-full">
           <SheetHeader className="p-6 pb-0">
-            <div className="flex items-start justify-between gap-4">
-              <div>
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4">
+              <div className="min-w-0">
                 <SheetTitle className="text-xl flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  {quote.customer_name}
+                  <FileText className="h-5 w-5 shrink-0" />
+                  <span className="truncate">{quote.customer_name}</span>
                 </SheetTitle>
                 <SheetDescription className="mt-1">
                   Förfrågan skapad {formatDate(quote.created_at)}
@@ -274,7 +274,7 @@ export const QuoteDetailSheet = ({
                 <UrgencyBadge daysUntilMove={daysUntilMove} showCard />
 
                 {/* Quick Stats */}
-                <div className="grid grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <StatsCard
                     value={daysUntilMove < 0 ? "Passerad" : daysUntilMove}
                     label={daysUntilMove < 0 ? "" : "dagar kvar"}
@@ -1114,7 +1114,7 @@ function OffersList({
               </div>
 
               {/* Quick Info */}
-              <div className="grid grid-cols-4 gap-2 mt-3 text-sm">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3 text-sm">
                 <div className="flex items-center gap-1">
                   <Calendar className="h-3 w-3 text-muted-foreground" />
                   <span>{formatDate(offer.available_date)}</span>

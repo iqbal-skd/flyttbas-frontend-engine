@@ -28,13 +28,13 @@ export function StatsCard({
 }: StatsCardProps) {
   return (
     <Card>
-      <CardContent className="p-4">
-        <div className="flex items-center gap-3">
-          <div className={`p-2 rounded-lg ${iconBgColor}`}>
-            <Icon className={`h-5 w-5 ${iconColor}`} />
+      <CardContent className="p-3 sm:p-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+          <div className={`p-1.5 sm:p-2 rounded-lg ${iconBgColor} w-fit`}>
+            <Icon className={`h-4 w-4 sm:h-5 sm:w-5 ${iconColor}`} />
           </div>
           <div>
-            <p className="text-2xl font-bold">{value}</p>
+            <p className="text-xl sm:text-2xl font-bold">{value}</p>
             <p className="text-xs text-muted-foreground">{label}</p>
             {trend && (
               <p
