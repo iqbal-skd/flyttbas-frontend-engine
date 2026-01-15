@@ -25,6 +25,12 @@ import MinaOfferter from "./pages/MinaOfferter";
 import CustomerDashboard from "./pages/CustomerDashboard";
 import SetupPassword from "./pages/SetupPassword";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminOverview from "./pages/admin/AdminOverview";
+import AdminCustomers from "./pages/admin/AdminCustomers";
+import AdminReviews from "./pages/admin/AdminReviews";
+import AdminAudit from "./pages/admin/AdminAudit";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminSettings from "./pages/admin/AdminSettings";
 import PartnerDashboard from "./pages/partner/PartnerDashboard";
 import AllmannaVillkor from "./pages/AllmannaVillkor";
 import Integritetspolicy from "./pages/Integritetspolicy";
@@ -74,7 +80,57 @@ const App = () => (
               {/* Admin Routes */}
               <Route path="/admin" element={
                 <ProtectedRoute requiredRole="admin">
+                  <AdminOverview />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/partners" element={
+                <ProtectedRoute requiredRole="admin">
                   <AdminDashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/quotes" element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/offers" element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/customers" element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminCustomers />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/reviews" element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminReviews />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/billing" element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/analytics" element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminOverview />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/audit" element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminAudit />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/users" element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminUsers />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/settings" element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminSettings />
                 </ProtectedRoute>
               } />
               
