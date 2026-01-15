@@ -2,11 +2,11 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-const FROM_EMAIL_RAW = Deno.env.get("FROM_EMAIL") || "noreply@resend.dev";
-// Ensure proper format: "Name <email>" - if just email provided, wrap with brand name
-const FROM_EMAIL = FROM_EMAIL_RAW.includes("<") 
-  ? FROM_EMAIL_RAW 
+const FROM_EMAIL_RAW = Deno.env.get("FROM_EMAIL") || "noreply@flyttbas.se";
+const FROM_EMAIL = FROM_EMAIL_RAW.includes("<")
+  ? FROM_EMAIL_RAW
   : `Flyttbas <${FROM_EMAIL_RAW}>`;
+const SITE_URL = (Deno.env.get("SITE_URL") || "https://flyttbas.se").replace(/\/+$/, "");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -25,9 +25,9 @@ interface EmailRequest {
 
 const handler = async (req: Request): Promise<Response> => {
   console.log("send-confirmation-email function called");
-  console.log("FROM_EMAIL_RAW:", FROM_EMAIL_RAW);
   console.log("FROM_EMAIL:", FROM_EMAIL);
-  
+  console.log("SITE_URL:", SITE_URL);
+
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -42,9 +42,7 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Generate magic link for the user - ensure no trailing slash
-    const siteUrlRaw = Deno.env.get("SITE_URL") || "https://preview--flyttbas.lovable.app";
-    const siteUrl = siteUrlRaw.replace(/\/+$/, "");
+    const siteUrl = SITE_URL;
     
     let redirectTo: string;
     let subject: string;

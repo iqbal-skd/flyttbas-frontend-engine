@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { PageViewTracker } from "@/components/PageViewTracker";
 import { RecaptchaProvider } from "@/components/RecaptchaProvider";
+import { ThirdPartyScripts } from "@/components/ThirdPartyScripts";
 import Index from "./pages/Index";
 import Privatflytt from "./pages/Privatflytt";
 import Kontorsflytt from "./pages/Kontorsflytt";
@@ -47,6 +48,7 @@ const App = () => (
             <Toaster />
             <Sonner />
           <BrowserRouter>
+            <ThirdPartyScripts />
             <PageViewTracker />
             <Routes>
               <Route path="/" element={<Index />} />
