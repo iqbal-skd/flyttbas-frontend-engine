@@ -26,6 +26,15 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetFooter,
+} from "@/components/ui/sheet";
+import { Separator } from "@/components/ui/separator";
+import {
   FileText,
   Send,
   MapPin,
@@ -44,6 +53,8 @@ import {
   Phone,
   Truck,
   Car,
+  ExternalLink,
+  Route,
 } from "lucide-react";
 
 interface Partner {
@@ -65,8 +76,12 @@ interface QuoteRequest {
   customer_phone: string | null;
   from_address: string;
   from_postal_code: string;
+  from_lat: number | null;
+  from_lng: number | null;
   to_address: string;
   to_postal_code: string;
+  to_lat: number | null;
+  to_lng: number | null;
   move_date: string;
   move_start_time: string | null;
   area_m2: number;
@@ -107,8 +122,12 @@ interface Offer {
     customer_phone: string | null;
     from_address: string;
     from_postal_code: string;
+    from_lat: number | null;
+    from_lng: number | null;
     to_address: string;
     to_postal_code: string;
+    to_lat: number | null;
+    to_lng: number | null;
     move_date: string;
     move_start_time: string | null;
     dwelling_type: string;
@@ -206,7 +225,7 @@ const PartnerDashboard = () => {
 
         const { data: offersData } = await supabase
           .from('offers')
-          .select('*, quote_requests(id, customer_name, customer_email, customer_phone, from_address, from_postal_code, to_address, to_postal_code, move_date, move_start_time, dwelling_type, area_m2, rooms, stairs_from, stairs_to, elevator_from_size, elevator_to_size, carry_from_m, carry_to_m, parking_restrictions, home_visit_requested, heavy_items, packing_hours, assembly_hours, notes)')
+          .select('*, quote_requests(id, customer_name, customer_email, customer_phone, from_address, from_postal_code, from_lat, from_lng, to_address, to_postal_code, to_lat, to_lng, move_date, move_start_time, dwelling_type, area_m2, rooms, stairs_from, stairs_to, elevator_from_size, elevator_to_size, carry_from_m, carry_to_m, parking_restrictions, home_visit_requested, heavy_items, packing_hours, assembly_hours, notes)')
           .eq('partner_id', partnerData.id)
           .order('created_at', { ascending: false });
 
@@ -344,6 +363,67 @@ const PartnerDashboard = () => {
         return `${item.name}: ${item.quantity}`;
       })
       .join(', ');
+  };
+
+  // Calculate distance between two coordinates using Haversine formula
+  const calculateDistance = (
+    lat1: number | null,
+    lng1: number | null,
+    lat2: number | null,
+    lng2: number | null
+  ): number | null => {
+    if (!lat1 || !lng1 || !lat2 || !lng2) return null;
+
+    const R = 6371; // Earth's radius in kilometers
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLng = ((lng2 - lng1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLng / 2) *
+        Math.sin(dLng / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return Math.round(R * c * 10) / 10; // Round to 1 decimal
+  };
+
+  // Open Google Maps with directions
+  const openGoogleMapsDirections = (
+    fromLat: number | null,
+    fromLng: number | null,
+    toLat: number | null,
+    toLng: number | null,
+    fromAddress?: string,
+    toAddress?: string
+  ) => {
+    let url: string;
+    if (fromLat && fromLng && toLat && toLng) {
+      // Use coordinates if available
+      url = `https://www.google.com/maps/dir/${fromLat},${fromLng}/${toLat},${toLng}`;
+    } else if (fromAddress && toAddress) {
+      // Fallback to addresses
+      url = `https://www.google.com/maps/dir/${encodeURIComponent(fromAddress)}/${encodeURIComponent(toAddress)}`;
+    } else {
+      return;
+    }
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  // Open single location in Google Maps
+  const openGoogleMapsLocation = (
+    lat: number | null,
+    lng: number | null,
+    address?: string
+  ) => {
+    let url: string;
+    if (lat && lng) {
+      url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+    } else if (address) {
+      url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+    } else {
+      return;
+    }
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   const handleOpenJobDetails = (offer: Offer) => {
@@ -728,189 +808,383 @@ const PartnerDashboard = () => {
         </Tabs>
       )}
 
-      {/* Detail View Dialog */}
-      <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Förfrågningsdetaljer
-            </DialogTitle>
+      {/* Detail View Sheet - Slide-out panel for better UX */}
+      <Sheet open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
+        <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
+          <SheetHeader className="pb-4">
+            <SheetTitle className="text-xl font-bold">Förfrågningsdetaljer</SheetTitle>
             {viewingQuote && (
-              <DialogDescription>
-                Flytt den {new Date(viewingQuote.move_date).toLocaleDateString('sv-SE')}
-              </DialogDescription>
+              <SheetDescription className="flex items-center gap-2 text-base">
+                <Calendar className="h-4 w-4" />
+                Flytt den {new Date(viewingQuote.move_date).toLocaleDateString('sv-SE', {
+                  weekday: 'long',
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric'
+                })}
+              </SheetDescription>
             )}
-          </DialogHeader>
-          
+          </SheetHeader>
+
           {viewingQuote && (
-            <div className="space-y-4 mt-4">
-              {/* Date and Time */}
-              <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-                <h4 className="font-medium text-sm flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  Datum & Tid
-                </h4>
-                <div className="text-sm pl-6 space-y-1">
-                  <p>
-                    <span className="text-muted-foreground">Flyttdatum:</span>{' '}
-                    {new Date(viewingQuote.move_date).toLocaleDateString('sv-SE', { 
-                      weekday: 'long', 
-                      year: 'numeric', 
-                      month: 'long', 
-                      day: 'numeric' 
-                    })}
-                  </p>
-                  {viewingQuote.move_start_time && (
-                    <p><span className="text-muted-foreground">Önskad starttid:</span> {viewingQuote.move_start_time}</p>
-                  )}
-                </div>
-              </div>
+            <div className="flex flex-col h-[calc(100vh-12rem)]">
+              {/* Scrollable content area */}
+              <div className="flex-1 overflow-y-auto pr-1 space-y-6">
 
-              {/* Addresses */}
-              <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-                <h4 className="font-medium text-sm flex items-center gap-2">
-                  <MapPin className="h-4 w-4" />
-                  Adresser
-                </h4>
-                <div className="text-sm space-y-1 pl-6">
-                  <p><span className="text-muted-foreground">Från:</span> {viewingQuote.from_address}, {viewingQuote.from_postal_code}</p>
-                  <p><span className="text-muted-foreground">Till:</span> {viewingQuote.to_address}, {viewingQuote.to_postal_code}</p>
-                </div>
-              </div>
-
-              {/* Dwelling Details */}
-              <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-                <h4 className="font-medium text-sm flex items-center gap-2">
-                  <Home className="h-4 w-4" />
-                  Bostadsdetaljer
-                </h4>
-                <div className="grid grid-cols-2 gap-2 text-sm pl-6">
-                  <p><span className="text-muted-foreground">Typ:</span> {viewingQuote.dwelling_type}</p>
-                  <p><span className="text-muted-foreground">Yta:</span> {viewingQuote.area_m2} m²</p>
-                  {viewingQuote.rooms && <p><span className="text-muted-foreground">Rum:</span> {viewingQuote.rooms}</p>}
-                </div>
-              </div>
-
-              {/* Access Details: Stairs, Elevator - Always show this section */}
-              <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-                <h4 className="font-medium text-sm flex items-center gap-2">
-                  <Building className="h-4 w-4" />
-                  Hiss & Trappor
-                </h4>
-                <div className="text-sm pl-6 space-y-3">
-                  {/* From location */}
-                  <div>
-                    <p className="font-medium text-muted-foreground mb-1">Från-adress:</p>
-                    <div className="pl-2 space-y-1">
-                      {viewingQuote.elevator_from_size ? (
-                        <p>✓ Hiss finns ({viewingQuote.elevator_from_size === 'big' || viewingQuote.elevator_from_size === 'large' ? 'Stor möbelhiss' : 'Liten personhiss'})</p>
-                      ) : (
-                        <p>✗ Ingen hiss</p>
-                      )}
-                      <p>Våningar utan hiss: {viewingQuote.stairs_from || 0} tr</p>
-                      {viewingQuote.carry_from_m && viewingQuote.carry_from_m > 0 && (
-                        <p>Bäravstånd: {viewingQuote.carry_from_m} m</p>
-                      )}
+                {/* Quick Overview Card */}
+                <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl p-5 border border-primary/20">
+                  <div className="grid grid-cols-4 gap-4 text-center">
+                    <div>
+                      <p className="text-2xl font-bold text-primary">{viewingQuote.area_m2}</p>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Kvadratmeter</p>
                     </div>
-                  </div>
-                  {/* To location */}
-                  <div>
-                    <p className="font-medium text-muted-foreground mb-1">Till-adress:</p>
-                    <div className="pl-2 space-y-1">
-                      {viewingQuote.elevator_to_size ? (
-                        <p>✓ Hiss finns ({viewingQuote.elevator_to_size === 'big' || viewingQuote.elevator_to_size === 'large' ? 'Stor möbelhiss' : 'Liten personhiss'})</p>
-                      ) : (
-                        <p>✗ Ingen hiss</p>
-                      )}
-                      <p>Våningar utan hiss: {viewingQuote.stairs_to || 0} tr</p>
-                      {viewingQuote.carry_to_m && viewingQuote.carry_to_m > 0 && (
-                        <p>Bäravstånd: {viewingQuote.carry_to_m} m</p>
-                      )}
+                    <div>
+                      <p className="text-2xl font-bold text-primary">{viewingQuote.rooms || '-'}</p>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Rum</p>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-primary capitalize">{viewingQuote.dwelling_type}</p>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Bostadstyp</p>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-primary">
+                        {calculateDistance(
+                          viewingQuote.from_lat,
+                          viewingQuote.from_lng,
+                          viewingQuote.to_lat,
+                          viewingQuote.to_lng
+                        ) || '-'}
+                      </p>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide">km avstånd</p>
                     </div>
                   </div>
                 </div>
+
+                {/* Date and Time Section */}
+                <section>
+                  <h3 className="flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                    <Clock className="h-4 w-4" />
+                    Datum & Tid
+                  </h3>
+                  <Card className="border-0 shadow-sm bg-card/50">
+                    <CardContent className="p-4 space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">Flyttdatum</span>
+                        <span className="font-medium">
+                          {new Date(viewingQuote.move_date).toLocaleDateString('sv-SE', {
+                            weekday: 'long',
+                            day: 'numeric',
+                            month: 'long'
+                          })}
+                        </span>
+                      </div>
+                      {viewingQuote.move_start_time && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-muted-foreground">Önskad starttid</span>
+                          <span className="font-medium">{viewingQuote.move_start_time}</span>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </section>
+
+                {/* Addresses Section */}
+                <section>
+                  <h3 className="flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                    <MapPin className="h-4 w-4" />
+                    Adresser
+                  </h3>
+                  <div className="space-y-3">
+                    {/* From Address */}
+                    <Card
+                      className="border-0 shadow-sm bg-card/50 cursor-pointer hover:bg-card/80 transition-colors"
+                      onClick={() => openGoogleMapsLocation(
+                        viewingQuote.from_lat,
+                        viewingQuote.from_lng,
+                        `${viewingQuote.from_address}, ${viewingQuote.from_postal_code}`
+                      )}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-start gap-3">
+                          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+                            <span className="text-blue-700 font-bold text-sm">A</span>
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Från</p>
+                            <p className="font-medium">{viewingQuote.from_address}</p>
+                            <p className="text-sm text-muted-foreground">{viewingQuote.from_postal_code}</p>
+                          </div>
+                          <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0" />
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Distance indicator with directions button */}
+                    <div className="flex items-center justify-center gap-3">
+                      <div className="h-px flex-1 bg-border" />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-2"
+                        onClick={() => openGoogleMapsDirections(
+                          viewingQuote.from_lat,
+                          viewingQuote.from_lng,
+                          viewingQuote.to_lat,
+                          viewingQuote.to_lng,
+                          `${viewingQuote.from_address}, ${viewingQuote.from_postal_code}`,
+                          `${viewingQuote.to_address}, ${viewingQuote.to_postal_code}`
+                        )}
+                      >
+                        <Route className="h-4 w-4" />
+                        {calculateDistance(
+                          viewingQuote.from_lat,
+                          viewingQuote.from_lng,
+                          viewingQuote.to_lat,
+                          viewingQuote.to_lng
+                        ) ? (
+                          <span>
+                            {calculateDistance(
+                              viewingQuote.from_lat,
+                              viewingQuote.from_lng,
+                              viewingQuote.to_lat,
+                              viewingQuote.to_lng
+                            )} km
+                          </span>
+                        ) : (
+                          <span>Visa rutt</span>
+                        )}
+                        <ExternalLink className="h-3 w-3" />
+                      </Button>
+                      <div className="h-px flex-1 bg-border" />
+                    </div>
+
+                    {/* To Address */}
+                    <Card
+                      className="border-0 shadow-sm bg-card/50 cursor-pointer hover:bg-card/80 transition-colors"
+                      onClick={() => openGoogleMapsLocation(
+                        viewingQuote.to_lat,
+                        viewingQuote.to_lng,
+                        `${viewingQuote.to_address}, ${viewingQuote.to_postal_code}`
+                      )}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-start gap-3">
+                          <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center shrink-0">
+                            <span className="text-green-700 font-bold text-sm">B</span>
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Till</p>
+                            <p className="font-medium">{viewingQuote.to_address}</p>
+                            <p className="text-sm text-muted-foreground">{viewingQuote.to_postal_code}</p>
+                          </div>
+                          <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </section>
+
+                {/* Access Details Section */}
+                <section>
+                  <h3 className="flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                    <Building className="h-4 w-4" />
+                    Tillgänglighet
+                  </h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* From Location Access */}
+                    <Card className="border-0 shadow-sm bg-card/50">
+                      <CardContent className="p-4">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">Från-adress</p>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            {viewingQuote.elevator_from_size ? (
+                              <>
+                                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                                <span className="text-sm">
+                                  {viewingQuote.elevator_from_size === 'big' || viewingQuote.elevator_from_size === 'large' ? 'Stor hiss' : 'Liten hiss'}
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                <AlertCircle className="h-4 w-4 text-amber-500" />
+                                <span className="text-sm">Ingen hiss</span>
+                              </>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <span>{viewingQuote.stairs_from || 0} våningar</span>
+                          </div>
+                          {viewingQuote.carry_from_m && viewingQuote.carry_from_m > 0 && (
+                            <div className="text-sm text-muted-foreground">
+                              Bäravstånd: {viewingQuote.carry_from_m} m
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* To Location Access */}
+                    <Card className="border-0 shadow-sm bg-card/50">
+                      <CardContent className="p-4">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">Till-adress</p>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            {viewingQuote.elevator_to_size ? (
+                              <>
+                                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                                <span className="text-sm">
+                                  {viewingQuote.elevator_to_size === 'big' || viewingQuote.elevator_to_size === 'large' ? 'Stor hiss' : 'Liten hiss'}
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                <AlertCircle className="h-4 w-4 text-amber-500" />
+                                <span className="text-sm">Ingen hiss</span>
+                              </>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <span>{viewingQuote.stairs_to || 0} våningar</span>
+                          </div>
+                          {viewingQuote.carry_to_m && viewingQuote.carry_to_m > 0 && (
+                            <div className="text-sm text-muted-foreground">
+                              Bäravstånd: {viewingQuote.carry_to_m} m
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </section>
+
+                {/* Parking Section */}
+                <section>
+                  <h3 className="flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                    <Car className="h-4 w-4" />
+                    Parkering
+                  </h3>
+                  <Card className={`border-0 shadow-sm ${viewingQuote.parking_restrictions ? 'bg-amber-50 border-amber-200' : 'bg-green-50 border-green-200'}`}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-3">
+                        {viewingQuote.parking_restrictions ? (
+                          <>
+                            <AlertCircle className="h-5 w-5 text-amber-600" />
+                            <div>
+                              <p className="font-medium text-amber-800">Begränsad parkering</p>
+                              <p className="text-sm text-amber-700">Planera extra tid för parkering</p>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle2 className="h-5 w-5 text-green-600" />
+                            <div>
+                              <p className="font-medium text-green-800">Bra parkeringsmöjligheter</p>
+                              <p className="text-sm text-green-700">Inga problem angivna</p>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </section>
+
+                {/* Heavy Items Section */}
+                {formatHeavyItems(viewingQuote.heavy_items) && (
+                  <section>
+                    <h3 className="flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                      <Weight className="h-4 w-4" />
+                      Tunga föremål
+                    </h3>
+                    <Card className="border-0 shadow-sm bg-amber-50 border-amber-200">
+                      <CardContent className="p-4">
+                        <div className="flex items-start gap-3">
+                          <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                          <div>
+                            <p className="font-medium text-amber-800">Extra utrustning kan krävas</p>
+                            <p className="text-sm text-amber-700 mt-1">{formatHeavyItems(viewingQuote.heavy_items)}</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </section>
+                )}
+
+                {/* Additional Services Section */}
+                <section>
+                  <h3 className="flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                    <Package className="h-4 w-4" />
+                    Tilläggstjänster
+                  </h3>
+                  <Card className="border-0 shadow-sm bg-card/50">
+                    <CardContent className="p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">Packning</span>
+                        {viewingQuote.packing_hours > 0 ? (
+                          <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Önskas</Badge>
+                        ) : (
+                          <Badge variant="secondary">Nej</Badge>
+                        )}
+                      </div>
+                      <Separator />
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">Montering/Demontering</span>
+                        {viewingQuote.assembly_hours > 0 ? (
+                          <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Önskas</Badge>
+                        ) : (
+                          <Badge variant="secondary">Nej</Badge>
+                        )}
+                      </div>
+                      <Separator />
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">Hembesök</span>
+                        {viewingQuote.home_visit_requested ? (
+                          <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Önskas</Badge>
+                        ) : (
+                          <Badge variant="secondary">Nej</Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground pt-2">
+                        Tilläggstjänster är RUT-berättigade
+                      </p>
+                    </CardContent>
+                  </Card>
+                </section>
+
+                {/* Customer Notes Section */}
+                {viewingQuote.notes && (
+                  <section>
+                    <h3 className="flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                      <FileText className="h-4 w-4" />
+                      Kundanteckning
+                    </h3>
+                    <Card className="border-0 shadow-sm bg-blue-50 border-blue-200">
+                      <CardContent className="p-4">
+                        <p className="text-sm text-blue-800 italic">"{viewingQuote.notes}"</p>
+                      </CardContent>
+                    </Card>
+                  </section>
+                )}
               </div>
 
-              {/* Parking */}
-              <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-                <h4 className="font-medium text-sm flex items-center gap-2">
-                  <Car className="h-4 w-4" />
-                  Parkering
-                </h4>
-                <div className="text-sm pl-6">
-                  {viewingQuote.parking_restrictions ? (
-                    <p className="text-yellow-700">⚠️ Svår parkering (begränsade parkeringsmöjligheter)</p>
-                  ) : (
-                    <p className="text-green-700">✓ Inga parkeringsproblem angivna</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Heavy items */}
-              <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-                <h4 className="font-medium text-sm flex items-center gap-2">
-                  <Weight className="h-4 w-4" />
-                  Tunga föremål
-                </h4>
-                <div className="text-sm pl-6">
-                  {formatHeavyItems(viewingQuote.heavy_items) ? (
-                    <p>{formatHeavyItems(viewingQuote.heavy_items)}</p>
-                  ) : (
-                    <p className="text-muted-foreground">Inga tunga föremål angivna</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Additional services */}
-              <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-                <h4 className="font-medium text-sm flex items-center gap-2">
-                  <Package className="h-4 w-4" />
-                  Tilläggstjänster (RUT-berättigat)
-                </h4>
-                <div className="text-sm pl-6 space-y-1">
-                  {viewingQuote.packing_hours > 0 ? (
-                    <p className="text-green-700">✓ Packning önskas</p>
-                  ) : (
-                    <p className="text-muted-foreground">✗ Packning: Nej</p>
-                  )}
-                  {viewingQuote.assembly_hours > 0 ? (
-                    <p className="text-green-700">✓ Montering/Demontering önskas</p>
-                  ) : (
-                    <p className="text-muted-foreground">✗ Montering/Demontering: Nej</p>
-                  )}
-                  {viewingQuote.home_visit_requested ? (
-                    <p className="text-green-700">✓ Hembesök önskas för exakt prisuppskattning</p>
-                  ) : (
-                    <p className="text-muted-foreground">✗ Hembesök: Nej</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Customer notes */}
-              {viewingQuote.notes && (
-                <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-                  <h4 className="font-medium text-sm">Kundanteckning</h4>
-                  <p className="text-sm pl-6 italic text-muted-foreground">{viewingQuote.notes}</p>
-                </div>
-              )}
-
+              {/* Sticky Footer with Action Button */}
               {!quotesWithOffers.has(viewingQuote.id) && (
-                <Button 
-                  className="w-full mt-4"
-                  onClick={() => {
-                    setDetailDialogOpen(false);
-                    handleOpenOfferForm(viewingQuote);
-                  }}
-                >
-                  <Send className="h-4 w-4 mr-2" />
-                  Lämna offert på detta jobb
-                </Button>
+                <SheetFooter className="pt-4 mt-4 border-t">
+                  <Button
+                    className="w-full h-12 text-base font-semibold"
+                    onClick={() => {
+                      setDetailDialogOpen(false);
+                      handleOpenOfferForm(viewingQuote);
+                    }}
+                  >
+                    <Send className="h-5 w-5 mr-2" />
+                    Lämna offert på detta jobb
+                  </Button>
+                </SheetFooter>
               )}
             </div>
           )}
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
 
       {/* Offer Form Dialog */}
       <Dialog open={offerDialogOpen} onOpenChange={setOfferDialogOpen}>
