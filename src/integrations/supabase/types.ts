@@ -206,7 +206,6 @@ export type Database = {
           address_lat: number | null
           address_lng: number | null
           average_rating: number | null
-          commission_rate_override: number | null
           company_name: string
           completed_jobs: number | null
           contact_email: string
@@ -238,7 +237,6 @@ export type Database = {
           address_lat?: number | null
           address_lng?: number | null
           average_rating?: number | null
-          commission_rate_override?: number | null
           company_name: string
           completed_jobs?: number | null
           contact_email: string
@@ -270,7 +268,6 @@ export type Database = {
           address_lat?: number | null
           address_lng?: number | null
           average_rating?: number | null
-          commission_rate_override?: number | null
           company_name?: string
           completed_jobs?: number | null
           contact_email?: string
@@ -484,33 +481,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      system_settings: {
-        Row: {
-          id: string
-          key: string
-          value: Json
-          description: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          key: string
-          value: Json
-          description?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          key?: string
-          value?: Json
-          description?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
       }
       user_roles: {
         Row: {
