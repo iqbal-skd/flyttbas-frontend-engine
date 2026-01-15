@@ -295,21 +295,20 @@ const BliPartner = () => {
         }
       }
 
-      // Insert partner application
-      const { error: partnerError } = await supabase.from('partners').insert({
-        user_id: userId,
-        company_name: formData.company_name,
-        org_number: formData.org_number,
-        contact_name: formData.contact_name,
-        contact_email: formData.contact_email,
-        contact_phone: formData.contact_phone,
-        address: formData.address,
-        address_lat: formData.address_lat || null,
-        address_lng: formData.address_lng || null,
-        traffic_license_number: formData.traffic_license_number || null,
-        f_tax_certificate: formData.f_tax_certificate,
-        insurance_company: formData.insurance_company || null,
-        status: 'pending',
+      // Insert partner application using RPC function (works for unauthenticated users)
+      const { error: partnerError } = await supabase.rpc('register_partner', {
+        p_user_id: userId,
+        p_company_name: formData.company_name,
+        p_org_number: formData.org_number,
+        p_contact_name: formData.contact_name,
+        p_contact_email: formData.contact_email,
+        p_contact_phone: formData.contact_phone,
+        p_address: formData.address || null,
+        p_address_lat: formData.address_lat || null,
+        p_address_lng: formData.address_lng || null,
+        p_traffic_license_number: formData.traffic_license_number || null,
+        p_f_tax_certificate: formData.f_tax_certificate,
+        p_insurance_company: formData.insurance_company || null,
       });
 
       if (partnerError) throw partnerError;
