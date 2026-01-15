@@ -87,8 +87,8 @@ interface QuoteRequest {
   area_m2: number;
   rooms: number | null;
   dwelling_type: string;
-  stairs_from: number;
-  stairs_to: number;
+  stairs_from: number | null;
+  stairs_to: number | null;
   elevator_from_size: string | null;
   elevator_to_size: string | null;
   carry_from_m: number | null;
@@ -96,8 +96,8 @@ interface QuoteRequest {
   parking_restrictions: boolean | null;
   home_visit_requested: boolean | null;
   heavy_items: any;
-  packing_hours: number;
-  assembly_hours: number;
+  packing_hours: number | null;
+  assembly_hours: number | null;
   notes: string | null;
   status: string;
   created_at: string;
@@ -220,7 +220,7 @@ const PartnerDashboard = () => {
           .order('created_at', { ascending: false });
 
         if (quotesData) {
-          setQuotes(quotesData);
+          setQuotes(quotesData as unknown as QuoteRequest[]);
         }
 
         const { data: offersData } = await supabase
@@ -230,7 +230,7 @@ const PartnerDashboard = () => {
           .order('created_at', { ascending: false });
 
         if (offersData) {
-          setMyOffers(offersData as Offer[]);
+          setMyOffers(offersData as unknown as Offer[]);
         }
       }
     }
@@ -1536,8 +1536,8 @@ const PartnerDashboard = () => {
                           </div>
                           <div className="flex-1">
                             <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Från</p>
-                            <p className="font-medium">{selectedApprovedOffer.quote_requests.from_address}</p>
-                            <p className="text-sm text-muted-foreground">{selectedApprovedOffer.quote_requests.from_postal_code}</p>
+                            <p className="font-medium">{selectedApprovedOffer.quote_requests?.from_address}</p>
+                            <p className="text-sm text-muted-foreground">{selectedApprovedOffer.quote_requests?.from_postal_code}</p>
                           </div>
                           <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0" />
                         </div>
@@ -1590,8 +1590,8 @@ const PartnerDashboard = () => {
                           </div>
                           <div className="flex-1">
                             <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Till</p>
-                            <p className="font-medium">{selectedApprovedOffer.quote_requests.to_address}</p>
-                            <p className="text-sm text-muted-foreground">{selectedApprovedOffer.quote_requests.to_postal_code}</p>
+                            <p className="font-medium">{selectedApprovedOffer.quote_requests?.to_address}</p>
+                            <p className="text-sm text-muted-foreground">{selectedApprovedOffer.quote_requests?.to_postal_code}</p>
                           </div>
                           <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0" />
                         </div>
@@ -1610,15 +1610,15 @@ const PartnerDashboard = () => {
                     <CardContent className="p-4">
                       <div className="grid grid-cols-3 gap-4 text-center mb-4">
                         <div>
-                          <p className="text-lg font-bold capitalize">{selectedApprovedOffer.quote_requests.dwelling_type}</p>
+                          <p className="text-lg font-bold capitalize">{selectedApprovedOffer.quote_requests?.dwelling_type}</p>
                           <p className="text-xs text-muted-foreground">Typ</p>
                         </div>
                         <div className="border-x border-border/50">
-                          <p className="text-lg font-bold">{selectedApprovedOffer.quote_requests.area_m2} m²</p>
+                          <p className="text-lg font-bold">{selectedApprovedOffer.quote_requests?.area_m2} m²</p>
                           <p className="text-xs text-muted-foreground">Yta</p>
                         </div>
                         <div>
-                          <p className="text-lg font-bold">{selectedApprovedOffer.quote_requests.rooms || '-'}</p>
+                          <p className="text-lg font-bold">{selectedApprovedOffer.quote_requests?.rooms || '-'}</p>
                           <p className="text-xs text-muted-foreground">Rum</p>
                         </div>
                       </div>
@@ -1628,23 +1628,23 @@ const PartnerDashboard = () => {
                         <div className="p-2 bg-muted/50 rounded-lg">
                           <p className="text-xs text-muted-foreground mb-1">Från-adress</p>
                           <div className="flex items-center gap-2">
-                            {selectedApprovedOffer.quote_requests.elevator_from_size ? (
+                            {selectedApprovedOffer.quote_requests?.elevator_from_size ? (
                               <Badge className="bg-green-100 text-green-800 text-xs">Hiss</Badge>
                             ) : (
                               <Badge variant="secondary" className="text-xs">Ingen hiss</Badge>
                             )}
-                            <span className="text-sm">{selectedApprovedOffer.quote_requests.stairs_from || 0} tr</span>
+                            <span className="text-sm">{selectedApprovedOffer.quote_requests?.stairs_from || 0} tr</span>
                           </div>
                         </div>
                         <div className="p-2 bg-muted/50 rounded-lg">
                           <p className="text-xs text-muted-foreground mb-1">Till-adress</p>
                           <div className="flex items-center gap-2">
-                            {selectedApprovedOffer.quote_requests.elevator_to_size ? (
+                            {selectedApprovedOffer.quote_requests?.elevator_to_size ? (
                               <Badge className="bg-green-100 text-green-800 text-xs">Hiss</Badge>
                             ) : (
                               <Badge variant="secondary" className="text-xs">Ingen hiss</Badge>
                             )}
-                            <span className="text-sm">{selectedApprovedOffer.quote_requests.stairs_to || 0} tr</span>
+                            <span className="text-sm">{selectedApprovedOffer.quote_requests?.stairs_to || 0} tr</span>
                           </div>
                         </div>
                       </div>
@@ -1679,7 +1679,7 @@ const PartnerDashboard = () => {
                 </section>
 
                 {/* Customer Notes */}
-                {selectedApprovedOffer.quote_requests.notes && (
+                {selectedApprovedOffer.quote_requests?.notes && (
                   <section>
                     <h3 className="flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
                       <FileText className="h-4 w-4" />
@@ -1687,7 +1687,7 @@ const PartnerDashboard = () => {
                     </h3>
                     <Card className="border-0 shadow-sm bg-blue-50 border-blue-200">
                       <CardContent className="p-4">
-                        <p className="text-sm text-blue-800 italic">"{selectedApprovedOffer.quote_requests.notes}"</p>
+                        <p className="text-sm text-blue-800 italic">"{selectedApprovedOffer.quote_requests?.notes}"</p>
                       </CardContent>
                     </Card>
                   </section>

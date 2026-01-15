@@ -362,8 +362,6 @@ export type Database = {
           stairs_to: number | null
           status: Database["public"]["Enums"]["quote_status"] | null
           to_address: string
-          to_lat: number | null
-          to_lng: number | null
           to_postal_code: string
           updated_at: string
         }
@@ -399,8 +397,6 @@ export type Database = {
           stairs_to?: number | null
           status?: Database["public"]["Enums"]["quote_status"] | null
           to_address: string
-          to_lat?: number | null
-          to_lng?: number | null
           to_postal_code: string
           updated_at?: string
         }
@@ -436,8 +432,6 @@ export type Database = {
           stairs_to?: number | null
           status?: Database["public"]["Enums"]["quote_status"] | null
           to_address?: string
-          to_lat?: number | null
-          to_lng?: number | null
           to_postal_code?: string
           updated_at?: string
         }
