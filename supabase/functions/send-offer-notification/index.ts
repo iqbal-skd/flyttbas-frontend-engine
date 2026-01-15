@@ -1,10 +1,11 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-const FROM_EMAIL_RAW = Deno.env.get("FROM_EMAIL") || "noreply@resend.dev";
-const FROM_EMAIL = FROM_EMAIL_RAW.includes("<") 
-  ? FROM_EMAIL_RAW 
+const FROM_EMAIL_RAW = Deno.env.get("FROM_EMAIL") || "noreply@flyttbas.se";
+const FROM_EMAIL = FROM_EMAIL_RAW.includes("<")
+  ? FROM_EMAIL_RAW
   : `Flyttbas <${FROM_EMAIL_RAW}>`;
+const SITE_URL = (Deno.env.get("SITE_URL") || "https://flyttbas.se").replace(/\/+$/, "");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,25 +24,25 @@ interface OfferNotificationRequest {
 
 const handler = async (req: Request): Promise<Response> => {
   console.log("send-offer-notification function called");
-  
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { 
-      customerEmail, 
-      customerName, 
-      partnerName, 
-      offerPrice, 
+    const {
+      customerEmail,
+      customerName,
+      partnerName,
+      offerPrice,
       moveDate,
-      quoteId 
+      quoteId
     }: OfferNotificationRequest = await req.json();
-    
+
     console.log(`Sending offer notification to ${customerEmail} from ${partnerName}`);
     console.log(`Offer details: price=${offerPrice}, moveDate=${moveDate}, quoteId=${quoteId}`);
 
-    const siteUrl = Deno.env.get("SITE_URL") || "https://preview--flyttbas.lovable.app";
+    const siteUrl = SITE_URL;
     const formattedDate = new Date(moveDate).toLocaleDateString('sv-SE', { 
       weekday: 'long', 
       year: 'numeric', 

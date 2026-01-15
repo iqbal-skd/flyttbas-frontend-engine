@@ -1,9 +1,9 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-const FROM_EMAIL_RAW = Deno.env.get("FROM_EMAIL") || "noreply@resend.dev";
-const FROM_EMAIL = FROM_EMAIL_RAW.includes("<") 
-  ? FROM_EMAIL_RAW 
+const FROM_EMAIL_RAW = Deno.env.get("FROM_EMAIL") || "noreply@flyttbas.se";
+const FROM_EMAIL = FROM_EMAIL_RAW.includes("<")
+  ? FROM_EMAIL_RAW
   : `Flyttbas <${FROM_EMAIL_RAW}>`;
 
 const corsHeaders = {
@@ -33,13 +33,13 @@ const statusLabels: Record<string, { label: string; emoji: string; color: string
 
 const handler = async (req: Request): Promise<Response> => {
   console.log("send-job-status-notification function called");
-  
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { 
+    const {
       customerEmail,
       customerName,
       companyName,
@@ -49,7 +49,7 @@ const handler = async (req: Request): Promise<Response> => {
       toAddress,
       jobNotes,
     }: JobStatusNotificationRequest = await req.json();
-    
+
     console.log(`Sending job status notification to ${customerEmail}`);
     console.log(`New status: ${newStatus} for move on ${moveDate}`);
 

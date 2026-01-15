@@ -1,9 +1,9 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-const FROM_EMAIL_RAW = Deno.env.get("FROM_EMAIL") || "noreply@resend.dev";
-const FROM_EMAIL = FROM_EMAIL_RAW.includes("<") 
-  ? FROM_EMAIL_RAW 
+const FROM_EMAIL_RAW = Deno.env.get("FROM_EMAIL") || "noreply@flyttbas.se";
+const FROM_EMAIL = FROM_EMAIL_RAW.includes("<")
+  ? FROM_EMAIL_RAW
   : `Flyttbas <${FROM_EMAIL_RAW}>`;
 
 const corsHeaders = {
@@ -30,13 +30,13 @@ interface OfferAcceptedRequest {
 
 const handler = async (req: Request): Promise<Response> => {
   console.log("send-offer-accepted function called");
-  
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { 
+    const {
       partnerEmail,
       partnerName,
       companyName,
@@ -48,7 +48,7 @@ const handler = async (req: Request): Promise<Response> => {
       fromAddress,
       toAddress,
     }: OfferAcceptedRequest = await req.json();
-    
+
     console.log(`Sending offer accepted notification to partner ${partnerEmail}`);
     console.log(`Customer: ${customerName}, ${customerEmail}, ${customerPhone}`);
 
