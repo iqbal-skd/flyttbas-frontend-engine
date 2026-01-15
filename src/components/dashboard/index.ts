@@ -7,3 +7,6 @@ export { StatCard } from "./StatCard";
 export { QuoteCard } from "./QuoteCard";
 export { OfferCard } from "./OfferCard";
 export { JobDetailsCard } from "./JobDetailsCard";
+export { JobProgressCard } from "./JobProgressCard";
+export { QuoteDetailHeader } from "./QuoteDetailHeader";
+export { TrustSignalsFooter } from "./TrustSignalsFooter";

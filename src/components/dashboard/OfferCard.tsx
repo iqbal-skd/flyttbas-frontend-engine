@@ -1,152 +1,229 @@
 import { Button } from "@/components/ui/button";
-import { StatusBadge } from "./StatusBadge";
-import { Truck, Star, Users, Phone, Mail } from "lucide-react";
-
-interface PartnerInfo {
-  company_name: string;
-  contact_name?: string;
-  contact_email?: string;
-  contact_phone?: string;
-  average_rating: number;
-  total_reviews: number;
-}
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Truck,
+  Star,
+  Users,
+  Shield,
+  Award,
+  CheckCircle2,
+  MessageSquare,
+} from "lucide-react";
+import { formatCurrency } from "@/lib/dashboard-utils";
+import type { Partner, Review } from "@/types/customer-dashboard";
 
 interface OfferCardProps {
   id: string;
   totalPrice: number;
-  priceBeforeRut?: number;
+  priceBeforeRut?: number | null;
   estimatedHours: number;
   teamSize: number;
   timeWindow: string;
   status: string;
-  partner: PartnerInfo | null;
-  showContactInfo?: boolean;
+  terms?: string | null;
+  distanceKm?: number | null;
+  partner: Partner | null;
+  reviews?: Review[];
   onApprove?: () => void;
   approveDisabled?: boolean;
 }
 
 export const OfferCard = ({
   totalPrice,
+  priceBeforeRut,
   estimatedHours,
   teamSize,
   timeWindow,
   status,
+  terms,
+  distanceKm,
   partner,
-  showContactInfo = false,
+  reviews = [],
   onApprove,
   approveDisabled = false,
 }: OfferCardProps) => {
   const isApproved = status === "approved";
   const isRejected = status === "rejected";
+  const isPending = status === "pending";
+  const isSponsored = partner?.is_sponsored;
 
   return (
-    <div
-      className={`border rounded-lg p-4 ${
-        isApproved
-          ? "border-green-500 bg-green-50"
-          : isRejected
-          ? "border-gray-300 bg-gray-50 opacity-60"
-          : ""
-      }`}
+    <Card
+      className={`overflow-hidden transition-all ${
+        isSponsored ? 'ring-2 ring-primary shadow-lg' : ''
+      } ${isRejected ? 'opacity-60' : ''}`}
     >
-      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-        <div className="flex-1">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-              <Truck className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <h4 className="font-semibold">{partner?.company_name}</h4>
-              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                <Star className="h-4 w-4 fill-orange text-orange" />
-                <span>
-                  {partner?.average_rating?.toFixed(1) || "N/A"} (
-                  {partner?.total_reviews || 0} omdömen)
-                </span>
+      {/* Sponsored Banner */}
+      {isSponsored && (
+        <div className="bg-primary text-primary-foreground text-xs font-medium px-4 py-1.5 text-center">
+          <Award className="h-3 w-3 inline mr-1" aria-hidden="true" />
+          Sponsrad partner - Topprankad
+        </div>
+      )}
+
+      <CardContent className="p-6">
+        <div className="flex flex-col lg:flex-row lg:items-start gap-6">
+          {/* Partner Info Section */}
+          <div className="flex-1">
+            {/* Header with Avatar */}
+            <div className="flex items-start gap-4 mb-4">
+              <div
+                className={`w-14 h-14 rounded-full flex items-center justify-center shrink-0 ${
+                  isSponsored ? 'bg-primary/20' : 'bg-primary/10'
+                }`}
+                aria-hidden="true"
+              >
+                <Truck className="h-7 w-7 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="font-semibold text-lg truncate">{partner?.company_name}</h4>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground mt-1">
+                  {partner?.average_rating != null && (
+                    <span className="flex items-center gap-1">
+                      <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" aria-hidden="true" />
+                      <span>{partner.average_rating.toFixed(1)}</span>
+                      <span className="text-muted-foreground">
+                        ({partner.total_reviews ?? 0} omdömen)
+                      </span>
+                    </span>
+                  )}
+                  {partner?.completed_jobs != null && partner.completed_jobs > 0 && (
+                    <span>{partner.completed_jobs} genomförda jobb</span>
+                  )}
+                </div>
+
+                {/* Trust Badges */}
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {partner?.f_tax_certificate && (
+                    <Badge
+                      variant="outline"
+                      className="text-xs bg-green-50 border-green-200 text-green-700"
+                    >
+                      <Shield className="h-3 w-3 mr-1" aria-hidden="true" />
+                      F-skatt
+                    </Badge>
+                  )}
+                  <Badge
+                    variant="outline"
+                    className="text-xs bg-blue-50 border-blue-200 text-blue-700"
+                  >
+                    <Shield className="h-3 w-3 mr-1" aria-hidden="true" />
+                    Försäkrad
+                  </Badge>
+                </div>
               </div>
             </div>
+
+            {/* Offer Details Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-muted/50 rounded-lg">
+              <div>
+                <p className="text-xs text-muted-foreground">Tidsfönster</p>
+                <p className="font-medium">{timeWindow}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Uppskattad tid</p>
+                <p className="font-medium">{estimatedHours} timmar</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Team</p>
+                <p className="font-medium flex items-center gap-1">
+                  <Users className="h-4 w-4" aria-hidden="true" />
+                  {teamSize} pers
+                </p>
+              </div>
+              {distanceKm != null && (
+                <div>
+                  <p className="text-xs text-muted-foreground">Avstånd</p>
+                  <p className="font-medium">{distanceKm} km</p>
+                </div>
+              )}
+            </div>
+
+            {/* Terms */}
+            {terms && (
+              <div className="mt-4 p-3 bg-secondary/50 rounded-lg">
+                <p className="text-sm">
+                  <MessageSquare className="h-4 w-4 inline mr-1 text-muted-foreground" aria-hidden="true" />
+                  {terms}
+                </p>
+              </div>
+            )}
+
+            {/* Reviews */}
+            {reviews.length > 0 && (
+              <div className="mt-4">
+                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">
+                  Senaste omdömen
+                </p>
+                {reviews.slice(0, 1).map((review) => (
+                  <div
+                    key={review.id}
+                    className="p-3 bg-yellow-50 rounded-lg border border-yellow-200"
+                  >
+                    <div className="flex items-center gap-0.5 mb-1" aria-label={`${review.rating} av 5 stjärnor`}>
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`h-3 w-3 ${
+                            i < review.rating
+                              ? 'text-yellow-500 fill-yellow-500'
+                              : 'text-gray-300'
+                          }`}
+                          aria-hidden="true"
+                        />
+                      ))}
+                    </div>
+                    {review.comment && (
+                      <p className="text-sm text-yellow-800">"{review.comment}"</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          <div className="grid grid-cols-3 gap-4 text-sm mt-3">
-            <div>
-              <p className="text-muted-foreground">Tidsfönster</p>
-              <p className="font-medium">{timeWindow}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Uppsk. tid</p>
-              <p className="font-medium">{estimatedHours}h</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Team</p>
-              <p className="font-medium flex items-center gap-1">
-                <Users className="h-4 w-4" />
-                {teamSize} pers
+          {/* Price & Action Section */}
+          <div className="lg:text-right lg:min-w-[180px]">
+            <div className="p-4 bg-primary/5 rounded-lg mb-4">
+              <p className="text-3xl font-bold text-primary">
+                {formatCurrency(totalPrice)} kr
               </p>
+              <p className="text-sm text-muted-foreground">efter RUT-avdrag</p>
+              {priceBeforeRut != null && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  ({formatCurrency(priceBeforeRut)} kr före)
+                </p>
+              )}
             </div>
+
+            {isApproved && (
+              <Badge className="bg-green-600 text-white hover:bg-green-600 w-full justify-center py-2">
+                <CheckCircle2 className="h-4 w-4 mr-1" aria-hidden="true" />
+                Godkänd
+              </Badge>
+            )}
+
+            {isRejected && (
+              <Badge variant="outline" className="w-full justify-center py-2 text-muted-foreground">
+                Avböjd
+              </Badge>
+            )}
+
+            {isPending && onApprove && (
+              <Button
+                className="w-full"
+                size="lg"
+                onClick={onApprove}
+                disabled={approveDisabled}
+              >
+                <CheckCircle2 className="h-5 w-5 mr-2" aria-hidden="true" />
+                Godkänn offert
+              </Button>
+            )}
           </div>
-
-          {/* Contact info when approved */}
-          {showContactInfo && isApproved && partner && (
-            <div className="mt-4 p-4 bg-green-100 border border-green-300 rounded-lg">
-              <h4 className="font-semibold text-green-800 mb-3 flex items-center gap-2">
-                <Phone className="h-4 w-4" />
-                Kontaktuppgifter till {partner.company_name}
-              </h4>
-              <div className="space-y-2 text-sm">
-                {partner.contact_name && (
-                  <p className="flex items-center gap-2">
-                    <span className="text-muted-foreground">Kontaktperson:</span>
-                    <span className="font-medium">{partner.contact_name}</span>
-                  </p>
-                )}
-                {partner.contact_email && (
-                  <p className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    <a
-                      href={`mailto:${partner.contact_email}`}
-                      className="text-primary hover:underline"
-                    >
-                      {partner.contact_email}
-                    </a>
-                  </p>
-                )}
-                {partner.contact_phone && (
-                  <p className="flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-muted-foreground" />
-                    <a
-                      href={`tel:${partner.contact_phone}`}
-                      className="text-primary hover:underline"
-                    >
-                      {partner.contact_phone}
-                    </a>
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
         </div>
-
-        <div className="text-right">
-          <p className="text-2xl font-bold text-primary">
-            {totalPrice.toLocaleString("sv-SE")} kr
-          </p>
-          <p className="text-xs text-muted-foreground">efter RUT-avdrag</p>
-
-          {isApproved ? (
-            <StatusBadge status="approved" />
-          ) : isRejected ? (
-            <StatusBadge status="rejected" />
-          ) : onApprove ? (
-            <Button
-              className="mt-2"
-              onClick={onApprove}
-              disabled={approveDisabled}
-            >
-              Godkänn offert
-            </Button>
-          ) : null}
-        </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
