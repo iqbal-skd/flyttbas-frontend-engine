@@ -206,6 +206,7 @@ export type Database = {
           address_lat: number | null
           address_lng: number | null
           average_rating: number | null
+          commission_rate_override: number | null
           company_name: string
           completed_jobs: number | null
           contact_email: string
@@ -237,6 +238,7 @@ export type Database = {
           address_lat?: number | null
           address_lng?: number | null
           average_rating?: number | null
+          commission_rate_override?: number | null
           company_name: string
           completed_jobs?: number | null
           contact_email: string
@@ -268,6 +270,7 @@ export type Database = {
           address_lat?: number | null
           address_lng?: number | null
           average_rating?: number | null
+          commission_rate_override?: number | null
           company_name?: string
           completed_jobs?: number | null
           contact_email?: string
@@ -482,6 +485,33 @@ export type Database = {
           },
         ]
       }
+      system_settings: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          key: string
+          updated_at: string | null
+          value: Json
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          key: string
+          updated_at?: string | null
+          value: Json
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          key?: string
+          updated_at?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -511,6 +541,10 @@ export type Database = {
       customer_owns_quote: {
         Args: { _quote_request_id: string; _user_id: string }
         Returns: boolean
+      }
+      get_partner_commission_rate: {
+        Args: { partner_uuid: string }
+        Returns: number
       }
       has_role: {
         Args: {
