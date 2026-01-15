@@ -16,7 +16,7 @@ import {
   QuoteDetailHeader,
   TrustSignalsFooter,
 } from "@/components/dashboard";
-import { FileText, Clock, Plus, Truck } from "lucide-react";
+import { FileText, Clock, Plus, Truck, ArrowLeft, List } from "lucide-react";
 import { getDaysUntilMove } from "@/lib/dashboard-utils";
 import type { QuoteRequest, Offer, Review } from "@/types/customer-dashboard";
 
@@ -32,6 +32,7 @@ const CustomerDashboard = () => {
   const [partnerReviews, setPartnerReviews] = useState<Record<string, Review[]>>({});
   const [loadingData, setLoadingData] = useState(true);
   const [loadingOffers, setLoadingOffers] = useState(false);
+  const [mobileView, setMobileView] = useState<'list' | 'detail'>('list');
 
   useEffect(() => {
     if (!loading && !user) {
@@ -209,9 +210,14 @@ const CustomerDashboard = () => {
     (quote: QuoteRequest) => {
       setSelectedQuote(quote);
       fetchOffers(quote.id);
+      setMobileView('detail'); // Switch to detail view on mobile
     },
     [fetchOffers]
   );
+
+  const handleBackToList = useCallback(() => {
+    setMobileView('list');
+  }, []);
 
   const handleApproveOffer = async (offerId: string) => {
     const approvedOffer = offers.find((o) => o.id === offerId);
@@ -319,8 +325,8 @@ const CustomerDashboard = () => {
         />
       ) : (
         <div className="grid lg:grid-cols-3 gap-6">
-          {/* Quote List */}
-          <div className="lg:col-span-1 space-y-3">
+          {/* Quote List - Hidden on mobile when viewing details */}
+          <div className={`lg:col-span-1 space-y-3 ${mobileView === 'detail' ? 'hidden lg:block' : ''}`}>
             <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
               Dina förfrågningar ({quotes.length})
             </h2>
@@ -344,8 +350,18 @@ const CustomerDashboard = () => {
             ))}
           </div>
 
-          {/* Detail Panel */}
-          <div className="lg:col-span-2 space-y-4">
+          {/* Detail Panel - Hidden on mobile when viewing list */}
+          <div className={`lg:col-span-2 space-y-4 ${mobileView === 'list' ? 'hidden lg:block' : ''}`}>
+            {/* Mobile Back Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="lg:hidden mb-2 -ml-2"
+              onClick={handleBackToList}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Tillbaka till lista
+            </Button>
             {selectedQuote && (
               <>
                 {/* Quote Header */}

@@ -111,7 +111,7 @@ export const Header = () => {
               </Button>
               {user ? (
                 <Button size="sm" className="w-full" asChild>
-                  <Link 
+                  <Link
                     to={getDashboardLink()}
                     onClick={() => setMobileMenuOpen(false)}
                   >
@@ -119,11 +119,18 @@ export const Header = () => {
                   </Link>
                 </Button>
               ) : (
-                <Button size="sm" className="w-full" asChild>
-                  <Link to="/#quote-wizard" onClick={() => setMobileMenuOpen(false)}>
-                    Jämför Offerter
-                  </Link>
-                </Button>
+                <>
+                  <Button variant="outline" size="sm" className="w-full" asChild>
+                    <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
+                      Logga in
+                    </Link>
+                  </Button>
+                  <Button size="sm" className="w-full" asChild>
+                    <Link to="/#quote-wizard" onClick={() => setMobileMenuOpen(false)}>
+                      Jämför Offerter
+                    </Link>
+                  </Button>
+                </>
               )}
             </div>
           </div>
