@@ -36,6 +36,17 @@ import PartnerDashboard from "./pages/partner/PartnerDashboard";
 import AllmannaVillkor from "./pages/AllmannaVillkor";
 import Integritetspolicy from "./pages/Integritetspolicy";
 import Cookiepolicy from "./pages/Cookiepolicy";
+import OmOss from "./pages/OmOss";
+// Guides
+import JamforFlyttfirmor from "./pages/guider/JamforFlyttfirmor";
+import VadKostarEnFlytt from "./pages/guider/VadKostarEnFlytt";
+import FastPrisVsTimpris from "./pages/guider/FastPrisVsTimpris";
+// Checklists
+import FlyttChecklista from "./pages/checklistor/FlyttChecklista";
+import FlyttstadningChecklista from "./pages/checklistor/FlyttstadningChecklista";
+import KontorsflyttChecklista from "./pages/checklistor/KontorsflyttChecklista";
+import DodsboChecklista from "./pages/checklistor/DodsboChecklista";
+import MagasineringChecklista from "./pages/checklistor/MagasineringChecklista";
 
 const queryClient = new QueryClient();
 
@@ -147,7 +158,22 @@ const App = () => (
               <Route path="/allmanna-villkor" element={<AllmannaVillkor />} />
               <Route path="/integritetspolicy" element={<Integritetspolicy />} />
               <Route path="/cookiepolicy" element={<Cookiepolicy />} />
-              
+
+              {/* About */}
+              <Route path="/om-oss" element={<OmOss />} />
+
+              {/* Guides */}
+              <Route path="/guider/jamfor-flyttfirmor" element={<JamforFlyttfirmor />} />
+              <Route path="/guider/vad-kostar-en-flytt" element={<VadKostarEnFlytt />} />
+              <Route path="/guider/fast-pris-vs-timpris" element={<FastPrisVsTimpris />} />
+
+              {/* Checklists */}
+              <Route path="/checklistor/flytt-checklista" element={<FlyttChecklista />} />
+              <Route path="/checklistor/flyttstadning-checklista" element={<FlyttstadningChecklista />} />
+              <Route path="/checklistor/kontorsflytt-checklista" element={<KontorsflyttChecklista />} />
+              <Route path="/checklistor/dodsbo-checklista" element={<DodsboChecklista />} />
+              <Route path="/checklistor/magasinering-checklista" element={<MagasineringChecklista />} />
+
               {/* Legacy routes */}
               <Route path="/om" element={<Index />} />
               <Route path="/juridik" element={<AllmannaVillkor />} />

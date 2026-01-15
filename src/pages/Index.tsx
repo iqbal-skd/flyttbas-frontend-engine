@@ -181,8 +181,8 @@ const Index = () => {
                   Är du flyttfirma?
                 </h2>
                 <p className="text-lg text-muted-foreground mb-6">
-                  Anslut dig till Flyttbas och få tillgång till nya kunder i hela Sverige. 
-                  Ingen startavgift – du betalar endast 7% vid genomfört jobb.
+                  Anslut dig till Flyttbas och få tillgång till nya kunder i hela Sverige.
+                  Ingen startavgift – du betalar endast en låg provision vid genomfört jobb.
                 </p>
                 <div className="space-y-3 mb-6">
                   <div className="flex items-center gap-2">
@@ -209,7 +209,7 @@ const Index = () => {
                 <div className="bg-background p-8 rounded-2xl shadow-xl">
                   <div className="text-center mb-4">
                     <p className="text-sm text-muted-foreground">Provision</p>
-                    <p className="text-4xl font-bold text-primary">7%</p>
+                    <p className="text-4xl font-bold text-primary">Låg</p>
                     <p className="text-sm text-muted-foreground">per genomfört jobb</p>
                   </div>
                   <div className="border-t pt-4 space-y-2 text-sm">

@@ -172,7 +172,7 @@ const faqData: FAQCategory[] = [
       {
         id: "gar-sonder",
         question: "Vad händer om något går sönder?",
-        answer: "Anmäl skadan till flyttfirman så snart som möjligt. Flyttfirman ansvarar för skador som uppstår i samband med uppdraget och hanterar ärendet enligt sina villkor och via sin försäkring. Flyttbas är en förmedlingstjänst och inte part i avtalet mellan dig och flyttfirman – eventuella anspråk riktas därför direkt mot den utförare som åtog sig uppdraget."
+        answer: "Om något skadas bör du dokumentera med bilder och kontakta flyttfirman så snart som möjligt. Hur ärendet hanteras beror på försäkring och villkor. Offerten och avtalet ska beskriva hur reklamation går till."
       },
       {
         id: "kundskydd",
@@ -192,7 +192,7 @@ const faqData: FAQCategory[] = [
         question: "Kan företag använda Flyttbas för kontorsflytt?",
         answer: (
           <span>
-            Ja. Flyttbas kan användas av företag som behöver kontorsflytt, företagsflytt eller verksamhetsflytt. Du får offerter från flyttfirmor med erfarenhet av att flytta kontor och verksamheter. 
+            Ja. Flyttbas kan användas av företag som behöver kontorsflytt, företagsflytt eller verksamhetsflytt. Du får offerter från flyttfirmor med erfarenhet av att flytta kontor och verksamheter.
             Läs mer på vår <Link to="/kontorsflytt" className="text-accent hover:underline">sida om kontorsflytt</Link>.
           </span>
         ),
@@ -226,6 +226,139 @@ const faqData: FAQCategory[] = [
         answer: "Nej. RUT gäller för privatpersoner. Företagsflytt prissätts utan RUT, men är normalt en avdragsgill kostnad i verksamheten."
       }
     ]
+  },
+  {
+    id: "magasinering",
+    title: "Magasinering",
+    filterTag: "Magasinering",
+    questions: [
+      {
+        id: "vad-ar-magasinering",
+        question: "Vad är magasinering?",
+        answer: "Magasinering innebär att dina möbler och saker förvaras tillfälligt i ett säkert lager. Det kan vara användbart vid mellanboende, renovering eller när du behöver extra utrymme under en period."
+      },
+      {
+        id: "nar-behover-magasinering",
+        question: "När kan jag behöva magasinering?",
+        answer: (
+          <div className="space-y-3">
+            <p>Vanliga situationer där magasinering behövs:</p>
+            <ul className="list-disc list-inside space-y-1">
+              <li>Mellanboende – när du flyttar ut innan du flyttar in</li>
+              <li>Renovering – för att skydda möbler under byggtiden</li>
+              <li>Dödsbo – tillfällig förvaring innan beslut om vad som ska sparas</li>
+              <li>Utlandsvistelse – förvara saker medan du är borta</li>
+              <li>Platsbrist – när nya bostaden är mindre än den gamla</li>
+            </ul>
+          </div>
+        ),
+        microCta: { text: "Läs vår magasineringschecklista", link: "/checklistor/magasinering-checklista" }
+      },
+      {
+        id: "hur-lange-magasinering",
+        question: "Hur länge kan jag magasinera?",
+        answer: "Du kan magasinera så länge du behöver – från några veckor till flera år. Många leverantörer erbjuder flexibla avtal med månadsvis uppsägning."
+      },
+      {
+        id: "vad-kostar-magasinering",
+        question: "Vad kostar magasinering?",
+        answer: "Priset beror på hur mycket utrymme du behöver och hur länge du magasinerar. Priset anges ofta per kubikmeter eller per förvaringsenhet per månad. Be om en offert för att få ett exakt pris."
+      },
+      {
+        id: "magasinering-forsakring",
+        question: "Är mina saker försäkrade under magasinering?",
+        answer: "Kontrollera alltid vad som gäller. Vissa leverantörer inkluderar försäkring, medan andra kräver att du tecknar separat. Din hemförsäkring kan ibland täcka magasinerade saker – kontrollera med ditt försäkringsbolag."
+      }
+    ]
+  },
+  {
+    id: "dodsbo",
+    title: "Dödsbo",
+    filterTag: "Dödsbo",
+    questions: [
+      {
+        id: "vad-ar-dodsbo",
+        question: "Vad är ett dödsbo?",
+        answer: "Ett dödsbo är den juridiska benämningen på en avliden persons kvarlåtenskap – tillgångar, skulder och ägodelar. Dödsboet förvaltas av dödsbodelägarna (arvingarna) fram till arvskiftet."
+      },
+      {
+        id: "vad-gora-dodsbo",
+        question: "Vad behöver göras med ett dödsbo?",
+        answer: (
+          <div className="space-y-3">
+            <p>De viktigaste momenten:</p>
+            <ul className="list-disc list-inside space-y-1">
+              <li>Upprätta bouppteckning (inom 3 månader)</li>
+              <li>Sortera och värdera bohaget</li>
+              <li>Tömma och städa bostaden</li>
+              <li>Säga upp hyresavtal eller sälja bostad</li>
+              <li>Genomföra arvskifte</li>
+            </ul>
+          </div>
+        ),
+        microCta: { text: "Se vår dödsbo-checklista", link: "/checklistor/dodsbo-checklista" }
+      },
+      {
+        id: "dodsbo-tomning",
+        question: "Kan jag få hjälp med tömning av dödsbo?",
+        answer: "Ja. Många flyttfirmor och specialiserade dödsbo-firmor erbjuder hjälp med sortering, värdering, tömning, bortforsling och städning. Du kan begära offerter för att jämföra priser och tjänster.",
+        microCta: { text: "Jämför offerter för dödsbo", link: "/#quote-wizard" }
+      },
+      {
+        id: "rut-dodsbo",
+        question: "Gäller RUT-avdrag för dödsbo?",
+        answer: "RUT-avdrag gäller normalt för privatpersoner, inte för dödsbon som juridisk person. Dock kan dödsbodelägare i vissa fall ha rätt till RUT om de anlitar hjälp för den avlidnes bostad. Kontrollera med Skatteverket för din specifika situation."
+      },
+      {
+        id: "hur-lang-tid-dodsbo",
+        question: "Hur lång tid tar det att tömma ett dödsbo?",
+        answer: "Det beror på bostadens storlek, mängden bohag och hur mycket som ska sorteras. En normal tömning kan ta från en dag till flera veckor. Med professionell hjälp går det ofta snabbare."
+      }
+    ]
+  },
+  {
+    id: "specialflytt",
+    title: "Specialflytt",
+    filterTag: "Specialflytt",
+    questions: [
+      {
+        id: "vad-ar-specialflytt",
+        question: "Vad räknas som specialflytt?",
+        answer: (
+          <div className="space-y-3">
+            <p>Specialflytt omfattar flytt av föremål som kräver särskild utrustning, kunskap eller försiktighet:</p>
+            <ul className="list-disc list-inside space-y-1">
+              <li>Pianoflytt och flyglar</li>
+              <li>Kassaskåp och tunga föremål</li>
+              <li>Konst och antika möbler</li>
+              <li>Stora vitvaror</li>
+              <li>Poolbord och större spelbord</li>
+            </ul>
+          </div>
+        )
+      },
+      {
+        id: "pianoflytt",
+        question: "Hur går en pianoflytt till?",
+        answer: "Pianoflytt kräver specialutrustning och erfarenhet. Flyttfirman använder ofta särskilda bärverktyg, skyddsfiltar och ibland transportvagnar. Flytten planeras noga med hänsyn till trappor, dörrar och hisskapacitet."
+      },
+      {
+        id: "specialflytt-kostnad",
+        question: "Vad kostar en specialflytt?",
+        answer: "Priset beror på föremålets storlek, vikt och hur svårt det är att flytta. Faktorer som våningsplan, hiss och bärväg påverkar också. Be alltid om en specifik offert för specialflytt."
+      },
+      {
+        id: "forsakring-specialflytt",
+        question: "Är specialföremål försäkrade under flytt?",
+        answer: "Kontrollera alltid försäkringsvillkoren med flyttfirman. Värdefulla föremål kan kräva tilläggsförsäkring. Be om skriftlig bekräftelse på vad som täcks innan flytten."
+      },
+      {
+        id: "kan-ni-flytta-allt",
+        question: "Kan alla flyttfirmor flytta specialföremål?",
+        answer: "Nej. Specialflytt kräver särskild kompetens och utrustning. Ange alltid vilka specialföremål du har i din förfrågan så att du får offerter från firmor med rätt erfarenhet.",
+        microCta: { text: "Beskriv din flytt och få offerter", link: "/#quote-wizard" }
+      }
+    ]
   }
 ];
 
@@ -241,7 +374,7 @@ const cityData = [
   { name: "Norrköping", tip: "Kontrollera lastzon/parkering och eventuella portkoder i förväg." }
 ];
 
-const filterTags = ["Privatflytt", "Flyttstäd", "Pris & fast pris", "RUT-avdrag", "Trygghet", "Kontorsflytt", "Storstäder"];
+const filterTags = ["Privatflytt", "Flyttstäd", "Pris & fast pris", "RUT-avdrag", "Trygghet", "Kontorsflytt", "Magasinering", "Dödsbo", "Specialflytt", "Storstäder"];
 
 const FAQ = () => {
   const location = useLocation();
@@ -313,17 +446,28 @@ const FAQ = () => {
     setAllExpanded(!allExpanded);
   };
 
-  // Generate JSON-LD for FAQPage
+  // Generate JSON-LD for FAQPage with proper text for JSX answers
   const faqJsonLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    "mainEntity": faqData.flatMap(cat => 
+    "mainEntity": faqData.flatMap(cat =>
       cat.questions.map(q => ({
         "@type": "Question",
         "name": q.question,
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": typeof q.answer === "string" ? q.answer : q.question // Fallback for JSX answers
+          "text": typeof q.answer === "string" ? q.answer : (
+            // Use pre-defined text for JSX answers
+            q.id === "hur-bokar-jag" ? "1. Fyll i en kostnadsfri förfrågan om flytt och/eller flyttstädning. 2. Ta emot offerter från flera verifierade flyttfirmor. 3. Jämför pris, innehåll och omdömen. 4. Välj och boka den flyttfirma som passar dig bäst." :
+            q.id === "jamfora-offert" ? "Jämför alltid: Totalpris och vad som ingår, eventuella tillägg (t.ex. packning, montering, bärhjälp), försäkring och villkor, datum/tidsfönster och upplägg (antal flyttare, bil, bärväg), omdömen och tidigare kunders erfarenheter." :
+            q.id === "hur-lang-tid" ? "Tidsåtgången varierar beroende på volym, hiss/våning, bärväg, parkering och avstånd. Som exempel vid flytt inom samma stad: 2 rok ca 3–5 timmar, 3 rok ca 5–7 timmar." :
+            q.id === "foretag-anvanda" ? "Ja. Flyttbas kan användas av företag som behöver kontorsflytt, företagsflytt eller verksamhetsflytt. Du får offerter från flyttfirmor med erfarenhet av att flytta kontor och verksamheter." :
+            q.id === "vad-ingar-kontorsflytt" ? "Det varierar, men kan omfatta: Flytt av kontorsmöbler och utrustning, demontering/montering av arbetsplatser, packning av arkiv och känslig utrustning, magasinering eller bortforsling, flyttstädning av lokaler. Exakt innehåll framgår i offerten." :
+            q.id === "nar-behover-magasinering" ? "Vanliga situationer där magasinering behövs: Mellanboende – när du flyttar ut innan du flyttar in, renovering – för att skydda möbler under byggtiden, dödsbo – tillfällig förvaring innan beslut om vad som ska sparas, utlandsvistelse – förvara saker medan du är borta, platsbrist – när nya bostaden är mindre än den gamla." :
+            q.id === "vad-gora-dodsbo" ? "De viktigaste momenten: Upprätta bouppteckning (inom 3 månader), sortera och värdera bohaget, tömma och städa bostaden, säga upp hyresavtal eller sälja bostad, genomföra arvskifte." :
+            q.id === "vad-ar-specialflytt" ? "Specialflytt omfattar flytt av föremål som kräver särskild utrustning, kunskap eller försiktighet: Pianoflytt och flyglar, kassaskåp och tunga föremål, konst och antika möbler, stora vitvaror, poolbord och större spelbord." :
+            q.question
+          )
         }
       }))
     )

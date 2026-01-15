@@ -373,11 +373,24 @@ const BliPartner = () => {
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4">
                 {isEditMode ? "Uppdatera din ansökan" : "Bli partner hos Flyttbas"}
               </h1>
-              <p className="text-muted-foreground mb-4">
-                {isEditMode 
-                  ? "Uppdatera dina uppgifter nedan så granskar vi dem igen inom 1-2 arbetsdagar."
-                  : "Fyll i formuläret nedan så granskar vi din ansökan inom 1-2 arbetsdagar."}
-              </p>
+              {isEditMode ? (
+                <p className="text-muted-foreground mb-4">
+                  Uppdatera dina uppgifter nedan så granskar vi dem igen inom 1-2 arbetsdagar.
+                </p>
+              ) : (
+                <div className="text-muted-foreground space-y-3 mb-4">
+                  <p>
+                    Flyttbas är en plattform för strukturerade flyttförfrågningar.
+                    Som partner får du tillgång till tydliga underlag för att kunna lämna korrekta och jämförbara offerter.
+                  </p>
+                  <p>
+                    Flyttbas är inte en leadlista. Alla förfrågningar är standardiserade och innehåller relevant information om uppdragets omfattning.
+                  </p>
+                  <p className="text-sm">
+                    Villkor för samarbete diskuteras direkt med Flyttbas.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </section>
@@ -578,8 +591,8 @@ const BliPartner = () => {
                           className={errors.gdpr_consent ? "border-destructive" : ""}
                         />
                         <Label htmlFor="gdpr" className="font-normal cursor-pointer text-sm">
-                          Jag godkänner Flyttbas partnervillkor och att mina uppgifter behandlas enligt GDPR. 
-                          Jag förstår att en provision på 7% av ordervärdet före RUT debiteras vid genomförda jobb. *
+                          Jag godkänner Flyttbas partnervillkor och att mina uppgifter behandlas enligt GDPR.
+                          Jag förstår att en provision av ordervärdet före RUT debiteras vid genomförda jobb. *
                         </Label>
                       </div>
                       {errors.gdpr_consent && <p className="text-xs text-destructive mt-1">{errors.gdpr_consent}</p>}

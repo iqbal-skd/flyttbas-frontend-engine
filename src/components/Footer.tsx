@@ -6,9 +6,9 @@ export const Footer = () => {
   return (
     <footer className="bg-navy text-white">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8">
           {/* Brand */}
-          <div>
+          <div className="lg:col-span-2">
             <img src={logo} alt="Flyttbas" className="h-8 w-auto mb-4" />
             <p className="text-sm text-white/80">
               Flyttbas är en jämförelsetjänst för flytt och flyttstäd där du jämför offerter från verifierade flyttfirmor.
@@ -42,12 +42,59 @@ export const Footer = () => {
             </ul>
           </div>
 
+          {/* Guider & Checklistor */}
+          <div>
+            <h3 className="font-semibold mb-4">Guider & Checklistor</h3>
+            <ul className="space-y-2 text-sm">
+              <li>
+                <Link to="/guider/vad-kostar-en-flytt" className="text-white/80 hover:text-white transition-colors">
+                  Vad kostar en flytt?
+                </Link>
+              </li>
+              <li>
+                <Link to="/guider/jamfor-flyttfirmor" className="text-white/80 hover:text-white transition-colors">
+                  Jämför flyttfirmor
+                </Link>
+              </li>
+              <li>
+                <Link to="/guider/fast-pris-vs-timpris" className="text-white/80 hover:text-white transition-colors">
+                  Fast pris vs timpris
+                </Link>
+              </li>
+              <li>
+                <Link to="/checklistor/flytt-checklista" className="text-white/80 hover:text-white transition-colors">
+                  Flyttchecklista
+                </Link>
+              </li>
+              <li>
+                <Link to="/checklistor/flyttstadning-checklista" className="text-white/80 hover:text-white transition-colors">
+                  Flyttstädning checklista
+                </Link>
+              </li>
+              <li>
+                <Link to="/checklistor/kontorsflytt-checklista" className="text-white/80 hover:text-white transition-colors">
+                  Kontorsflytt checklista
+                </Link>
+              </li>
+              <li>
+                <Link to="/checklistor/dodsbo-checklista" className="text-white/80 hover:text-white transition-colors">
+                  Dödsbo checklista
+                </Link>
+              </li>
+              <li>
+                <Link to="/checklistor/magasinering-checklista" className="text-white/80 hover:text-white transition-colors">
+                  Magasinering checklista
+                </Link>
+              </li>
+            </ul>
+          </div>
+
           {/* Info */}
           <div>
             <h3 className="font-semibold mb-4">Information</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link to="/om" className="text-white/80 hover:text-white transition-colors">
+                <Link to="/om-oss" className="text-white/80 hover:text-white transition-colors">
                   Om Flyttbas
                 </Link>
               </li>

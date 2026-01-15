@@ -62,7 +62,7 @@ const Kontorsflytt = () => {
                 <Button size="lg" asChild className="bg-orange hover:bg-orange/90">
                   <Link to="/kontakt">Jämför offerter</Link>
                 </Button>
-                <Button size="lg" variant="outline" asChild className="border-white/20 text-white hover:bg-white/10">
+                <Button size="lg" variant="hero" asChild>
                   <Link to="/faq">Hur det fungerar</Link>
                 </Button>
               </div>
