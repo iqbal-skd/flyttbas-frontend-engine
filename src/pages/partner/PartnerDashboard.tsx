@@ -590,81 +590,141 @@ const PartnerDashboard = () => {
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {quotes.map((quote) => {
                     const hasOffer = quotesWithOffers.has(quote.id);
-                    
+                    const distance = calculateDistance(
+                      quote.from_lat,
+                      quote.from_lng,
+                      quote.to_lat,
+                      quote.to_lng
+                    );
+                    const hasHeavyItems = quote.heavy_items && Array.isArray(quote.heavy_items) && quote.heavy_items.length > 0;
+                    const totalStairs = (quote.stairs_from || 0) + (quote.stairs_to || 0);
+                    const hasElevator = quote.elevator_from_size || quote.elevator_to_size;
+
                     return (
-                      <Card 
-                        key={quote.id} 
-                        className={`relative transition-all hover:shadow-lg ${hasOffer ? 'opacity-70 border-green-200 bg-green-50/30' : 'border-border'}`}
+                      <Card
+                        key={quote.id}
+                        className={`relative overflow-hidden transition-all hover:shadow-lg ${hasOffer ? 'border-green-300 bg-green-50/50' : 'border-border hover:border-primary/30'}`}
                       >
-                        {hasOffer && (
-                          <div className="absolute top-3 right-3">
-                            <Badge className="bg-green-600 text-white">
-                              <CheckCircle2 className="h-3 w-3 mr-1" />
-                              Offert skickad
-                            </Badge>
-                          </div>
-                        )}
-                        
-                        <CardHeader className="pb-3">
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                            <Calendar className="h-4 w-4" />
-                            <span className="font-medium text-foreground">
-                              {new Date(quote.move_date).toLocaleDateString('sv-SE', { 
-                                weekday: 'short', 
-                                day: 'numeric', 
-                                month: 'short' 
-                              })}
-                            </span>
-                            {quote.move_start_time && (
-                              <span className="text-muted-foreground">
-                                kl {quote.move_start_time}
+                        {/* Date Header Banner */}
+                        <div className={`px-4 py-3 ${hasOffer ? 'bg-green-100' : 'bg-gradient-to-r from-primary/10 to-primary/5'}`}>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Calendar className="h-4 w-4 text-primary" />
+                              <span className="font-semibold text-foreground">
+                                {new Date(quote.move_date).toLocaleDateString('sv-SE', {
+                                  weekday: 'long',
+                                  day: 'numeric',
+                                  month: 'short'
+                                })}
                               </span>
+                            </div>
+                            {hasOffer ? (
+                              <Badge className="bg-green-600 text-white text-xs">
+                                <CheckCircle2 className="h-3 w-3 mr-1" />
+                                Offert skickad
+                              </Badge>
+                            ) : quote.move_start_time && (
+                              <Badge variant="secondary" className="text-xs">
+                                <Clock className="h-3 w-3 mr-1" />
+                                {quote.move_start_time}
+                              </Badge>
                             )}
                           </div>
-                          
-                          <div className="space-y-1">
-                            <div className="flex items-start gap-2">
-                              <MapPin className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                              <div className="text-sm">
-                                <p className="font-medium">{quote.from_postal_code}</p>
-                                <div className="flex items-center gap-1 text-muted-foreground">
-                                  <ArrowRight className="h-3 w-3" />
-                                  <span>{quote.to_postal_code}</span>
+                        </div>
+
+                        <CardContent className="p-4 space-y-4">
+                          {/* Route Section */}
+                          <div className="space-y-2">
+                            <div className="flex items-start gap-3">
+                              <div className="flex flex-col items-center">
+                                <div className="w-3 h-3 rounded-full bg-blue-500 border-2 border-blue-200" />
+                                <div className="w-0.5 h-6 bg-gradient-to-b from-blue-300 to-green-300" />
+                                <div className="w-3 h-3 rounded-full bg-green-500 border-2 border-green-200" />
+                              </div>
+                              <div className="flex-1 space-y-2">
+                                <div>
+                                  <p className="text-sm font-medium truncate" title={quote.from_address}>
+                                    {quote.from_address}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">{quote.from_postal_code}</p>
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium truncate" title={quote.to_address}>
+                                    {quote.to_address}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">{quote.to_postal_code}</p>
                                 </div>
                               </div>
+                              {distance && (
+                                <div className="text-right">
+                                  <p className="text-lg font-bold text-primary">{distance}</p>
+                                  <p className="text-xs text-muted-foreground">km</p>
+                                </div>
+                              )}
                             </div>
                           </div>
-                        </CardHeader>
-                        
-                        <CardContent className="pt-0">
-                          <div className="flex flex-wrap gap-2 mb-4">
-                            <Badge variant="outline">{quote.dwelling_type}</Badge>
-                            <Badge variant="secondary">{quote.area_m2} m²</Badge>
-                            {quote.rooms && <Badge variant="secondary">{quote.rooms} rum</Badge>}
+
+                          {/* Property Info Grid */}
+                          <div className="grid grid-cols-3 gap-2 py-3 border-y border-border/50">
+                            <div className="text-center">
+                              <Home className="h-4 w-4 mx-auto text-muted-foreground mb-1" />
+                              <p className="text-sm font-semibold capitalize">{quote.dwelling_type}</p>
+                            </div>
+                            <div className="text-center border-x border-border/50">
+                              <p className="text-lg font-bold text-primary">{quote.area_m2}</p>
+                              <p className="text-xs text-muted-foreground">m²</p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-lg font-bold text-primary">{quote.rooms || '-'}</p>
+                              <p className="text-xs text-muted-foreground">rum</p>
+                            </div>
                           </div>
-                          
-                          <div className="flex flex-wrap gap-1 text-xs text-muted-foreground mb-4">
-                            {(quote.stairs_from > 0 || quote.stairs_to > 0) && (
-                              <span className="bg-muted px-2 py-0.5 rounded">
-                                {quote.stairs_from + quote.stairs_to} tr
-                              </span>
+
+                          {/* Quick Info Tags */}
+                          <div className="flex flex-wrap gap-1.5">
+                            {totalStairs > 0 && (
+                              <Badge variant="outline" className="text-xs gap-1 bg-amber-50 border-amber-200 text-amber-700">
+                                <Building className="h-3 w-3" />
+                                {totalStairs} tr
+                              </Badge>
+                            )}
+                            {hasElevator && (
+                              <Badge variant="outline" className="text-xs gap-1 bg-green-50 border-green-200 text-green-700">
+                                <CheckCircle2 className="h-3 w-3" />
+                                Hiss
+                              </Badge>
                             )}
                             {quote.packing_hours > 0 && (
-                              <span className="bg-muted px-2 py-0.5 rounded">
+                              <Badge variant="outline" className="text-xs gap-1 bg-blue-50 border-blue-200 text-blue-700">
+                                <Package className="h-3 w-3" />
                                 Packning
-                              </span>
+                              </Badge>
                             )}
                             {quote.assembly_hours > 0 && (
-                              <span className="bg-muted px-2 py-0.5 rounded">
+                              <Badge variant="outline" className="text-xs gap-1 bg-purple-50 border-purple-200 text-purple-700">
+                                <Package className="h-3 w-3" />
                                 Montering
-                              </span>
+                              </Badge>
+                            )}
+                            {hasHeavyItems && (
+                              <Badge variant="outline" className="text-xs gap-1 bg-red-50 border-red-200 text-red-700">
+                                <Weight className="h-3 w-3" />
+                                Tungt
+                              </Badge>
+                            )}
+                            {quote.parking_restrictions && (
+                              <Badge variant="outline" className="text-xs gap-1 bg-orange-50 border-orange-200 text-orange-700">
+                                <Car className="h-3 w-3" />
+                                Svår P
+                              </Badge>
                             )}
                           </div>
-                          
-                          <div className="flex gap-2">
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
+
+                          {/* Action Buttons */}
+                          <div className="flex gap-2 pt-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
                               className="flex-1"
                               onClick={() => handleViewDetails(quote)}
                             >
@@ -672,9 +732,9 @@ const PartnerDashboard = () => {
                               Detaljer
                             </Button>
                             {!hasOffer && (
-                              <Button 
-                                size="sm" 
-                                className="flex-1"
+                              <Button
+                                size="sm"
+                                className="flex-1 bg-primary hover:bg-primary/90"
                                 onClick={() => handleOpenOfferForm(quote)}
                               >
                                 <Send className="h-4 w-4 mr-1" />
