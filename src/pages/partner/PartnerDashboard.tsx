@@ -225,7 +225,7 @@ const PartnerDashboard = () => {
 
         const { data: offersData } = await supabase
           .from('offers')
-          .select('*, quote_requests(id, customer_name, customer_email, customer_phone, from_address, from_postal_code, from_lat, from_lng, to_address, to_postal_code, to_lat, to_lng, move_date, move_start_time, dwelling_type, area_m2, rooms, stairs_from, stairs_to, elevator_from_size, elevator_to_size, carry_from_m, carry_to_m, parking_restrictions, home_visit_requested, heavy_items, packing_hours, assembly_hours, notes)')
+          .select('*, quote_requests(*)')
           .eq('partner_id', partnerData.id)
           .order('created_at', { ascending: false });
 
