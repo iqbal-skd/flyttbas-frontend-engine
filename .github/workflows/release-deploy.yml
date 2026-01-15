@@ -91,9 +91,9 @@ jobs:
           echo "url=$url" >> $GITHUB_OUTPUT
           echo "Deployed to: $url"
 
-  # Job 3: Run database migrations (after deploy)
+  # Job 3: Run database migrations and deploy edge functions (after deploy)
   migrate:
-    name: Run Database Migrations
+    name: Migrations & Edge Functions
     needs: deploy
     runs-on: ubuntu-latest
     steps:
@@ -122,5 +122,20 @@ jobs:
         run: |
           echo "Checking migration status..."
           supabase migration list
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      - name: Deploy Edge Functions
+        run: |
+          echo "Deploying edge functions..."
+          for func_dir in supabase/functions/*/; do
+            func_name=$(basename "$func_dir")
+            # Skip directories starting with _ (shared code)
+            if [[ ! "$func_name" =~ ^_ ]]; then
+              echo "Deploying function: $func_name"
+              supabase functions deploy "$func_name" --no-verify-jwt
+            fi
+          done
+          echo "All edge functions deployed successfully!"
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
