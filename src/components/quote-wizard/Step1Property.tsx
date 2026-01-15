@@ -33,10 +33,12 @@ export const Step1Property = ({ formData, setFormData }: StepProps) => {
   };
 
   const handleToAddressChange = (address: string, postalCode?: string, location?: { lat: number; lng: number }) => {
-    setFormData({ 
-      ...formData, 
+    setFormData({
+      ...formData,
       to_address: address,
-      to_postal_code: postalCode || formData.to_postal_code 
+      to_postal_code: postalCode || formData.to_postal_code,
+      to_lat: location?.lat,
+      to_lng: location?.lng,
     });
   };
 

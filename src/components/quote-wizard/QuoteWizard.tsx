@@ -117,6 +117,8 @@ export const QuoteWizard = () => {
         from_lng: formData.from_lng || null,
         to_address: formData.to_address || '',
         to_postal_code: formData.to_postal_code || '',
+        to_lat: formData.to_lat || null,
+        to_lng: formData.to_lng || null,
         dwelling_type: formData.dwelling_type || 'apartment',
         area_m2: formData.area_m2 ? parseInt(formData.area_m2) : 50,
         rooms: formData.rooms ? parseInt(formData.rooms) : null,
