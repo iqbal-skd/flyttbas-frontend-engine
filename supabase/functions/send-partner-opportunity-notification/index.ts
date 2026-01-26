@@ -39,6 +39,9 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    console.log("Supabase URL:", supabaseUrl ? "Set" : "Missing");
+    console.log("Service Role Key:", supabaseServiceKey ? "Set (length: " + supabaseServiceKey.length + ")" : "Missing");
+
     // Fetch all approved partners
     const { data: partners, error: partnersError } = await supabase
       .from("partners")
@@ -46,8 +49,11 @@ const handler = async (req: Request): Promise<Response> => {
       .eq("status", "approved");
 
     if (partnersError) {
-      console.error("Error fetching partners:", partnersError);
-      throw new Error("Failed to fetch partners");
+      console.error("Error fetching partners - Code:", partnersError.code);
+      console.error("Error fetching partners - Message:", partnersError.message);
+      console.error("Error fetching partners - Details:", partnersError.details);
+      console.error("Error fetching partners - Hint:", partnersError.hint);
+      throw new Error(`Failed to fetch partners: ${partnersError.message}`);
     }
 
     if (!partners || partners.length === 0) {
