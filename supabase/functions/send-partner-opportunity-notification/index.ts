@@ -42,11 +42,16 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Supabase URL:", supabaseUrl ? "Set" : "Missing");
     console.log("Service Role Key:", supabaseServiceKey ? "Set (length: " + supabaseServiceKey.length + ")" : "Missing");
     
-    // Create client with service role - must disable auth features to use as service role
+    // Create client with service role - must explicitly set Authorization header
     const supabase = createClient(supabaseUrl, supabaseServiceKey, {
       auth: {
         autoRefreshToken: false,
         persistSession: false,
+      },
+      global: {
+        headers: {
+          Authorization: `Bearer ${supabaseServiceKey}`,
+        },
       },
     });
 
