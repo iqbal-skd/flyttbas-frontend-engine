@@ -25,8 +25,16 @@ export const formSchema = z.object({
   packing_help: z.boolean().optional(),
   assembly_help: z.boolean().optional(),
   customer_name: z.string().trim().min(2, "Namn krävs").max(100),
-  customer_phone: z.string().trim().optional(),
-  customer_email: z.string().trim().email({ message: "Ange giltig e-postadress" }).max(255),
+  customer_phone: z.string().trim()
+    .optional()
+    .refine(
+      (val) => !val || /^\+46[0-9]{7,12}$/.test(val.replace(/\s/g, '')),
+      { message: "Ange telefonnummer i format +46XXXXXXXXX" }
+    ),
+  customer_email: z.string().trim()
+    .min(1, "E-postadress krävs")
+    .email({ message: "Ange en giltig e-postadress" })
+    .max(255, "E-postadressen är för lång"),
   contact_preference: z.enum(['email', 'phone', 'both']).default('email'),
   home_visit_requested: z.boolean().optional(),
   gdpr_consent: z.boolean().refine(val => val === true, "Du måste godkänna GDPR"),
