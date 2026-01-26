@@ -550,7 +550,10 @@ export type Database = {
       }
       get_partner_commission_rate: {
         Args: { partner_uuid: string }
-        Returns: number
+        Returns: {
+          commission_type: string
+          rate: number
+        }[]
       }
       has_role: {
         Args: {
