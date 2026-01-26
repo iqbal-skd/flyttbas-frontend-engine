@@ -37,10 +37,17 @@ const handler = async (req: Request): Promise<Response> => {
     // Create Supabase client with service role to fetch all partners
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
+    
     console.log("Supabase URL:", supabaseUrl ? "Set" : "Missing");
     console.log("Service Role Key:", supabaseServiceKey ? "Set (length: " + supabaseServiceKey.length + ")" : "Missing");
+    
+    // Create client with service role - must disable auth features to use as service role
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    });
 
     // Fetch all approved partners
     const { data: partners, error: partnersError } = await supabase
