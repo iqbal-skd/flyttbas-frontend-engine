@@ -1,38 +1,69 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { COMMISSION } from "@/lib/constants";
+import { COMMISSION, type CommissionType } from "@/lib/constants";
 import { useToast } from "@/hooks/use-toast";
+
+interface CommissionValue {
+  rate: number;
+  type: CommissionType;
+}
 
 interface CommissionSettings {
   systemRate: number;
+  systemType: CommissionType;
   loading: boolean;
   error: string | null;
 }
 
 interface UseCommissionSettingsReturn extends CommissionSettings {
-  updateSystemRate: (rate: number) => Promise<boolean>;
-  getPartnerRate: (partnerId: string, partnerOverride: number | null) => number;
-  updatePartnerRate: (partnerId: string, rate: number | null) => Promise<boolean>;
+  updateSystemSettings: (rate: number, type: CommissionType) => Promise<boolean>;
+  getPartnerRate: (partnerId: string, partnerOverride: number | null, partnerTypeOverride: CommissionType | null) => CommissionValue;
+  updatePartnerSettings: (partnerId: string, rate: number | null, type: CommissionType | null) => Promise<boolean>;
   refetch: () => Promise<void>;
 }
 
-// Simple in-memory cache for system rate
-let cachedSystemRate: number | null = null;
+// Simple in-memory cache
+let cachedSettings: CommissionValue | null = null;
 let cacheTimestamp: number = 0;
 const CACHE_TTL = 60000; // 1 minute
+
+function parseCommissionValue(value: unknown): CommissionValue {
+  // Handle new JSON format: { rate: number, type: string }
+  if (value && typeof value === "object" && "rate" in value) {
+    const obj = value as { rate?: number; type?: string };
+    return {
+      rate: typeof obj.rate === "number" ? obj.rate : COMMISSION.DEFAULT_RATE,
+      type: (obj.type === "percentage" || obj.type === "fixed") ? obj.type : COMMISSION.DEFAULT_TYPE,
+    };
+  }
+  // Handle legacy numeric format
+  if (typeof value === "number") {
+    return { rate: value, type: "percentage" };
+  }
+  // Handle string number
+  if (typeof value === "string" && !isNaN(parseFloat(value))) {
+    return { rate: parseFloat(value), type: "percentage" };
+  }
+  // Default
+  return { rate: COMMISSION.DEFAULT_RATE, type: COMMISSION.DEFAULT_TYPE };
+}
 
 export function useCommissionSettings(): UseCommissionSettingsReturn {
   const { toast } = useToast();
   const [systemRate, setSystemRate] = useState<number>(
-    cachedSystemRate ?? COMMISSION.DEFAULT_RATE
+    cachedSettings?.rate ?? COMMISSION.DEFAULT_RATE
   );
-  const [loading, setLoading] = useState<boolean>(cachedSystemRate === null);
+  const [systemType, setSystemType] = useState<CommissionType>(
+    cachedSettings?.type ?? COMMISSION.DEFAULT_TYPE
+  );
+  const [loading, setLoading] = useState<boolean>(cachedSettings === null);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchSystemRate = useCallback(async () => {
+  const fetchSystemSettings = useCallback(async () => {
     // Use cache if valid
-    if (cachedSystemRate !== null && Date.now() - cacheTimestamp < CACHE_TTL) {
-      setSystemRate(cachedSystemRate);
+    if (cachedSettings !== null && Date.now() - cacheTimestamp < CACHE_TTL) {
+      setSystemRate(cachedSettings.rate);
+      setSystemType(cachedSettings.type);
       setLoading(false);
       return;
     }
@@ -48,48 +79,48 @@ export function useCommissionSettings(): UseCommissionSettingsReturn {
         throw fetchError;
       }
 
-      const rate = data
-        ? typeof data.value === "number"
-          ? data.value
-          : parseFloat(String(data.value))
-        : COMMISSION.DEFAULT_RATE;
+      const parsed = data ? parseCommissionValue(data.value) : { rate: COMMISSION.DEFAULT_RATE, type: COMMISSION.DEFAULT_TYPE };
 
-      cachedSystemRate = rate;
+      cachedSettings = parsed;
       cacheTimestamp = Date.now();
-      setSystemRate(rate);
+      setSystemRate(parsed.rate);
+      setSystemType(parsed.type);
       setError(null);
     } catch (err) {
-      console.error("Error fetching system commission rate:", err);
-      setError("Kunde inte hämta provisionssats");
-      // Keep using default or cached value
+      console.error("Error fetching system commission settings:", err);
+      setError("Kunde inte hämta provisionsinställningar");
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchSystemRate();
-  }, [fetchSystemRate]);
+    fetchSystemSettings();
+  }, [fetchSystemSettings]);
 
-  const updateSystemRate = useCallback(
-    async (rate: number): Promise<boolean> => {
-      if (rate < COMMISSION.MIN_RATE || rate > COMMISSION.MAX_RATE) {
+  const updateSystemSettings = useCallback(
+    async (rate: number, type: CommissionType): Promise<boolean> => {
+      const maxValue = type === "fixed" ? COMMISSION.MAX_FIXED : COMMISSION.MAX_RATE;
+      if (rate < COMMISSION.MIN_RATE || rate > maxValue) {
         toast({
           variant: "destructive",
           title: "Ogiltigt värde",
-          description: `Provisionssatsen måste vara mellan ${COMMISSION.MIN_RATE} och ${COMMISSION.MAX_RATE}.`,
+          description: type === "fixed"
+            ? `Beloppet måste vara mellan ${COMMISSION.MIN_RATE} och ${COMMISSION.MAX_FIXED} SEK.`
+            : `Provisionssatsen måste vara mellan ${COMMISSION.MIN_RATE} och ${COMMISSION.MAX_RATE}%.`,
         });
         return false;
       }
 
       try {
+        const newValue = { rate, type };
         const { error: upsertError } = await supabase
           .from("system_settings")
           .upsert(
             {
               key: COMMISSION.SETTINGS_KEY,
-              value: rate,
-              description: "Default commission rate percentage for all partners",
+              value: newValue,
+              description: "Default commission rate/amount for all partners",
             },
             { onConflict: "key" }
           );
@@ -97,22 +128,25 @@ export function useCommissionSettings(): UseCommissionSettingsReturn {
         if (upsertError) throw upsertError;
 
         // Update cache
-        cachedSystemRate = rate;
+        cachedSettings = newValue;
         cacheTimestamp = Date.now();
         setSystemRate(rate);
+        setSystemType(type);
 
         toast({
           title: "Sparat",
-          description: `Systemprovisionssatsen har uppdaterats till ${rate}%.`,
+          description: type === "fixed"
+            ? `Systemprovisionen har uppdaterats till ${rate} SEK.`
+            : `Systemprovisionssatsen har uppdaterats till ${rate}%.`,
         });
 
         return true;
       } catch (err) {
-        console.error("Error saving system commission rate:", err);
+        console.error("Error saving system commission settings:", err);
         toast({
           variant: "destructive",
           title: "Fel",
-          description: "Kunde inte spara provisionssatsen.",
+          description: "Kunde inte spara provisionsinställningarna.",
         });
         return false;
       }
@@ -121,66 +155,80 @@ export function useCommissionSettings(): UseCommissionSettingsReturn {
   );
 
   const getPartnerRate = useCallback(
-    (partnerId: string, partnerOverride: number | null): number => {
-      return partnerOverride ?? systemRate;
+    (partnerId: string, partnerOverride: number | null, partnerTypeOverride: CommissionType | null): CommissionValue => {
+      return {
+        rate: partnerOverride ?? systemRate,
+        type: partnerTypeOverride ?? systemType,
+      };
     },
-    [systemRate]
+    [systemRate, systemType]
   );
 
-  const updatePartnerRate = useCallback(
-    async (partnerId: string, rate: number | null): Promise<boolean> => {
-      if (rate !== null && (rate < COMMISSION.MIN_RATE || rate > COMMISSION.MAX_RATE)) {
-        toast({
-          variant: "destructive",
-          title: "Ogiltigt värde",
-          description: `Provisionssatsen måste vara mellan ${COMMISSION.MIN_RATE} och ${COMMISSION.MAX_RATE}.`,
-        });
-        return false;
+  const updatePartnerSettings = useCallback(
+    async (partnerId: string, rate: number | null, type: CommissionType | null): Promise<boolean> => {
+      if (rate !== null) {
+        const effectiveType = type ?? systemType;
+        const maxValue = effectiveType === "fixed" ? COMMISSION.MAX_FIXED : COMMISSION.MAX_RATE;
+        if (rate < COMMISSION.MIN_RATE || rate > maxValue) {
+          toast({
+            variant: "destructive",
+            title: "Ogiltigt värde",
+            description: effectiveType === "fixed"
+              ? `Beloppet måste vara mellan ${COMMISSION.MIN_RATE} och ${COMMISSION.MAX_FIXED} SEK.`
+              : `Provisionssatsen måste vara mellan ${COMMISSION.MIN_RATE} och ${COMMISSION.MAX_RATE}%.`,
+          });
+          return false;
+        }
       }
 
       try {
         const { error: updateError } = await supabase
           .from("partners")
-          .update({ commission_rate_override: rate })
+          .update({ 
+            commission_rate_override: rate,
+            commission_type_override: type,
+          })
           .eq("id", partnerId);
 
         if (updateError) throw updateError;
 
         toast({
           title: "Sparat",
-          description:
-            rate !== null
-              ? `Provisionssatsen har uppdaterats till ${rate}%.`
-              : "Anpassad provisionssats borttagen. Systemstandarden används.",
+          description: rate !== null
+            ? type === "fixed"
+              ? `Provisionen har uppdaterats till ${rate} SEK.`
+              : `Provisionssatsen har uppdaterats till ${rate}%.`
+            : "Anpassad provision borttagen. Systemstandarden används.",
         });
 
         return true;
       } catch (err) {
-        console.error("Error saving partner commission rate:", err);
+        console.error("Error saving partner commission settings:", err);
         toast({
           variant: "destructive",
           title: "Fel",
-          description: "Kunde inte spara provisionssatsen.",
+          description: "Kunde inte spara provisionsinställningarna.",
         });
         return false;
       }
     },
-    [toast]
+    [toast, systemType]
   );
 
   const refetch = useCallback(async () => {
-    cachedSystemRate = null; // Invalidate cache
+    cachedSettings = null; // Invalidate cache
     setLoading(true);
-    await fetchSystemRate();
-  }, [fetchSystemRate]);
+    await fetchSystemSettings();
+  }, [fetchSystemSettings]);
 
   return {
     systemRate,
+    systemType,
     loading,
     error,
-    updateSystemRate,
+    updateSystemSettings,
     getPartnerRate,
-    updatePartnerRate,
+    updatePartnerSettings,
     refetch,
   };
 }

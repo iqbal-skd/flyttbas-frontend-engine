@@ -100,7 +100,7 @@ export const PartnerDetailSheet = ({
   userId,
 }: PartnerDetailSheetProps) => {
   const { toast } = useToast();
-  const { systemRate, updatePartnerRate, getPartnerRate } = useCommissionSettings();
+  const { systemRate, systemType, updatePartnerSettings, getPartnerRate } = useCommissionSettings();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setSaving] = useState(false);
   const [statusReason, setStatusReason] = useState("");
@@ -115,9 +115,9 @@ export const PartnerDetailSheet = ({
   const [savingCommission, setSavingCommission] = useState(false);
 
   // Calculate effective commission rate using the hook
-  const effectiveCommissionRate = partner
-    ? getPartnerRate(partner.id, customCommissionRate)
-    : systemRate;
+  const effectiveCommission = partner
+    ? getPartnerRate(partner.id, customCommissionRate, null)
+    : { rate: systemRate, type: systemType };
 
   useEffect(() => {
     if (partner && open) {
@@ -131,7 +131,7 @@ export const PartnerDetailSheet = ({
     if (!partner) return;
 
     setSavingCommission(true);
-    const success = await updatePartnerRate(partner.id, rate);
+    const success = await updatePartnerSettings(partner.id, rate, null);
     if (success) {
       setCustomCommissionRate(rate);
       onUpdate();
@@ -1149,14 +1149,14 @@ export const PartnerDetailSheet = ({
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-2xl font-bold text-primary">{effectiveCommissionRate}%</p>
+                      <p className="text-2xl font-bold text-primary">{effectiveCommission.rate}{effectiveCommission.type === "fixed" ? " SEK" : "%"}</p>
                     </div>
                   </div>
 
                   <div className="space-y-3">
                     <div>
                       <Label className="text-xs text-muted-foreground">
-                        Systemets standardsats: {systemRate}%
+                        Systemets standard: {systemRate}{systemType === "fixed" ? " SEK" : "%"}
                       </Label>
                     </div>
 
