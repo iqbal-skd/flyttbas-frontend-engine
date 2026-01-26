@@ -24,6 +24,7 @@ interface JobDetailsCardProps {
   toAddress: string;
   moveDate: string;
   moveStartTime?: string | null;
+  flexibleDays?: number | null;
   dwellingType: string;
   areaM2: number;
   rooms?: number | null;
@@ -48,6 +49,7 @@ export const JobDetailsCard = ({
   toAddress,
   moveDate,
   moveStartTime,
+  flexibleDays,
   dwellingType,
   areaM2,
   rooms,
@@ -161,7 +163,12 @@ export const JobDetailsCard = ({
               <Clock className="h-4 w-4 text-muted-foreground" />
               <div>
                 <p className="text-xs text-muted-foreground">Starttid</p>
-                <p className="text-sm font-medium">{moveStartTime}</p>
+                <p className="text-sm font-medium">
+                  {moveStartTime}
+                  {flexibleDays && (
+                    <span className="text-muted-foreground ml-1">(±{flexibleDays} {flexibleDays === 1 ? 'dag' : 'dagar'})</span>
+                  )}
+                </p>
               </div>
             </div>
           )}

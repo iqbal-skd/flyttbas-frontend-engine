@@ -124,6 +124,7 @@ export const QuoteWizard = () => {
         rooms: formData.rooms ? parseInt(formData.rooms) : null,
         move_date: formData.date || new Date().toISOString().split('T')[0],
         move_start_time: formData.flexible_time ? 'Flexibel' : null,
+        flexible_days: formData.flexible_time && formData.flexible_days ? parseInt(formData.flexible_days) : null,
         stairs_from: formData.stairs_from ? parseInt(formData.stairs_from) : 0,
         stairs_to: formData.stairs_to ? parseInt(formData.stairs_to) : 0,
         elevator_from_size: formData.elevator_from ? (formData.elevator_from_size || 'small') : null,

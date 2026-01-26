@@ -27,6 +27,7 @@ export interface QuoteRequest {
   to_lng?: number | null;
   move_date: string;
   move_start_time: string | null;
+  flexible_days?: number | null;
   dwelling_type: string;
   area_m2: number;
   rooms: number | null;

@@ -85,6 +85,7 @@ interface QuoteRequest {
   to_lng: number | null;
   move_date: string;
   move_start_time: string | null;
+  flexible_days: number | null;
   area_m2: number;
   rooms: number | null;
   dwelling_type: string;
@@ -132,6 +133,7 @@ interface Offer {
     to_lng: number | null;
     move_date: string;
     move_start_time: string | null;
+    flexible_days: number | null;
     dwelling_type: string;
     area_m2: number;
     rooms: number | null;
@@ -629,6 +631,7 @@ const PartnerDashboard = () => {
                               <Badge variant="secondary" className="text-xs">
                                 <Clock className="h-3 w-3 mr-1" />
                                 {quote.move_start_time}
+                                {quote.flexible_days && ` (±${quote.flexible_days}d)`}
                               </Badge>
                             )}
                           </div>
@@ -1000,7 +1003,12 @@ const PartnerDashboard = () => {
                       {viewingQuote.move_start_time && (
                         <div className="flex justify-between items-center">
                           <span className="text-muted-foreground">Önskad starttid</span>
-                          <span className="font-medium">{viewingQuote.move_start_time}</span>
+                          <span className="font-medium">
+                            {viewingQuote.move_start_time}
+                            {viewingQuote.flexible_days && (
+                              <span className="text-muted-foreground ml-1">(±{viewingQuote.flexible_days} {viewingQuote.flexible_days === 1 ? 'dag' : 'dagar'})</span>
+                            )}
+                          </span>
                         </div>
                       )}
                     </CardContent>
