@@ -55,6 +55,7 @@ import {
   Car,
   ExternalLink,
   Route,
+  MessageSquare,
 } from "lucide-react";
 
 interface Partner {
@@ -120,6 +121,7 @@ interface Offer {
     customer_name: string;
     customer_email: string;
     customer_phone: string | null;
+    contact_preference: string | null;
     from_address: string;
     from_postal_code: string;
     from_lat: number | null;
@@ -1454,15 +1456,31 @@ const PartnerDashboard = () => {
                         <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
                           <User className="h-5 w-5 text-green-700" />
                         </div>
-                        <div>
+                        <div className="flex-1">
                           <p className="font-semibold text-lg">{selectedApprovedOffer.quote_requests.customer_name}</p>
                           <p className="text-sm text-muted-foreground">Kund</p>
                         </div>
                       </div>
+                      
+                      {/* Contact Preference Badge */}
+                      {selectedApprovedOffer.quote_requests.contact_preference && (
+                        <div className="flex items-center gap-2 p-2 bg-amber-50 rounded-lg border border-amber-200">
+                          <MessageSquare className="h-4 w-4 text-amber-600" />
+                          <span className="text-sm font-medium text-amber-800">
+                            Föredrar kontakt via:{" "}
+                            {selectedApprovedOffer.quote_requests.contact_preference === 'email' && 'Endast e-post'}
+                            {selectedApprovedOffer.quote_requests.contact_preference === 'phone' && 'Telefon'}
+                            {selectedApprovedOffer.quote_requests.contact_preference === 'both' && 'Både telefon och e-post'}
+                          </span>
+                        </div>
+                      )}
+                      
                       <div className="grid grid-cols-2 gap-2">
                         <a
                           href={`tel:${selectedApprovedOffer.quote_requests.customer_phone}`}
-                          className="flex items-center gap-2 p-3 bg-white rounded-lg border hover:bg-green-50 transition-colors"
+                          className={`flex items-center gap-2 p-3 bg-white rounded-lg border hover:bg-green-50 transition-colors ${
+                            selectedApprovedOffer.quote_requests.contact_preference === 'email' ? 'opacity-50' : ''
+                          }`}
                         >
                           <Phone className="h-5 w-5 text-green-600" />
                           <div>
