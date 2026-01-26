@@ -209,7 +209,7 @@ const Index = () => {
                 <div className="bg-background p-8 rounded-2xl shadow-xl">
                   <div className="text-center mb-4">
                     <p className="text-sm text-muted-foreground">Provision</p>
-                    <p className="text-4xl font-bold text-primary">Låg</p>
+                    <p className="text-4xl font-bold text-primary">Fastpris per lead</p>
                     <p className="text-sm text-muted-foreground">per genomfört jobb</p>
                   </div>
                   <div className="border-t pt-4 space-y-2 text-sm">
