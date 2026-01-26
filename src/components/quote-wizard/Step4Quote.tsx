@@ -67,9 +67,13 @@ export const Step4Quote = ({ formData, setFormData, errors }: StepProps) => {
               placeholder="+46701234567"
               value={formData.customer_phone}
               onChange={(e) => setFormData({ ...formData, customer_phone: e.target.value })}
-              className="mt-1.5"
+              className={`mt-1.5 ${errors.customer_phone ? "border-destructive" : ""}`}
               autoComplete="tel"
+              aria-invalid={errors.customer_phone ? "true" : "false"}
             />
+            {errors.customer_phone && (
+              <p className="text-xs text-destructive mt-1" role="alert">{errors.customer_phone}</p>
+            )}
           </div>
         </div>
       </div>
