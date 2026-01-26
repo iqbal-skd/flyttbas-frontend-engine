@@ -157,6 +157,23 @@ export const QuoteWizard = () => {
         // Don't fail the whole process if email fails
       }
 
+      // Notify all approved partners about the new opportunity
+      try {
+        await supabase.functions.invoke('send-partner-opportunity-notification', {
+          body: {
+            quoteId: quoteId,
+            fromAddress: formData.from_address || '',
+            toAddress: formData.to_address || '',
+            moveDate: formData.date || new Date().toISOString().split('T')[0],
+            dwellingType: formData.dwelling_type || 'apartment',
+            areaM2: formData.area_m2 ? parseInt(formData.area_m2) : 50,
+          }
+        });
+      } catch (partnerNotifyError) {
+        console.error('Failed to notify partners:', partnerNotifyError);
+        // Don't fail the whole process if partner notification fails
+      }
+
       setSubmitted(true);
       toast({
         title: "Förfrågan skickad!",
