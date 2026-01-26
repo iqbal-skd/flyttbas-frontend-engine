@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -116,6 +116,10 @@ const AdminDashboard = () => {
   const { user, isAdmin, loading, rolesLoaded } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Get initial status filter from URL query parameter
+  const initialStatusFilter = searchParams.get("status") || "all";
 
   const [partners, setPartners] = useState<Partner[]>([]);
   const [quotes, setQuotes] = useState<QuoteRequest[]>([]);
@@ -129,7 +133,7 @@ const AdminDashboard = () => {
   const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
   const [offerSheetOpen, setOfferSheetOpen] = useState(false);
   const [quoteSearchQuery, setQuoteSearchQuery] = useState("");
-  const [quoteStatusFilter, setQuoteStatusFilter] = useState<string>("all");
+  const [quoteStatusFilter, setQuoteStatusFilter] = useState<string>(initialStatusFilter);
 
   // Determine current section from route
   const currentSection = location.pathname.split("/").pop() || "partners";
@@ -176,6 +180,25 @@ const AdminDashboard = () => {
       navigate("/auth");
     }
   }, [user, isAdmin, loading, rolesLoaded, navigate]);
+
+  // Sync URL search params with quote status filter
+  useEffect(() => {
+    const statusFromUrl = searchParams.get("status");
+    if (statusFromUrl && statusFromUrl !== quoteStatusFilter) {
+      setQuoteStatusFilter(statusFromUrl);
+    }
+  }, [searchParams]);
+
+  // Clear URL params when filter changes to "all"
+  const handleQuoteStatusFilterChange = (status: string) => {
+    setQuoteStatusFilter(status);
+    if (status === "all") {
+      searchParams.delete("status");
+    } else {
+      searchParams.set("status", status);
+    }
+    setSearchParams(searchParams, { replace: true });
+  };
 
   useEffect(() => {
     if (rolesLoaded && isAdmin) {
@@ -476,7 +499,7 @@ const AdminDashboard = () => {
                   key={filter.key}
                   size="sm"
                   variant={quoteStatusFilter === filter.key ? "default" : "outline"}
-                  onClick={() => setQuoteStatusFilter(filter.key)}
+                  onClick={() => handleQuoteStatusFilterChange(filter.key)}
                   className="h-8"
                 >
                   {filter.color && <span className={`w-2 h-2 rounded-full ${filter.color} mr-2`} />}

@@ -127,14 +127,20 @@ export const AdminLayout = ({ children, title }: AdminLayoutProps) => {
                 <div className="p-2">
                   <p className="font-medium mb-2">Notifieringar</p>
                   {stats.pendingPartners > 0 && (
-                    <div className="p-2 rounded-lg bg-amber-50 text-amber-800 text-sm mb-2">
+                    <button
+                      onClick={() => navigate("/admin/partners")}
+                      className="w-full text-left p-2 rounded-lg bg-amber-50 text-amber-800 text-sm mb-2 hover:bg-amber-100 transition-colors cursor-pointer"
+                    >
                       {stats.pendingPartners} partners väntar på granskning
-                    </div>
+                    </button>
                   )}
                   {stats.pendingQuotes > 0 && (
-                    <div className="p-2 rounded-lg bg-blue-50 text-blue-800 text-sm mb-2">
+                    <button
+                      onClick={() => navigate("/admin/quotes?status=pending")}
+                      className="w-full text-left p-2 rounded-lg bg-blue-50 text-blue-800 text-sm mb-2 hover:bg-blue-100 transition-colors cursor-pointer"
+                    >
                       {stats.pendingQuotes} nya förfrågningar
-                    </div>
+                    </button>
                   )}
                   {stats.pendingPartners === 0 && stats.pendingQuotes === 0 && (
                     <p className="text-sm text-muted-foreground">
