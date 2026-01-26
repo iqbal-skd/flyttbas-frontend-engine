@@ -157,18 +157,22 @@ export const PartnerDetailSheet = ({
 
       if (offersData) setOffers(offersData as PartnerOffer[]);
 
-      // Fetch reviews
+      // Fetch reviews (without trying to join on profiles since customer_id relationship doesn't exist)
       const { data: reviewsData } = await supabase
         .from("reviews")
-        .select(`
-          id, rating, comment, created_at,
-          profiles:customer_id(full_name, email)
-        `)
+        .select("id, rating, comment, created_at, customer_id")
         .eq("partner_id", partner.id)
         .order("created_at", { ascending: false })
         .limit(20);
 
-      if (reviewsData) setReviews(reviewsData as PartnerReview[]);
+      if (reviewsData) {
+        // Map to expected format with placeholder profile data
+        const mappedReviews = reviewsData.map(r => ({
+          ...r,
+          profiles: { full_name: "Kund", email: "" }
+        }));
+        setReviews(mappedReviews as PartnerReview[]);
+      }
 
       // Fetch commissions
       const { data: commissionsData } = await supabase

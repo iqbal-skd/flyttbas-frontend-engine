@@ -43,8 +43,8 @@ interface AuditLog {
   entity_type: string;
   entity_id: string | null;
   user_id: string | null;
-  old_data: Record<string, unknown> | null;
-  new_data: Record<string, unknown> | null;
+  old_data: unknown;
+  new_data: unknown;
   ip_address: string | null;
   created_at: string;
 }
@@ -166,18 +166,20 @@ const AdminAudit = () => {
     setSheetOpen(true);
   };
 
-  const renderDataDiff = (oldData: Record<string, unknown> | null, newData: Record<string, unknown> | null) => {
-    if (!oldData && !newData) return null;
+  const renderDataDiff = (oldData: unknown, newData: unknown) => {
+    const oldObj = (oldData && typeof oldData === 'object' ? oldData : {}) as Record<string, unknown>;
+    const newObj = (newData && typeof newData === 'object' ? newData : {}) as Record<string, unknown>;
+    if (!Object.keys(oldObj).length && !Object.keys(newObj).length) return null;
 
     const allKeys = new Set([
-      ...Object.keys(oldData || {}),
-      ...Object.keys(newData || {}),
+      ...Object.keys(oldObj),
+      ...Object.keys(newObj),
     ]);
 
     const changes: { key: string; old: unknown; new: unknown }[] = [];
     allKeys.forEach(key => {
-      const oldVal = oldData?.[key];
-      const newVal = newData?.[key];
+      const oldVal = oldObj[key];
+      const newVal = newObj[key];
       if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
         changes.push({ key, old: oldVal, new: newVal });
       }

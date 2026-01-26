@@ -31,7 +31,7 @@ export function AdminStatusBadge({ status, type, className = "" }: StatusBadgePr
   if (!status) return null;
 
   const config = STATUS_CONFIGS[type];
-  const statusConfig = config[status as keyof typeof config];
+  const statusConfig = config[status as keyof typeof config] as { label: string; color: string } | undefined;
 
   if (!statusConfig) {
     return (

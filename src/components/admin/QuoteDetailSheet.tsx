@@ -166,7 +166,7 @@ export const QuoteDetailSheet = ({
         parking_restrictions: formData.parking_restrictions,
         home_visit_requested: formData.home_visit_requested,
         contact_preference: formData.contact_preference,
-        status: formData.status,
+        status: formData.status as "pending" | "offers_received" | "offer_approved" | "completed" | "cancelled" | "expired",
         updated_at: new Date().toISOString(),
       })
       .eq("id", quote.id);
@@ -271,7 +271,7 @@ export const QuoteDetailSheet = ({
               {/* Overview Tab */}
               <TabsContent value="overview" className="mt-4 space-y-4 pb-6">
                 {/* Urgency Warning */}
-                <UrgencyBadge daysUntilMove={daysUntilMove} showCard />
+                {quote.move_date && <UrgencyBadge date={quote.move_date} />}
 
                 {/* Quick Stats */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

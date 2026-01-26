@@ -63,9 +63,15 @@ export function useQuoteDetails({
       if (!quoteId) return false;
 
       try {
+        // Convert to database-compatible format
+        const dbUpdates = {
+          ...updates,
+          updated_at: new Date().toISOString(),
+        } as Record<string, unknown>;
+        
         const { error: updateError } = await supabase
           .from("quote_requests")
-          .update({ ...updates, updated_at: new Date().toISOString() })
+          .update(dbUpdates)
           .eq("id", quoteId);
 
         if (updateError) throw updateError;

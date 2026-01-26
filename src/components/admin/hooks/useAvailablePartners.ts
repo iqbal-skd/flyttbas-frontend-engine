@@ -36,7 +36,7 @@ export function useAvailablePartners({
       let query = supabase
         .from("partners")
         .select("id, company_name, status")
-        .eq("status", "active")
+        .eq("status", "approved")
         .order("company_name");
 
       if (excludePartnerIds.length > 0) {

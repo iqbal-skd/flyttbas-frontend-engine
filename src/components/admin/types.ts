@@ -11,7 +11,7 @@ export type OfferStatus = Database["public"]["Enums"]["offer_status"];
 export type PartnerStatus = Database["public"]["Enums"]["partner_status"];
 export type JobStatus = "confirmed" | "scheduled" | "in_progress" | "completed" | "cancelled";
 
-// Quote Request interface
+// Quote Request interface - matches database schema with flexible types for compatibility
 export interface QuoteRequest {
   id: string;
   customer_name: string;
@@ -36,12 +36,12 @@ export interface QuoteRequest {
   elevator_to_size: string | null;
   packing_hours: number | null;
   assembly_hours: number | null;
-  heavy_items: string[] | null;
+  heavy_items: unknown;
   notes: string | null;
   parking_restrictions: boolean | null;
   home_visit_requested: boolean | null;
-  contact_preference: "email" | "phone" | "both" | null;
-  status: QuoteStatus | null;
+  contact_preference: string | null;
+  status: string | null;
   created_at: string;
   updated_at?: string;
   expires_at?: string | null;
