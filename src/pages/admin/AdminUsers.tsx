@@ -220,7 +220,7 @@ const AdminUsers = () => {
         .from("user_roles")
         .delete()
         .eq("user_id", userToRemove.userId)
-        .eq("role", userToRemove.role);
+        .eq("role", userToRemove.role as "admin" | "partner" | "customer");
 
       if (error) throw error;
 

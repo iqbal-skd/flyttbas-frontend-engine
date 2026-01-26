@@ -1,10 +1,7 @@
 // Type definitions for Google Tag Manager
 
-declare global {
-  interface Window {
-    dataLayer?: (Record<string, any> | ((dataLayer: any[]) => void))[];
-  }
-}
+// Note: Window.dataLayer is declared in ThirdPartyScripts.tsx
+// This file only exports GTM-related interfaces
 
 export interface GTMPageView {
   event: "pageview";
