@@ -153,6 +153,7 @@ export const QuoteDetailSheet = ({
         to_postal_code: formData.to_postal_code,
         move_date: formData.move_date,
         move_start_time: formData.move_start_time,
+        flexible_days: formData.flexible_days,
         dwelling_type: formData.dwelling_type,
         area_m2: formData.area_m2,
         rooms: formData.rooms,
@@ -377,7 +378,12 @@ export const QuoteDetailSheet = ({
                       {quote.move_start_time && (
                         <div>
                           <p className="text-xs text-muted-foreground">Starttid</p>
-                          <p className="font-medium">{quote.move_start_time}</p>
+                          <p className="font-medium">
+                            {quote.move_start_time}
+                            {quote.flexible_days && (
+                              <span className="text-muted-foreground ml-1">(±{quote.flexible_days} {quote.flexible_days === 1 ? 'dag' : 'dagar'})</span>
+                            )}
+                          </p>
                         </div>
                       )}
                       <div>

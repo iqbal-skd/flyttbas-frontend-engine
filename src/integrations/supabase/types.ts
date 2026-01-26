@@ -351,6 +351,7 @@ export type Database = {
           elevator_from_size: string | null
           elevator_to_size: string | null
           expires_at: string | null
+          flexible_days: number | null
           from_address: string
           from_lat: number | null
           from_lng: number | null
@@ -388,6 +389,7 @@ export type Database = {
           elevator_from_size?: string | null
           elevator_to_size?: string | null
           expires_at?: string | null
+          flexible_days?: number | null
           from_address: string
           from_lat?: number | null
           from_lng?: number | null
@@ -425,6 +427,7 @@ export type Database = {
           elevator_from_size?: string | null
           elevator_to_size?: string | null
           expires_at?: string | null
+          flexible_days?: number | null
           from_address?: string
           from_lat?: number | null
           from_lng?: number | null

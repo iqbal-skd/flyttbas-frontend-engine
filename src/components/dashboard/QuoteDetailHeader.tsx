@@ -58,6 +58,9 @@ export const QuoteDetailHeader = ({ quote }: QuoteDetailHeaderProps) => {
               <p className="text-sm text-muted-foreground mt-1">
                 <Clock className="h-4 w-4 inline mr-1" aria-hidden="true" />
                 Önskad starttid: {quote.move_start_time}
+                {quote.flexible_days && (
+                  <span className="ml-1">(±{quote.flexible_days} {quote.flexible_days === 1 ? 'dag' : 'dagar'})</span>
+                )}
               </p>
             )}
           </div>

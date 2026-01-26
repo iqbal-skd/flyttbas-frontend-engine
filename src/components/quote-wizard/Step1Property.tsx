@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { MapPin, Home, Calendar, Route } from "lucide-react";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import { useDistanceCalculation } from "@/hooks/useDistanceCalculation";
@@ -198,7 +199,11 @@ export const Step1Property = ({ formData, setFormData }: StepProps) => {
             id="flexible_time"
             checked={formData.flexible_time}
             onCheckedChange={(checked) => 
-              setFormData({ ...formData, flexible_time: checked as boolean })
+              setFormData({ 
+                ...formData, 
+                flexible_time: checked as boolean,
+                flexible_days: checked ? formData.flexible_days : undefined
+              })
             }
           />
           <Label 
@@ -208,6 +213,30 @@ export const Step1Property = ({ formData, setFormData }: StepProps) => {
             Flexibel starttid (flyttfirman föreslår tid)
           </Label>
         </div>
+
+        {formData.flexible_time && (
+          <div className="pl-6 space-y-2">
+            <Label className="text-sm font-medium">Hur flexibelt datum?</Label>
+            <RadioGroup
+              value={formData.flexible_days || ""}
+              onValueChange={(value) => setFormData({ ...formData, flexible_days: value as '1' | '2' | '3' })}
+              className="flex flex-wrap gap-3"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="1" id="flexible_1" />
+                <Label htmlFor="flexible_1" className="font-normal cursor-pointer">±1 dag</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="2" id="flexible_2" />
+                <Label htmlFor="flexible_2" className="font-normal cursor-pointer">±2 dagar</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="3" id="flexible_3" />
+                <Label htmlFor="flexible_3" className="font-normal cursor-pointer">±3 dagar</Label>
+              </div>
+            </RadioGroup>
+          </div>
+        )}
       </div>
     </fieldset>
   );
