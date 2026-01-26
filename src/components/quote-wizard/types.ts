@@ -57,7 +57,7 @@ export const initialFormData: FormData = {
   rooms: "",
   dwelling_type: "",
   date: "",
-  flexible_time: true,
+  flexible_time: false,
   flexible_days: undefined,
   elevator_from: false,
   elevator_from_size: undefined,
