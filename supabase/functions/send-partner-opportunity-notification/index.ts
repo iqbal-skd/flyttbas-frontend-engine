@@ -36,8 +36,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Create Supabase client with service role to fetch all partners
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    // Use custom secret name since SUPABASE_ prefix secrets can't be manually managed
-    const supabaseServiceKey = Deno.env.get("SERVICE_ROLE_KEY") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    // SUPABASE_SERVICE_ROLE_KEY is automatically provided by Supabase Edge Functions
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     
     console.log("Supabase URL:", supabaseUrl ? "Set" : "Missing");
     console.log("Service Role Key:", supabaseServiceKey ? "Set (length: " + supabaseServiceKey.length + ")" : "Missing");
