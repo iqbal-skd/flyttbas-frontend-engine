@@ -207,6 +207,7 @@ export type Database = {
           address_lng: number | null
           average_rating: number | null
           commission_rate_override: number | null
+          commission_type_override: string | null
           company_name: string
           completed_jobs: number | null
           contact_email: string
@@ -239,6 +240,7 @@ export type Database = {
           address_lng?: number | null
           average_rating?: number | null
           commission_rate_override?: number | null
+          commission_type_override?: string | null
           company_name: string
           completed_jobs?: number | null
           contact_email: string
@@ -271,6 +273,7 @@ export type Database = {
           address_lng?: number | null
           average_rating?: number | null
           commission_rate_override?: number | null
+          commission_type_override?: string | null
           company_name?: string
           completed_jobs?: number | null
           contact_email?: string

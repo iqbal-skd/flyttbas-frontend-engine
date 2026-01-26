@@ -19,7 +19,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useCommissionSettings } from "@/hooks/use-commission-settings";
-import { COMMISSION } from "@/lib/constants";
+import { COMMISSION, type CommissionType } from "@/lib/constants";
 import {
   CheckCircle,
   XCircle,
@@ -44,6 +44,7 @@ import {
   ExternalLink,
   Copy,
   Percent,
+  Banknote,
 } from "lucide-react";
 import { Tables } from "@/integrations/supabase/types";
 
@@ -110,30 +111,44 @@ export const PartnerDetailSheet = ({
   const [commissions, setCommissions] = useState<PartnerCommission[]>([]);
   const [loadingData, setLoadingData] = useState(false);
 
-  // Local state for commission rate input
+  // Local state for commission settings input
   const [customCommissionRate, setCustomCommissionRate] = useState<number | null>(null);
+  const [customCommissionType, setCustomCommissionType] = useState<CommissionType | null>(null);
   const [savingCommission, setSavingCommission] = useState(false);
 
-  // Calculate effective commission rate using the hook
+  // Calculate effective commission using the hook
   const effectiveCommission = partner
-    ? getPartnerRate(partner.id, customCommissionRate, null)
+    ? getPartnerRate(partner.id, customCommissionRate, customCommissionType)
     : { rate: systemRate, type: systemType };
 
   useEffect(() => {
     if (partner && open) {
       fetchPartnerData();
-      // Set the local custom rate from partner data
+      // Set the local custom settings from partner data
       setCustomCommissionRate(partner.commission_rate_override ?? null);
+      setCustomCommissionType((partner.commission_type_override as CommissionType) ?? null);
     }
   }, [partner, open]);
 
-  const handleSaveCommissionRate = async (rate: number | null) => {
+  const handleSaveCommissionSettings = async () => {
     if (!partner) return;
 
     setSavingCommission(true);
-    const success = await updatePartnerSettings(partner.id, rate, null);
+    const success = await updatePartnerSettings(partner.id, customCommissionRate, customCommissionType);
     if (success) {
-      setCustomCommissionRate(rate);
+      onUpdate();
+    }
+    setSavingCommission(false);
+  };
+
+  const handleResetCommissionSettings = async () => {
+    if (!partner) return;
+
+    setSavingCommission(true);
+    const success = await updatePartnerSettings(partner.id, null, null);
+    if (success) {
+      setCustomCommissionRate(null);
+      setCustomCommissionType(null);
       onUpdate();
     }
     setSavingCommission(false);
@@ -1147,70 +1162,116 @@ export const PartnerDetailSheet = ({
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                     <div>
-                      <p className="text-sm font-medium">Effektiv sats</p>
+                      <p className="text-sm font-medium">Effektiv provision</p>
                       <p className="text-xs text-muted-foreground">
-                        {customCommissionRate !== null ? "Anpassad sats" : "Systemstandard"}
+                        {(customCommissionRate !== null || customCommissionType !== null) ? "Anpassad" : "Systemstandard"}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-2xl font-bold text-primary">{effectiveCommission.rate}{effectiveCommission.type === "fixed" ? " SEK" : "%"}</p>
+                      <p className="text-2xl font-bold text-primary">
+                        {effectiveCommission.rate}{effectiveCommission.type === "fixed" ? " SEK" : "%"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {COMMISSION.TYPE_LABELS[effectiveCommission.type]}
+                      </p>
                     </div>
                   </div>
 
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     <div>
                       <Label className="text-xs text-muted-foreground">
-                        Systemets standard: {systemRate}{systemType === "fixed" ? " SEK" : "%"}
+                        Systemets standard: {systemRate}{systemType === "fixed" ? " SEK" : "%"} ({COMMISSION.TYPE_LABELS[systemType]})
                       </Label>
                     </div>
 
-                    <div className="flex items-end gap-3">
-                      <div className="flex-1">
-                        <Label htmlFor="customRate" className="text-sm">
-                          Anpassad provisionssats
-                        </Label>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Input
-                            id="customRate"
-                            type="number"
-                            min={COMMISSION.MIN_RATE}
-                            max={COMMISSION.MAX_RATE}
-                            step="0.1"
-                            placeholder={`Standard: ${systemRate}`}
-                            value={customCommissionRate ?? ""}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              setCustomCommissionRate(val === "" ? null : parseFloat(val));
-                            }}
-                            className="w-24"
-                          />
-                          <span className="text-muted-foreground">%</span>
-                        </div>
+                    {/* Commission Type Selection */}
+                    <div>
+                      <Label className="text-sm">Anpassad provisionstyp</Label>
+                      <div className="flex gap-2 mt-2">
+                        <Button
+                          type="button"
+                          variant={customCommissionType === null ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setCustomCommissionType(null)}
+                          className="flex-1"
+                        >
+                          Standard
+                        </Button>
+                        <Button
+                          type="button"
+                          variant={customCommissionType === "percentage" ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setCustomCommissionType("percentage")}
+                          className="flex-1"
+                        >
+                          <Percent className="h-3 w-3 mr-1" />
+                          Procent
+                        </Button>
+                        <Button
+                          type="button"
+                          variant={customCommissionType === "fixed" ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setCustomCommissionType("fixed")}
+                          className="flex-1"
+                        >
+                          <Banknote className="h-3 w-3 mr-1" />
+                          Fast
+                        </Button>
                       </div>
+                    </div>
+
+                    {/* Commission Rate Input */}
+                    <div>
+                      <Label htmlFor="customRate" className="text-sm">
+                        Anpassat belopp/sats
+                      </Label>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Input
+                          id="customRate"
+                          type="number"
+                          min={COMMISSION.MIN_RATE}
+                          max={(customCommissionType ?? effectiveCommission.type) === "fixed" ? COMMISSION.MAX_FIXED : COMMISSION.MAX_RATE}
+                          step={(customCommissionType ?? effectiveCommission.type) === "fixed" ? "1" : "0.1"}
+                          placeholder={`Standard: ${systemRate}`}
+                          value={customCommissionRate ?? ""}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setCustomCommissionRate(val === "" ? null : parseFloat(val));
+                          }}
+                          className="w-28"
+                        />
+                        <span className="text-muted-foreground">
+                          {(customCommissionType ?? effectiveCommission.type) === "fixed" ? "SEK" : "%"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2">
                       <Button
                         size="sm"
-                        onClick={() => handleSaveCommissionRate(customCommissionRate)}
+                        onClick={handleSaveCommissionSettings}
                         disabled={savingCommission}
                       >
                         <Save className="h-4 w-4 mr-1" />
                         {savingCommission ? "Sparar..." : "Spara"}
                       </Button>
+
+                      {(customCommissionRate !== null || customCommissionType !== null) && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleResetCommissionSettings}
+                          disabled={savingCommission}
+                          className="text-muted-foreground"
+                        >
+                          Återställ till standard
+                        </Button>
+                      )}
                     </div>
 
-                    {customCommissionRate !== null && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleSaveCommissionRate(null)}
-                        className="text-muted-foreground"
-                      >
-                        Återställ till systemstandard
-                      </Button>
-                    )}
-
                     <p className="text-xs text-muted-foreground pt-2 border-t">
-                      Lämna tomt för att använda systemets standardsats.
-                      Provisionen beräknas på ordervärdet före RUT-avdrag.
+                      Anpassa provision för denna partner. Lämna tomt för systemstandard.
+                      Procentprovision beräknas på ordervärdet före RUT-avdrag.
                     </p>
                   </div>
                 </CardContent>
