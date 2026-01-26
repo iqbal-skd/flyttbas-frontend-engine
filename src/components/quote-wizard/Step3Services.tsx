@@ -9,7 +9,7 @@ export const Step3Services = ({ formData, setFormData }: StepProps) => {
       <legend className="sr-only">Steg 3: Tilläggstjänster</legend>
       
       <div className="p-3 sm:p-4 bg-accent/10 border border-accent/20 rounded-lg text-sm">
-        <p className="text-accent-foreground font-medium">
+        <p className="text-foreground font-medium">
           <span aria-hidden="true">💡 </span>
           RUT-avdrag gäller för packning och montering – du får upp till 50% tillbaka!
         </p>
