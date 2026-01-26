@@ -183,7 +183,7 @@ const AdminSettings = () => {
               <li>
                 <strong>Fast belopp:</strong> Det fasta beloppet används oavsett ordervärde
               </li>
-              <li>Om partnern har en anpassad provision används den, annars systemstandarden</li>
+              <li>Om partnern har en anpassad provision (sats och/eller typ) används den, annars systemstandarden</li>
               <li>Procentberäkning baseras på priset före RUT-avdrag</li>
             </ol>
           </CardContent>
