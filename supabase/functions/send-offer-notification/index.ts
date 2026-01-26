@@ -91,7 +91,7 @@ const handler = async (req: Request): Promise<Response> => {
           </div>
           
           <div style="text-align: center; margin: 35px 0;">
-            <a href="${siteUrl}/mina-offerter" style="display: inline-block; background-color: #2563eb; color: white; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: bold; font-size: 16px;">
+            <a href="${siteUrl}/mina-offerter?quote=${quoteId}" style="display: inline-block; background-color: #2563eb; color: white; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: bold; font-size: 16px;">
               Se alla dina offerter
             </a>
           </div>
