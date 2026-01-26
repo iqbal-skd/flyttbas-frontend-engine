@@ -14,3 +14,6 @@ verify_jwt = false
 
 [functions.send-job-status-notification]
 verify_jwt = false
+
+[functions.send-partner-opportunity-notification]
+verify_jwt = false
