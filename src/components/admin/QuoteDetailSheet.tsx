@@ -407,10 +407,10 @@ export const QuoteDetailSheet = ({
                         </Badge>
                       )}
                       {(quote.packing_hours || 0) > 0 && (
-                        <Badge variant="secondary">{quote.packing_hours} tim packning</Badge>
+                        <Badge variant="secondary">Packning: Ja</Badge>
                       )}
                       {(quote.assembly_hours || 0) > 0 && (
-                        <Badge variant="secondary">{quote.assembly_hours} tim montering</Badge>
+                        <Badge variant="secondary">Montering: Ja</Badge>
                       )}
                     </div>
                   </CardContent>
@@ -909,25 +909,27 @@ function ServicesSection({ formData, setFormData, isEditing, quote }: SectionPro
       <CardContent>
         {isEditing ? (
           <div className="space-y-4">
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div>
-                <Label>Packningstimmar</Label>
-                <Input
-                  type="number"
-                  value={formData.packing_hours || ""}
-                  onChange={(e) => setFormData({ ...formData, packing_hours: parseInt(e.target.value) || 0 })}
-                />
-              </div>
-              <div>
-                <Label>Monteringstimmar</Label>
-                <Input
-                  type="number"
-                  value={formData.assembly_hours || ""}
-                  onChange={(e) => setFormData({ ...formData, assembly_hours: parseInt(e.target.value) || 0 })}
-                />
-              </div>
-            </div>
             <div className="flex flex-wrap gap-4">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="packing_service"
+                  checked={(formData.packing_hours || 0) > 0}
+                  onCheckedChange={(checked) =>
+                    setFormData({ ...formData, packing_hours: checked ? 1 : 0 })
+                  }
+                />
+                <Label htmlFor="packing_service">Packning</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="assembly_service"
+                  checked={(formData.assembly_hours || 0) > 0}
+                  onCheckedChange={(checked) =>
+                    setFormData({ ...formData, assembly_hours: checked ? 1 : 0 })
+                  }
+                />
+                <Label htmlFor="assembly_service">Montering</Label>
+              </div>
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="parking_restrictions"
@@ -954,12 +956,12 @@ function ServicesSection({ formData, setFormData, isEditing, quote }: SectionPro
           <div className="space-y-3 text-sm">
             <div className="grid sm:grid-cols-2 gap-3">
               <div>
-                <p className="text-xs text-muted-foreground">Packningstimmar</p>
-                <p className="font-medium">{quote.packing_hours || 0}</p>
+                <p className="text-xs text-muted-foreground">Packning</p>
+                <p className="font-medium">{(quote.packing_hours || 0) > 0 ? "Ja" : "Nej"}</p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Monteringstimmar</p>
-                <p className="font-medium">{quote.assembly_hours || 0}</p>
+                <p className="text-xs text-muted-foreground">Montering</p>
+                <p className="font-medium">{(quote.assembly_hours || 0) > 0 ? "Ja" : "Nej"}</p>
               </div>
             </div>
             <div className="flex flex-wrap gap-2">

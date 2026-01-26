@@ -614,26 +614,26 @@ export const QuoteDetailDialog = ({
                 <Package className="h-4 w-4" />
                 Tilläggstjänster
               </h3>
-              <div className="grid sm:grid-cols-2 gap-4">
-                <div>
-                  <Label>Packningstimmar</Label>
-                  <Input
-                    type="number"
-                    value={formData.packing_hours || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, packing_hours: parseInt(e.target.value) || 0 })
+              <div className="flex flex-wrap gap-4">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="packing_service_dialog"
+                    checked={(formData.packing_hours || 0) > 0}
+                    onCheckedChange={(checked) =>
+                      setFormData({ ...formData, packing_hours: checked ? 1 : 0 })
                     }
                   />
+                  <Label htmlFor="packing_service_dialog">Packning</Label>
                 </div>
-                <div>
-                  <Label>Monteringstimmar</Label>
-                  <Input
-                    type="number"
-                    value={formData.assembly_hours || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, assembly_hours: parseInt(e.target.value) || 0 })
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="assembly_service_dialog"
+                    checked={(formData.assembly_hours || 0) > 0}
+                    onCheckedChange={(checked) =>
+                      setFormData({ ...formData, assembly_hours: checked ? 1 : 0 })
                     }
                   />
+                  <Label htmlFor="assembly_service_dialog">Montering</Label>
                 </div>
               </div>
             </div>
