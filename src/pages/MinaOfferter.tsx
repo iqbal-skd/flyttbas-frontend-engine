@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -61,6 +62,7 @@ const MinaOfferter = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, loading: authLoading } = useAuth();
   
   const quoteId = searchParams.get("quote");
   
@@ -69,11 +71,20 @@ const MinaOfferter = () => {
   const [offers, setOffers] = useState<Offer[]>([]);
   const [approving, setApproving] = useState<string | null>(null);
 
+  // If no quote ID and user is authenticated, redirect to dashboard
+  useEffect(() => {
+    if (!authLoading && !quoteId) {
+      if (user) {
+        navigate("/dashboard", { replace: true });
+      } else {
+        setLoading(false);
+      }
+    }
+  }, [quoteId, user, authLoading, navigate]);
+
   useEffect(() => {
     if (quoteId) {
       fetchOffers();
-    } else {
-      setLoading(false);
     }
   }, [quoteId]);
 
