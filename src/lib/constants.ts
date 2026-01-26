@@ -1,10 +1,18 @@
 // System-wide constants and configuration
 
+export type CommissionType = "percentage" | "fixed";
+
 export const COMMISSION = {
   DEFAULT_RATE: 7,
+  DEFAULT_TYPE: "percentage" as CommissionType,
   MIN_RATE: 0,
   MAX_RATE: 100,
+  MAX_FIXED: 50000, // Max fixed amount in SEK
   SETTINGS_KEY: "commission_rate",
+  TYPE_LABELS: {
+    percentage: "Procent (%)",
+    fixed: "Fast belopp (SEK)",
+  } as Record<CommissionType, string>,
 } as const;
 
 export const PARTNER_STATUS = {
