@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Phone, Mail, MapPin } from "lucide-react";
+import { Mail, MapPin } from "lucide-react";
 import logo from "@/assets/flyttbas-logo-white.svg";
 
 export const Footer = () => {
@@ -136,12 +136,6 @@ export const Footer = () => {
             <h3 className="font-semibold mb-4">Kontakt</h3>
             <ul className="space-y-3 text-sm">
               <li className="flex items-start gap-2">
-                <Phone className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                <a href="tel:+46701234567" className="text-white/80 hover:text-white transition-colors">
-                  070-123 45 67
-                </a>
-              </li>
-              <li className="flex items-start gap-2">
                 <Mail className="h-4 w-4 mt-0.5 flex-shrink-0" />
                 <a href="mailto:info@flyttbas.se" className="text-white/80 hover:text-white transition-colors">
                   info@flyttbas.se
@@ -149,7 +143,7 @@ export const Footer = () => {
               </li>
               <li className="flex items-start gap-2">
                 <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                <span className="text-white/80">Stockholm, Sverige</span>
+                <span className="text-white/80">Industrivägen 10, 135 40 Tyresö</span>
               </li>
             </ul>
           </div>

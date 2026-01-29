@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
-import { Phone, Mail, MapPin, Clock } from "lucide-react";
+import { Mail, MapPin, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { Helmet } from "react-helmet-async";
@@ -33,12 +33,6 @@ const Kontakt = () => {
 
   const contactInfo = [
     {
-      icon: Phone,
-      title: "Telefon",
-      content: "+46 70 123 45 67",
-      link: "tel:+46701234567"
-    },
-    {
       icon: Mail,
       title: "E-post",
       content: "info@flyttbas.se",
@@ -47,7 +41,7 @@ const Kontakt = () => {
     {
       icon: MapPin,
       title: "Adress",
-      content: "Stockholm, Sverige",
+      content: "Industrivägen 10, 135 40 Tyresö",
       link: null
     },
     {
@@ -88,7 +82,7 @@ const Kontakt = () => {
         {/* Contact Info Cards */}
         <section className="py-16 bg-light-bg">
           <div className="container mx-auto px-4">
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+            <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
               {contactInfo.map((info, index) => (
                 <Card key={index} className="p-6 text-center">
                   <div className="bg-orange/10 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
