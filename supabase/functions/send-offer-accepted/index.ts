@@ -52,11 +52,11 @@ const handler = async (req: Request): Promise<Response> => {
     console.log(`Sending offer accepted notification to partner ${partnerEmail}`);
     console.log(`Customer: ${customerName}, ${customerEmail}, ${customerPhone}`);
 
-    const formattedDate = new Date(moveDate).toLocaleDateString('sv-SE', { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    const formattedDate = new Date(moveDate).toLocaleDateString('sv-SE', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
     });
     const formattedPrice = offerPrice.toLocaleString('sv-SE');
 
@@ -70,22 +70,24 @@ const handler = async (req: Request): Promise<Response> => {
       <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8fafc;">
         <div style="background-color: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
           <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #16a34a; margin: 0; font-size: 28px;">🎉 Grattis! Din offert har godkänts!</h1>
+            <h1 style="color: #1a365d; margin: 0; font-size: 28px; letter-spacing: 2px;">FLYTTBAS</h1>
           </div>
-          
-          <p style="font-size: 18px; color: #1a365d;">Hej ${partnerName}!</p>
-          
-          <p style="font-size: 16px;">Fantastiska nyheter! <strong>${customerName}</strong> har godkänt er offert för flytten.</p>
-          
+
+          <h2 style="color: #16a34a; margin: 0 0 20px 0; font-size: 22px;">Din offert har godk\u00e4nts</h2>
+
+          <p style="font-size: 16px; color: #1e293b;">Hej ${partnerName},</p>
+
+          <p style="font-size: 16px;"><strong>${customerName}</strong> har godk\u00e4nt er offert f\u00f6r uppdraget.</p>
+
           <div style="background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); border-radius: 12px; padding: 25px; margin: 30px 0; color: white;">
             <div style="text-align: center;">
-              <p style="margin: 0 0 5px 0; font-size: 14px; opacity: 0.9;">Godkänt pris</p>
+              <p style="margin: 0 0 5px 0; font-size: 14px; opacity: 0.9;">Godk\u00e4nt pris</p>
               <p style="margin: 0; font-size: 36px; font-weight: bold;">${formattedPrice} kr</p>
             </div>
           </div>
-          
+
           <div style="background-color: #f0fdf4; border: 2px solid #16a34a; border-radius: 12px; padding: 25px; margin: 25px 0;">
-            <h2 style="color: #16a34a; margin: 0 0 15px 0; font-size: 18px;">📞 Kontaktuppgifter till kunden</h2>
+            <h3 style="color: #16a34a; margin: 0 0 15px 0; font-size: 18px;">Kontaktuppgifter till kunden</h3>
             <table style="width: 100%; border-collapse: collapse;">
               <tr>
                 <td style="padding: 10px 0; color: #64748b; font-weight: 500;">Namn</td>
@@ -107,39 +109,35 @@ const handler = async (req: Request): Promise<Response> => {
               ` : ''}
             </table>
           </div>
-          
+
           <div style="background-color: #f1f5f9; border-radius: 8px; padding: 20px; margin: 20px 0;">
-            <h3 style="margin: 0 0 15px 0; font-size: 16px; color: #1a365d;">📦 Flyttdetaljer</h3>
+            <h3 style="margin: 0 0 15px 0; font-size: 16px; color: #1a365d;">Uppdragsdetaljer</h3>
             <table style="width: 100%; border-collapse: collapse;">
               <tr>
-                <td style="padding: 8px 0; color: #64748b;">📅 Datum</td>
+                <td style="padding: 8px 0; color: #64748b;">Datum</td>
                 <td style="padding: 8px 0; text-align: right; font-weight: 500;">${formattedDate}</td>
               </tr>
               <tr>
-                <td style="padding: 8px 0; color: #64748b;">📍 Från</td>
+                <td style="padding: 8px 0; color: #64748b;">Fr\u00e5n</td>
                 <td style="padding: 8px 0; text-align: right; font-weight: 500;">${fromAddress}</td>
               </tr>
               <tr>
-                <td style="padding: 8px 0; color: #64748b;">📍 Till</td>
+                <td style="padding: 8px 0; color: #64748b;">Till</td>
                 <td style="padding: 8px 0; text-align: right; font-weight: 500;">${toAddress}</td>
               </tr>
             </table>
           </div>
-          
-          <div style="background-color: #fef3c7; border-radius: 8px; padding: 15px; margin: 25px 0;">
-            <p style="margin: 0; color: #92400e; font-size: 14px;">
-              ⏰ <strong>Viktigt:</strong> Kontakta kunden så snart som möjligt för att bekräfta detaljerna för flytten.
+
+          <div style="background-color: #f1f5f9; border-radius: 8px; padding: 15px; margin: 25px 0;">
+            <p style="margin: 0; color: #4a5568; font-size: 14px;">
+              <strong>Viktigt:</strong> Kontakta kunden f\u00f6r att bekr\u00e4fta detaljerna f\u00f6r uppdraget.
             </p>
           </div>
-          
+
           <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
-          
+
           <p style="color: #64748b; font-size: 14px; text-align: center;">
-            Har du frågor? Kontakta oss på <a href="mailto:support@flyttbas.se" style="color: #2563eb;">support@flyttbas.se</a>
-          </p>
-          
-          <p style="color: #94a3b8; font-size: 12px; text-align: center; margin-top: 20px;">
-            © ${new Date().getFullYear()} Flyttbas. Sveriges ledande marknadsplats för flyttjänster.
+            Vid fr\u00e5gor, kontakta oss p\u00e5 <a href="mailto:info@flyttbas.se" style="color: #2563eb;">info@flyttbas.se</a>
           </p>
         </div>
       </body>
@@ -155,7 +153,7 @@ const handler = async (req: Request): Promise<Response> => {
       body: JSON.stringify({
         from: FROM_EMAIL,
         to: [partnerEmail],
-        subject: `🎉 Din offert har godkänts av ${customerName}!`,
+        subject: `Din offert har godk\u00e4nts av ${customerName}`,
         html: htmlContent,
       }),
     });

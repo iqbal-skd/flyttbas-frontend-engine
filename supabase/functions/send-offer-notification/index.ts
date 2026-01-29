@@ -5,7 +5,6 @@ const FROM_EMAIL_RAW = Deno.env.get("FROM_EMAIL") || "noreply@flyttbas.se";
 const FROM_EMAIL = FROM_EMAIL_RAW.includes("<")
   ? FROM_EMAIL_RAW
   : `Flyttbas <${FROM_EMAIL_RAW}>`;
-const SITE_URL = (Deno.env.get("SITE_URL") || "https://flyttbas.se").replace(/\/+$/, "");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -16,10 +15,11 @@ const corsHeaders = {
 interface OfferNotificationRequest {
   customerEmail: string;
   customerName: string;
-  partnerName: string;
-  offerPrice: number;
-  moveDate: string;
-  quoteId: string;
+  serviceDate: string;
+  offerCount: number;
+  ctaLink: string;
+  googleRating?: number;
+  googleReviewCount?: number;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -33,24 +33,33 @@ const handler = async (req: Request): Promise<Response> => {
     const {
       customerEmail,
       customerName,
-      partnerName,
-      offerPrice,
-      moveDate,
-      quoteId
+      serviceDate,
+      offerCount,
+      ctaLink,
+      googleRating,
+      googleReviewCount,
     }: OfferNotificationRequest = await req.json();
 
-    console.log(`Sending offer notification to ${customerEmail} from ${partnerName}`);
-    console.log(`Offer details: price=${offerPrice}, moveDate=${moveDate}, quoteId=${quoteId}`);
+    console.log(`Sending offer notification to ${customerEmail}`);
+    console.log(`Offer count: ${offerCount}, serviceDate: ${serviceDate}`);
 
-    const siteUrl = SITE_URL;
-    const formattedDate = new Date(moveDate).toLocaleDateString('sv-SE', { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    const formattedDate = new Date(serviceDate).toLocaleDateString('sv-SE', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
     });
-    const formattedPrice = offerPrice.toLocaleString('sv-SE');
-    const rutPrice = Math.ceil(offerPrice * 0.5).toLocaleString('sv-SE');
+
+    const googleBlock = (googleRating && googleReviewCount)
+      ? `
+          <div style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin: 25px 0;">
+            <p style="margin: 0 0 5px 0; font-size: 14px; color: #64748b; font-weight: 500;">Extern kundfeedback (k\u00e4lla: Google)</p>
+            <p style="margin: 0; font-size: 18px; color: #1e293b;">
+              \u2B50 ${googleRating} / 5 (${googleReviewCount} recensioner)
+            </p>
+          </div>
+      `
+      : '';
 
     const htmlContent = `
       <!DOCTYPE html>
@@ -62,54 +71,54 @@ const handler = async (req: Request): Promise<Response> => {
       <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8fafc;">
         <div style="background-color: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
           <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #1a365d; margin: 0; font-size: 28px;">🎉 Ny offert!</h1>
+            <h1 style="color: #1a365d; margin: 0; font-size: 28px; letter-spacing: 2px;">FLYTTBAS</h1>
           </div>
-          
-          <p style="font-size: 18px; color: #1a365d;">Hej ${customerName}!</p>
-          
-          <p style="font-size: 16px;">Du har fått en ny offert på din flytt från <strong>${partnerName}</strong>.</p>
-          
-          <div style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); border-radius: 12px; padding: 25px; margin: 30px 0; color: white;">
-            <div style="text-align: center;">
-              <p style="margin: 0 0 5px 0; font-size: 14px; opacity: 0.9;">Offertpris</p>
-              <p style="margin: 0; font-size: 36px; font-weight: bold;">${formattedPrice} kr</p>
-              <p style="margin: 8px 0 0 0; font-size: 14px; opacity: 0.9;">Efter RUT-avdrag: ca ${rutPrice} kr</p>
-            </div>
-          </div>
-          
-          <div style="background-color: #f1f5f9; border-radius: 8px; padding: 20px; margin: 20px 0;">
+
+          <p style="font-size: 16px; color: #1e293b;">Hej ${customerName},</p>
+
+          <p style="font-size: 16px; color: #1e293b; font-weight: 600;">Du har nu offerter att j\u00e4mf\u00f6ra via Flyttbas.</p>
+
+          <p style="font-size: 15px; color: #4a5568;">
+            Vi har samlat offerter fr\u00e5n verifierade f\u00f6retag baserat p\u00e5 ditt uppdrag.<br>
+            Du j\u00e4mf\u00f6r i lugn och ro \u2013 ingen f\u00f6rpliktelse, och du v\u00e4ljer sj\u00e4lv om och vem du vill boka.
+          </p>
+
+          <div style="background-color: #f1f5f9; border-radius: 8px; padding: 20px; margin: 25px 0;">
+            <p style="margin: 0 0 5px 0; font-size: 14px; color: #64748b; font-weight: 500;">Ditt uppdrag</p>
             <table style="width: 100%; border-collapse: collapse;">
               <tr>
-                <td style="padding: 8px 0; color: #64748b;">📅 Flyttdatum</td>
-                <td style="padding: 8px 0; text-align: right; font-weight: 500;">${formattedDate}</td>
+                <td style="padding: 8px 0; color: #64748b;">Datum</td>
+                <td style="padding: 8px 0; text-align: right; font-weight: 500; color: #1e293b;">${formattedDate}</td>
               </tr>
               <tr>
-                <td style="padding: 8px 0; color: #64748b;">🏢 Flyttfirma</td>
-                <td style="padding: 8px 0; text-align: right; font-weight: 500;">${partnerName}</td>
+                <td style="padding: 8px 0; color: #64748b;">Antal offerter hittills</td>
+                <td style="padding: 8px 0; text-align: right; font-weight: 500; color: #1e293b;">${offerCount}</td>
               </tr>
             </table>
+            <p style="margin: 10px 0 0 0; font-size: 13px; color: #94a3b8; font-style: italic;">(Fler offerter kan tillkomma.)</p>
           </div>
-          
+
+          <div style="margin: 25px 0;">
+            <p style="font-size: 15px; color: #1e293b; font-weight: 600; margin-bottom: 10px;">S\u00e5 g\u00f6r du nu:</p>
+            <ol style="padding-left: 20px; margin: 0; color: #4a5568; font-size: 15px;">
+              <li style="margin-bottom: 8px;">G\u00e5 till din kundportal</li>
+              <li style="margin-bottom: 8px;">J\u00e4mf\u00f6r pris, villkor och vad som ing\u00e5r</li>
+              <li style="margin-bottom: 8px;">Godk\u00e4nn eller avb\u00f6j offerter direkt online</li>
+            </ol>
+          </div>
+
           <div style="text-align: center; margin: 35px 0;">
-            <a href="${siteUrl}/mina-offerter?quote=${quoteId}" style="display: inline-block; background-color: #2563eb; color: white; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: bold; font-size: 16px;">
-              Se alla dina offerter
+            <a href="${ctaLink}" style="display: inline-block; background-color: #2563eb; color: white; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: bold; font-size: 16px;">
+              J\u00e4mf\u00f6r offerter och v\u00e4lj tryggt
             </a>
           </div>
-          
-          <div style="background-color: #fef3c7; border-radius: 8px; padding: 15px; margin: 25px 0;">
-            <p style="margin: 0; color: #92400e; font-size: 14px;">
-              💡 <strong>Tips:</strong> Jämför offerter från flera flyttfirmor innan du bestämmer dig. Du kan godkänna eller avslå offerter direkt i din kundportal.
-            </p>
-          </div>
-          
+
+          ${googleBlock}
+
           <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
-          
+
           <p style="color: #64748b; font-size: 14px; text-align: center;">
-            Har du frågor? Kontakta oss på <a href="mailto:support@flyttbas.se" style="color: #2563eb;">support@flyttbas.se</a>
-          </p>
-          
-          <p style="color: #94a3b8; font-size: 12px; text-align: center; margin-top: 20px;">
-            © ${new Date().getFullYear()} Flyttbas. Sveriges ledande marknadsplats för flyttjänster.
+            Vid fr\u00e5gor, kontakta oss p\u00e5 <a href="mailto:info@flyttbas.se" style="color: #2563eb;">info@flyttbas.se</a>
           </p>
         </div>
       </body>
@@ -125,7 +134,7 @@ const handler = async (req: Request): Promise<Response> => {
       body: JSON.stringify({
         from: FROM_EMAIL,
         to: [customerEmail],
-        subject: `🎉 Ny offert från ${partnerName} - Flyttbas`,
+        subject: "Du har offerter att j\u00e4mf\u00f6ra via Flyttbas",
         html: htmlContent,
       }),
     });
