@@ -189,7 +189,7 @@ const LocalArea = () => {
                 Jämför offerter för flytt i {area.displayName}
               </h2>
               <p className="text-center text-muted-foreground mb-6 md:mb-8">
-                Fyll i formuläret så skickar vi din förfrågan till verifierade partners. Du får offerter inom 2 timmar.
+                Fyll i formuläret så skickar vi din förfrågan till verifierade partners.
               </p>
               <QuoteWizard />
             </div>

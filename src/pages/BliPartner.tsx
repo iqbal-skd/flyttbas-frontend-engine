@@ -595,7 +595,7 @@ const BliPartner = () => {
                         />
                         <Label htmlFor="gdpr" className="font-normal cursor-pointer text-sm">
                           Jag godkänner Flyttbas partnervillkor och att mina uppgifter behandlas enligt GDPR.
-                          Jag förstår att en provision av ordervärdet före RUT debiteras vid genomförda jobb. *
+                          Jag förstår att en avgift per förmedlat uppdrag debiteras vid genomförda jobb. *
                         </Label>
                       </div>
                       {errors.gdpr_consent && <p className="text-xs text-destructive mt-1">{errors.gdpr_consent}</p>}

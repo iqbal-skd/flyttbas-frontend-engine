@@ -12,7 +12,7 @@ export const PageViewTracker = () => {
   const { trackPageView } = useGTM();
 
   useEffect(() => {
-    // Track page view whenever the location changes
+    window.scrollTo(0, 0);
     trackPageView(location.pathname, document.title);
   }, [location.pathname, trackPageView]);
 

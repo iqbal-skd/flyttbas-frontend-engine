@@ -24,7 +24,7 @@ const Kontakt = () => {
     
     toast({
       title: "Tack för din förfrågan!",
-      description: "Vi skickar din förfrågan till verifierade flyttfirmor. Du får offerter inom 2 timmar.",
+      description: "Vi skickar din förfrågan till verifierade flyttfirmor.",
     });
     
     setIsSubmitting(false);
@@ -46,8 +46,8 @@ const Kontakt = () => {
     },
     {
       icon: Clock,
-      title: "Svarstid",
-      content: "Offerter inom 2 timmar\nKundservice: Mån-Fre 08-18",
+      title: "Öppettider",
+      content: "Mån-Fre 08-18",
       link: null
     }
   ];
@@ -55,10 +55,10 @@ const Kontakt = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Helmet>
-        <title>Jämför Flyttofferter – Få Offerter inom 2 Timmar | Flyttbas</title>
-        <meta name="description" content="Få offerter från verifierade flyttfirmor i Stockholm. Fyll i formuläret och jämför priser inom 2 timmar. Gratis och utan förpliktelser." />
+        <title>Jämför Flyttofferter – Få Offerter från Verifierade Firmor | Flyttbas</title>
+        <meta name="description" content="Få offerter från verifierade flyttfirmor i Stockholm. Fyll i formuläret och jämför priser. Gratis och utan förpliktelser." />
         <link rel="canonical" href="https://flyttbas.se/kontakt" />
-        <meta property="og:title" content="Jämför Flyttofferter – Få offerter inom 2 timmar" />
+        <meta property="og:title" content="Jämför Flyttofferter – Få offerter från verifierade firmor" />
         <meta property="og:description" content="Jämför offerter från verifierade flyttfirmor. Gratis och utan förpliktelser." />
         <meta property="og:url" content="https://flyttbas.se/kontakt" />
       </Helmet>
@@ -73,7 +73,7 @@ const Kontakt = () => {
                 Jämför offerter från flyttfirmor
               </h1>
               <p className="text-lg md:text-xl text-white/90">
-                Fyll i formuläret och få offerter från verifierade partners inom 2 timmar. Helt gratis!
+                Fyll i formuläret och få offerter från verifierade partners. Helt gratis!
               </p>
             </div>
           </div>
@@ -181,7 +181,7 @@ const Kontakt = () => {
                   </Button>
 
                   <p className="text-sm text-center text-muted-foreground">
-                    Du får vanligtvis 3-5 offerter inom 2 timmar under kontorstid
+                    Du får vanligtvis 3-5 offerter från verifierade flyttfirmor
                   </p>
                 </form>
               </Card>

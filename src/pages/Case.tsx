@@ -29,7 +29,7 @@ const Case = () => {
       time: "12 timmar",
       team: "5 flyttare",
       firm: "Business Move AB",
-      description: "Ett snabbväxande tech-företag behövde flytta på kort varsel. Via Flyttbas fick de 3 offerter från specialiserade kontorsfirmor inom 2 timmar.",
+      description: "Ett snabbväxande tech-företag behövde flytta på kort varsel. Via Flyttbas fick de 3 offerter från specialiserade kontorsfirmor.",
       result: "Flytten genomfördes över en helg med noll driftstörningar. IT-utrustning hanterades med extra försiktighet.",
       quote: "Vi fick snabbt kontakt med firmor som verkligen förstod våra behov. Imponerande!"
     },

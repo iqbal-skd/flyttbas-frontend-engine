@@ -34,7 +34,7 @@ const Index = () => {
     { value: "150+", label: "Verifierade flyttfirmor" },
     { value: "12 000+", label: "Genomförda flyttar" },
     { value: "4.8", label: "Snittbetyg" },
-    { value: "< 2h", label: "Tid till offerter" },
+    { value: "50%", label: "RUT-avdrag" },
   ];
 
   const howItWorks = [
@@ -182,7 +182,7 @@ const Index = () => {
                 </h2>
                 <p className="text-lg text-muted-foreground mb-6">
                   Anslut dig till Flyttbas och få tillgång till nya kunder i hela Sverige.
-                  Ingen startavgift – du betalar endast en låg provision vid genomfört jobb.
+                  Ingen startavgift – betala bara per förmedlat uppdrag.
                 </p>
                 <div className="space-y-3 mb-6">
                   <div className="flex items-center gap-2">
@@ -208,14 +208,23 @@ const Index = () => {
               <div className="flex-1 flex justify-center">
                 <div className="bg-background p-8 rounded-2xl shadow-xl">
                   <div className="text-center mb-4">
-                    <p className="text-sm text-muted-foreground">Provision</p>
-                    <p className="text-4xl font-bold text-primary">Fastpris per lead</p>
-                    <p className="text-sm text-muted-foreground">per genomfört jobb</p>
+                    <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Prismodell</p>
+                    <p className="text-3xl font-bold text-primary mt-2">Betala per uppdrag</p>
+                    <p className="text-sm text-muted-foreground mt-1">Enkel och transparent prissättning</p>
                   </div>
-                  <div className="border-t pt-4 space-y-2 text-sm">
-                    <p className="flex justify-between"><span>Startavgift</span><strong>0 kr</strong></p>
-                    <p className="flex justify-between"><span>Månadsavgift</span><strong>0 kr</strong></p>
-                    <p className="flex justify-between"><span>Bindningstid</span><strong>Ingen</strong></p>
+                  <div className="border-t pt-4 space-y-3 text-sm">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
+                      <span>Ingen startavgift</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
+                      <span>Ingen månadsavgift</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
+                      <span>Ingen bindningstid</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -270,7 +279,7 @@ const Index = () => {
               {[
                 {
                   name: "Anna Svensson",
-                  text: "Fick 4 offerter inom 2 timmar. Valde den med bäst omdömen och flytten gick perfekt!",
+                  text: "Fick flera offerter snabbt. Valde den med bäst omdömen och flytten gick perfekt!",
                   rating: 5,
                 },
                 {

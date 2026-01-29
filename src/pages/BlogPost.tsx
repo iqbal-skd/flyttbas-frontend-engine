@@ -4,7 +4,7 @@ import { MobileActionBar } from "@/components/MobileActionBar";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link, useParams } from "react-router-dom";
-import { Calendar, Clock, ArrowLeft, Check } from "lucide-react";
+import { Clock, ArrowLeft, Check } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
@@ -22,7 +22,7 @@ const BlogPost = () => {
     category: "Flytttips",
     date: "2024-01-15",
     readTime: "8 min",
-    image: "/placeholder.svg",
+    image: "/images/blog/checklista.png",
     content: [
       {
         type: "intro",
@@ -199,14 +199,6 @@ const BlogPost = () => {
               <div className="flex items-center gap-4 text-sm mb-4">
                 <span className="bg-orange px-3 py-1 rounded-full text-xs font-medium">
                   {post.category}
-                </span>
-                <span className="flex items-center gap-1 text-white/80">
-                  <Calendar className="h-4 w-4" />
-                  {new Date(post.date).toLocaleDateString('sv-SE', { 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
-                  })}
                 </span>
                 <span className="flex items-center gap-1 text-white/80">
                   <Clock className="h-4 w-4" />

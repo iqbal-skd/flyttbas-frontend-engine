@@ -1,13 +1,16 @@
+import { useState } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { MobileActionBar } from "@/components/MobileActionBar";
 import { Card } from "@/components/ui/card";
 import { Link } from "react-router-dom";
-import { Calendar, Clock, ArrowRight } from "lucide-react";
+import { Clock, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Helmet } from "react-helmet-async";
 
 const Blogg = () => {
+  const [selectedCategory, setSelectedCategory] = useState("Alla artiklar");
+
   const categories = [
     "Alla artiklar",
     "Flytttips",
@@ -28,7 +31,7 @@ const Blogg = () => {
       category: "Flytttips",
       date: "2024-01-15",
       readTime: "8 min",
-      image: "/placeholder.svg"
+      image: "/images/blog/checklista.png"
     },
     {
       slug: "packa-for-flytt-guide",
@@ -37,7 +40,7 @@ const Blogg = () => {
       category: "Packning",
       date: "2024-01-10",
       readTime: "6 min",
-      image: "/placeholder.svg"
+      image: "/images/blog/packning.png"
     },
     {
       slug: "rut-avdrag-flytt",
@@ -46,7 +49,7 @@ const Blogg = () => {
       category: "Priser & RUT",
       date: "2024-01-08",
       readTime: "5 min",
-      image: "/placeholder.svg"
+      image: "/images/blog/rut-avdrag.png"
     },
     {
       slug: "flytta-piano-sakert",
@@ -55,7 +58,7 @@ const Blogg = () => {
       category: "Tunga lyft",
       date: "2024-01-05",
       readTime: "7 min",
-      image: "/placeholder.svg"
+      image: "/images/blog/piano.png"
     },
     {
       slug: "kontorsflytt-planering",
@@ -64,7 +67,7 @@ const Blogg = () => {
       category: "Kontorsflytt",
       date: "2024-01-03",
       readTime: "10 min",
-      image: "/placeholder.svg"
+      image: "/images/blog/kontorsflytt.png"
     },
     {
       slug: "flyttstadning-tips",
@@ -73,7 +76,7 @@ const Blogg = () => {
       category: "Flyttstäd",
       date: "2023-12-28",
       readTime: "6 min",
-      image: "/placeholder.svg"
+      image: "/images/blog/flyttstad.png"
     }
   ];
 
@@ -112,9 +115,10 @@ const Blogg = () => {
               {categories.map((cat, index) => (
                 <Button
                   key={index}
-                  variant={index === 0 ? "default" : "outline"}
+                  variant={selectedCategory === cat ? "default" : "outline"}
                   size="sm"
                   className="whitespace-nowrap"
+                  onClick={() => setSelectedCategory(cat)}
                 >
                   {cat}
                 </Button>
@@ -127,7 +131,7 @@ const Blogg = () => {
         <section className="py-16">
           <div className="container mx-auto px-4">
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
-              {blogPosts.map((post, index) => (
+              {blogPosts.filter(post => selectedCategory === "Alla artiklar" || post.category === selectedCategory).map((post, index) => (
                 <Link to={`/blogg/${post.slug}`} key={index}>
                   <Card className="overflow-hidden hover:shadow-xl transition-shadow h-full flex flex-col">
                     <div className="aspect-video bg-gray-200 flex items-center justify-center">
@@ -153,15 +157,7 @@ const Blogg = () => {
                       <p className="text-muted-foreground mb-4 line-clamp-3 flex-1">
                         {post.excerpt}
                       </p>
-                      <div className="flex items-center justify-between pt-4 border-t">
-                        <span className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Calendar className="h-4 w-4" />
-                          {new Date(post.date).toLocaleDateString('sv-SE', { 
-                            year: 'numeric', 
-                            month: 'long', 
-                            day: 'numeric' 
-                          })}
-                        </span>
+                      <div className="flex items-center justify-end pt-4 border-t">
                         <ArrowRight className="h-5 w-5 text-orange" />
                       </div>
                     </div>
