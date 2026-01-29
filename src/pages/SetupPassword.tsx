@@ -160,7 +160,7 @@ const SetupPassword = () => {
             </div>
             <CardTitle>Skapa ditt lösenord</CardTitle>
             <CardDescription>
-              Välj ett lösenord så kan du enkelt logga in nästa gång utan magisk länk.
+              Välj ett lösenord så kan du enkelt logga in nästa gång utan e-postlänk.
             </CardDescription>
           </CardHeader>
           <CardContent>

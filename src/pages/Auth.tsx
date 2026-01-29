@@ -186,7 +186,7 @@ const Auth = () => {
                 </TabsTrigger>
                 <TabsTrigger value="magic-link">
                   <Mail className="h-4 w-4 mr-2" />
-                  Magisk länk
+                  E-postlänk
                 </TabsTrigger>
               </TabsList>
               

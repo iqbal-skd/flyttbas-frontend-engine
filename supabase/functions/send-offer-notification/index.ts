@@ -15,12 +15,16 @@ const corsHeaders = {
 interface OfferNotificationRequest {
   customerEmail: string;
   customerName: string;
-  serviceDate: string;
-  offerCount: number;
-  ctaLink: string;
+  serviceDate?: string;
+  moveDate?: string;
+  offerCount?: number;
+  ctaLink?: string;
+  quoteId?: string;
   googleRating?: number;
   googleReviewCount?: number;
 }
+
+const SITE_URL = (Deno.env.get("SITE_URL") || "https://flyttbas.se").replace(/\/$/, "");
 
 const handler = async (req: Request): Promise<Response> => {
   console.log("send-offer-notification function called");
@@ -30,25 +34,32 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    const body: OfferNotificationRequest = await req.json();
     const {
       customerEmail,
       customerName,
-      serviceDate,
-      offerCount,
-      ctaLink,
       googleRating,
       googleReviewCount,
-    }: OfferNotificationRequest = await req.json();
+    } = body;
+
+    const dateValue = body.moveDate || body.serviceDate;
+    const resolvedCtaLink = body.ctaLink || (body.quoteId ? `${SITE_URL}/mina-offerter` : `${SITE_URL}/dashboard`);
 
     console.log(`Sending offer notification to ${customerEmail}`);
-    console.log(`Offer count: ${offerCount}, serviceDate: ${serviceDate}`);
+    console.log(`moveDate: ${dateValue}`);
 
-    const formattedDate = new Date(serviceDate).toLocaleDateString('sv-SE', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
+    let formattedDate = "Ej angivet";
+    if (dateValue) {
+      const parsed = new Date(dateValue);
+      if (!isNaN(parsed.getTime())) {
+        formattedDate = parsed.toLocaleDateString('sv-SE', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        });
+      }
+    }
 
     const googleBlock = (googleRating && googleReviewCount)
       ? `
@@ -90,10 +101,10 @@ const handler = async (req: Request): Promise<Response> => {
                 <td style="padding: 8px 0; color: #64748b;">Datum</td>
                 <td style="padding: 8px 0; text-align: right; font-weight: 500; color: #1e293b;">${formattedDate}</td>
               </tr>
-              <tr>
+              ${body.offerCount ? `<tr>
                 <td style="padding: 8px 0; color: #64748b;">Antal offerter hittills</td>
-                <td style="padding: 8px 0; text-align: right; font-weight: 500; color: #1e293b;">${offerCount}</td>
-              </tr>
+                <td style="padding: 8px 0; text-align: right; font-weight: 500; color: #1e293b;">${body.offerCount}</td>
+              </tr>` : ''}
             </table>
             <p style="margin: 10px 0 0 0; font-size: 13px; color: #94a3b8; font-style: italic;">(Fler offerter kan tillkomma.)</p>
           </div>
@@ -108,7 +119,7 @@ const handler = async (req: Request): Promise<Response> => {
           </div>
 
           <div style="text-align: center; margin: 35px 0;">
-            <a href="${ctaLink}" style="display: inline-block; background-color: #2563eb; color: white; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: bold; font-size: 16px;">
+            <a href="${resolvedCtaLink}" style="display: inline-block; background-color: #2563eb; color: white; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: bold; font-size: 16px;">
               J\u00e4mf\u00f6r offerter och v\u00e4lj tryggt
             </a>
           </div>
