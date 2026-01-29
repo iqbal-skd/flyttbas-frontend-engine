@@ -89,105 +89,136 @@ const handler = async (req: Request): Promise<Response> => {
       day: "numeric",
     });
 
-    // Send emails to all partners
-    const emailPromises = partners.map(async (partner) => {
-      try {
-        const ctaLink = `${siteUrl}/partner`;
+    const ctaLink = `${siteUrl}/partner`;
 
-        const emailHtml = `
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          </head>
-          <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8fafc;">
-            <div style="background-color: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
-              <div style="text-align: center; margin-bottom: 30px;">
-                <h1 style="color: #1a365d; margin: 0; font-size: 28px; letter-spacing: 2px;">FLYTTBAS</h1>
-              </div>
-
-              <p style="font-size: 16px; color: #1e293b;">Hej ${partner.contact_name || partner.company_name},</p>
-
-              <p style="font-size: 16px; color: #1e293b;">En ny uppdragsf\u00f6rfr\u00e5gan matchar er verksamhet.</p>
-
-              <div style="background-color: #f1f5f9; border-radius: 8px; padding: 24px; margin: 24px 0;">
-                <p style="margin: 0 0 16px 0; font-size: 18px; color: #1e293b; font-weight: 600;">Sammanfattning</p>
-
-                <table style="width: 100%; border-collapse: collapse;">
-                  <tr>
-                    <td style="padding: 8px 0; color: #64748b; width: 40%;">Tj\u00e4nst</td>
-                    <td style="padding: 8px 0; font-weight: 500;">${serviceType || "Ej angiven"}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 8px 0; color: #64748b;">Datum</td>
-                    <td style="padding: 8px 0; font-weight: 500;">${formattedDate}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 8px 0; color: #64748b;">Fr\u00e5n</td>
-                    <td style="padding: 8px 0; font-weight: 500;">${fromAddress || "Ej angiven"}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 8px 0; color: #64748b;">Till</td>
-                    <td style="padding: 8px 0; font-weight: 500;">${toAddress || "Ej angiven"}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 8px 0; color: #64748b;">Omfattning</td>
-                    <td style="padding: 8px 0; font-weight: 500;">${scope || "Ej angiven"}</td>
-                  </tr>
-                </table>
-              </div>
-
-              <p style="font-size: 15px; color: #1e293b; font-weight: 600; margin-bottom: 5px;">N\u00e4sta steg:</p>
-              <p style="font-size: 15px; color: #4a5568; margin-top: 5px;">
-                Logga in i partnerportalen f\u00f6r att se fullst\u00e4ndiga detaljer och l\u00e4mna offert.
-              </p>
-
-              <div style="text-align: center; margin: 35px 0;">
-                <a href="${ctaLink}" style="display: inline-block; background-color: #2563eb; color: white; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: bold; font-size: 16px;">
-                  Visa f\u00f6rfr\u00e5gan och l\u00e4mna offert
-                </a>
-              </div>
-
-              <div style="background-color: #f8f9fa; border-radius: 8px; padding: 16px; margin: 24px 0;">
-                <p style="margin: 0 0 5px 0; font-size: 14px; color: #1e293b; font-weight: 600;">Bra att veta:</p>
-                <ul style="margin: 0; padding-left: 20px; color: #4a5568; font-size: 14px;">
-                  <li style="margin-bottom: 6px;">Kunder b\u00f6rjar ofta j\u00e4mf\u00f6ra offerter s\u00e5 snart de f\u00f6rsta kommer in</li>
-                  <li style="margin-bottom: 6px;">Tydliga och tidiga offerter f\u00e5r d\u00e4rf\u00f6r ofta mer uppm\u00e4rksamhet</li>
-                  <li style="margin-bottom: 0;">Det \u00e4r alltid kvalitet och transparens som avg\u00f6r kundens val</li>
-                </ul>
-              </div>
-
-              <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
-
-              <p style="font-size: 13px; color: #64748b; text-align: center;">
-                Du f\u00e5r detta mejl eftersom du \u00e4r registrerad partner hos Flyttbas.
-              </p>
-              <p style="font-size: 13px; color: #64748b; text-align: center; margin-top: 5px;">
-                Kontakt: <a href="mailto:info@flyttbas.se" style="color: #2563eb;">info@flyttbas.se</a>
-              </p>
+    // Build all email objects
+    const emails = partners.map((partner) => {
+      const emailHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8fafc;">
+          <div style="background-color: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h1 style="color: #1a365d; margin: 0; font-size: 28px; letter-spacing: 2px;">FLYTTBAS</h1>
             </div>
-          </body>
-          </html>
-        `;
 
-        await resend.emails.send({
-          from: formattedFrom,
-          to: [partner.contact_email],
-          subject: "Ny uppdragsf\u00f6rfr\u00e5gan att offerera via Flyttbas",
-          html: emailHtml,
-        });
+            <p style="font-size: 16px; color: #1e293b;">Hej ${partner.contact_name || partner.company_name},</p>
 
-        console.log(`Email sent to partner: ${partner.contact_email}`);
-        return { success: true, email: partner.contact_email };
-      } catch (emailError) {
-        console.error(`Failed to send email to ${partner.contact_email}:`, emailError);
-        return { success: false, email: partner.contact_email, error: emailError };
-      }
+            <p style="font-size: 16px; color: #1e293b;">En ny uppdragsförfrågan matchar er verksamhet.</p>
+
+            <div style="background-color: #f1f5f9; border-radius: 8px; padding: 24px; margin: 24px 0;">
+              <p style="margin: 0 0 16px 0; font-size: 18px; color: #1e293b; font-weight: 600;">Sammanfattning</p>
+
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="padding: 8px 0; color: #64748b; width: 40%;">Tjänst</td>
+                  <td style="padding: 8px 0; font-weight: 500;">${serviceType || "Ej angiven"}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; color: #64748b;">Datum</td>
+                  <td style="padding: 8px 0; font-weight: 500;">${formattedDate}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; color: #64748b;">Från</td>
+                  <td style="padding: 8px 0; font-weight: 500;">${fromAddress || "Ej angiven"}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; color: #64748b;">Till</td>
+                  <td style="padding: 8px 0; font-weight: 500;">${toAddress || "Ej angiven"}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; color: #64748b;">Omfattning</td>
+                  <td style="padding: 8px 0; font-weight: 500;">${scope || "Ej angiven"}</td>
+                </tr>
+              </table>
+            </div>
+
+            <p style="font-size: 15px; color: #1e293b; font-weight: 600; margin-bottom: 5px;">Nästa steg:</p>
+            <p style="font-size: 15px; color: #4a5568; margin-top: 5px;">
+              Logga in i partnerportalen för att se fullständiga detaljer och lämna offert.
+            </p>
+
+            <div style="text-align: center; margin: 35px 0;">
+              <a href="${ctaLink}" style="display: inline-block; background-color: #2563eb; color: white; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: bold; font-size: 16px;">
+                Visa förfrågan och lämna offert
+              </a>
+            </div>
+
+            <div style="background-color: #f8f9fa; border-radius: 8px; padding: 16px; margin: 24px 0;">
+              <p style="margin: 0 0 5px 0; font-size: 14px; color: #1e293b; font-weight: 600;">Bra att veta:</p>
+              <ul style="margin: 0; padding-left: 20px; color: #4a5568; font-size: 14px;">
+                <li style="margin-bottom: 6px;">Kunder börjar ofta jämföra offerter så snart de första kommer in</li>
+                <li style="margin-bottom: 6px;">Tydliga och tidiga offerter får därför ofta mer uppmärksamhet</li>
+                <li style="margin-bottom: 0;">Det är alltid kvalitet och transparens som avgör kundens val</li>
+              </ul>
+            </div>
+
+            <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
+
+            <p style="font-size: 13px; color: #64748b; text-align: center;">
+              Du får detta mejl eftersom du är registrerad partner hos Flyttbas.
+            </p>
+            <p style="font-size: 13px; color: #64748b; text-align: center; margin-top: 5px;">
+              Kontakt: <a href="mailto:info@flyttbas.se" style="color: #2563eb;">info@flyttbas.se</a>
+            </p>
+          </div>
+        </body>
+        </html>
+      `;
+
+      return {
+        from: formattedFrom,
+        to: [partner.contact_email],
+        subject: "Ny uppdragsförfrågan att offerera via Flyttbas",
+        html: emailHtml,
+      };
     });
 
-    const results = await Promise.all(emailPromises);
-    const successCount = results.filter(r => r.success).length;
+    // Send in batches of 100 (Resend Batch API limit) with retry and backoff
+    const BATCH_SIZE = 100;
+    const MAX_RETRIES = 3;
+    let successCount = 0;
+
+    for (let i = 0; i < emails.length; i += BATCH_SIZE) {
+      const batch = emails.slice(i, i + BATCH_SIZE);
+      const batchIndex = Math.floor(i / BATCH_SIZE) + 1;
+      const totalBatches = Math.ceil(emails.length / BATCH_SIZE);
+
+      let lastError: Error | null = null;
+      for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+        try {
+          if (attempt > 0) {
+            const backoffMs = Math.pow(2, attempt) * 1000; // 2s, 4s
+            console.log(`Batch ${batchIndex}: retry ${attempt}, waiting ${backoffMs}ms`);
+            await new Promise((r) => setTimeout(r, backoffMs));
+          }
+
+          const result = await resend.batch.send(batch);
+          console.log(`Batch ${batchIndex}/${totalBatches} sent: ${batch.length} emails`, result);
+          successCount += batch.length;
+          lastError = null;
+          break;
+        } catch (err: any) {
+          lastError = err;
+          const isRateLimit = err?.statusCode === 429 || err?.message?.includes("rate");
+          console.error(`Batch ${batchIndex} attempt ${attempt + 1} failed:`, err.message);
+          if (!isRateLimit || attempt === MAX_RETRIES - 1) break;
+        }
+      }
+
+      if (lastError) {
+        console.error(`Batch ${batchIndex} failed after ${MAX_RETRIES} retries`);
+      }
+
+      // Wait between batches to stay under rate limit
+      if (i + BATCH_SIZE < emails.length) {
+        await new Promise((r) => setTimeout(r, 1000));
+      }
+    }
 
     console.log(`Successfully notified ${successCount}/${partners.length} partners`);
 
