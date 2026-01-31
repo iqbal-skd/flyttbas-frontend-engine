@@ -572,6 +572,23 @@ export type Database = {
         Args: { lat1: number; lat2: number; lng1: number; lng2: number }
         Returns: number
       }
+      insert_partner_as_user: {
+        Args: {
+          p_address?: string
+          p_address_lat?: number
+          p_address_lng?: number
+          p_company_name: string
+          p_contact_email: string
+          p_contact_name: string
+          p_contact_phone: string
+          p_f_tax_certificate?: boolean
+          p_insurance_company?: string
+          p_org_number: string
+          p_traffic_license_number?: string
+          p_user_id: string
+        }
+        Returns: string
+      }
       is_approved_partner: { Args: { _user_id: string }; Returns: boolean }
       partner_has_approved_offer_for_quote: {
         Args: { _quote_request_id: string; _user_id: string }
