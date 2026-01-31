@@ -295,24 +295,21 @@ const BliPartner = () => {
         }
       }
 
-      // Insert partner application directly into partners table
-      const { error: partnerError } = await supabase
-        .from('partners')
-        .insert({
-          user_id: userId,
-          company_name: formData.company_name,
-          org_number: formData.org_number,
-          contact_name: formData.contact_name,
-          contact_email: formData.contact_email,
-          contact_phone: formData.contact_phone,
-          address: formData.address || null,
-          address_lat: formData.address_lat || null,
-          address_lng: formData.address_lng || null,
-          traffic_license_number: formData.traffic_license_number || null,
-          f_tax_certificate: formData.f_tax_certificate,
-          insurance_company: formData.insurance_company || null,
-          status: 'pending',
-        });
+      // Insert partner using security definer function (bypasses RLS for unauthenticated signup)
+      const { error: partnerError } = await supabase.rpc('insert_partner_as_user', {
+        p_user_id: userId,
+        p_company_name: formData.company_name,
+        p_org_number: formData.org_number,
+        p_contact_name: formData.contact_name,
+        p_contact_email: formData.contact_email,
+        p_contact_phone: formData.contact_phone,
+        p_address: formData.address || null,
+        p_address_lat: formData.address_lat || null,
+        p_address_lng: formData.address_lng || null,
+        p_traffic_license_number: formData.traffic_license_number || null,
+        p_f_tax_certificate: formData.f_tax_certificate,
+        p_insurance_company: formData.insurance_company || null,
+      });
 
       if (partnerError) throw partnerError;
 
