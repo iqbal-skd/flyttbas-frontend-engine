@@ -202,136 +202,67 @@ const BliPartner = () => {
         return;
       }
 
-      // First, check if a partner already exists with this email
-      const { data: existingPartner } = await supabase
-        .from('partners')
-        .select('id')
-        .eq('contact_email', formData.contact_email)
-        .maybeSingle();
-      
-      if (existingPartner) {
-        toast({
-          variant: "destructive",
-          title: "E-post redan använd",
-          description: "Denna e-postadress används redan av en annan partner. Använd en annan e-postadress.",
-        });
-        setSubmitting(false);
-        return;
-      }
-      
-      // Determine userId: check if logged in, or if user exists with this email, or create new user
-      let userId: string;
-      let isNewUser = false;
-      
       const { data: { user: currentUser } } = await supabase.auth.getUser();
-      
+
       if (currentUser) {
-        // User is logged in, use their ID
-        userId = currentUser.id;
-      } else {
-        // Check if a user already exists with this email by checking profiles table
-        const { data: existingProfile } = await supabase
-          .from('profiles')
-          .select('user_id')
-          .eq('email', formData.contact_email)
-          .maybeSingle();
-        
-        if (existingProfile) {
-          // User exists but is not logged in - they need to log in first for security
-          toast({
-            variant: "destructive",
-            title: "E-post redan registrerad",
-            description: "Denna e-postadress är redan registrerad. Vänligen logga in först för att bli partner.",
-          });
-          setSubmitting(false);
-          return;
-        }
-        
-        // No user exists, create a new one with their chosen password
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-          email: formData.contact_email,
-          password: formData.password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/partner`,
-            data: {
-              full_name: formData.contact_name,
-            }
-          }
+        // User is logged in - use existing flow with RPC calls
+        const { error: roleError } = await supabase.rpc('set_partner_role', {
+          target_user_id: currentUser.id
         });
-        
-        if (signUpError) {
-          // Handle edge case where user exists in auth but not profiles
-          if (signUpError.message.includes('already registered')) {
-            toast({
-              variant: "destructive",
-              title: "E-post redan registrerad",
-              description: "Denna e-postadress är redan registrerad. Logga in först eller använd en annan e-post.",
-            });
-            setSubmitting(false);
-            return;
-          }
-          throw signUpError;
+
+        if (roleError) {
+          console.error('Failed to set partner role:', roleError);
         }
-        
-        if (!signUpData.user) {
-          throw new Error("Kunde inte skapa användarkonto");
-        }
-        
-        userId = signUpData.user.id;
-        isNewUser = true;
-      }
 
-      // For new users, update role to 'partner' immediately (before trigger creates 'customer')
-      // For existing users, also ensure they have partner role
-      const { error: roleError } = await supabase.rpc('set_partner_role', {
-        target_user_id: userId
-      });
-      
-      if (roleError) {
-        console.error('Failed to set partner role:', roleError);
-        // For new users, this is critical - throw error
-        if (isNewUser) {
-          throw new Error("Kunde inte sätta partnerroll. Försök igen.");
-        }
-      }
+        const { error: partnerError } = await supabase.rpc('insert_partner_as_user', {
+          p_user_id: currentUser.id,
+          p_company_name: formData.company_name,
+          p_org_number: formData.org_number,
+          p_contact_name: formData.contact_name,
+          p_contact_email: formData.contact_email,
+          p_contact_phone: formData.contact_phone,
+          p_address: formData.address || null,
+          p_address_lat: formData.address_lat || null,
+          p_address_lng: formData.address_lng || null,
+          p_traffic_license_number: formData.traffic_license_number || null,
+          p_f_tax_certificate: formData.f_tax_certificate,
+          p_insurance_company: formData.insurance_company || null,
+        });
 
-      // Insert partner using security definer function (bypasses RLS for unauthenticated signup)
-      const { error: partnerError } = await supabase.rpc('insert_partner_as_user', {
-        p_user_id: userId,
-        p_company_name: formData.company_name,
-        p_org_number: formData.org_number,
-        p_contact_name: formData.contact_name,
-        p_contact_email: formData.contact_email,
-        p_contact_phone: formData.contact_phone,
-        p_address: formData.address || null,
-        p_address_lat: formData.address_lat || null,
-        p_address_lng: formData.address_lng || null,
-        p_traffic_license_number: formData.traffic_license_number || null,
-        p_f_tax_certificate: formData.f_tax_certificate,
-        p_insurance_company: formData.insurance_company || null,
-      });
-
-      if (partnerError) throw partnerError;
-
-      // Send confirmation email with magic link
-      try {
-        await supabase.functions.invoke('send-confirmation-email', {
+        if (partnerError) throw partnerError;
+      } else {
+        // Not logged in - use edge function to handle everything server-side
+        // This avoids supabase.auth.signUp() which sends a rate-limited built-in email
+        const { data: registerData, error: registerError } = await supabase.functions.invoke('register-partner', {
           body: {
-            type: 'partner_application',
             email: formData.contact_email,
+            password: formData.password,
             name: formData.contact_name,
             companyName: formData.company_name,
+            orgNumber: formData.org_number,
+            contactPhone: formData.contact_phone,
+            address: formData.address || null,
+            addressLat: formData.address_lat || null,
+            addressLng: formData.address_lng || null,
+            trafficLicenseNumber: formData.traffic_license_number || null,
+            fTaxCertificate: formData.f_tax_certificate,
+            insuranceCompany: formData.insurance_company || null,
           }
         });
-      } catch (emailError) {
-        console.error('Failed to send confirmation email:', emailError);
-        // Don't fail the whole process if email fails
+
+        if (registerError) {
+          throw new Error(registerError.message || "Registrering misslyckades. Försök igen.");
+        }
+
+        if (registerData?.error) {
+          throw new Error(registerData.error);
+        }
       }
 
       setStep('success');
       toast({
         title: "Ansökan skickad!",
-        description: "Vi har skickat ett bekräftelsemail med en länk för att skapa ditt konto.",
+        description: "Vi har skickat ett bekräftelsemail med en länk för att verifiera ditt konto.",
       });
     } catch (error: any) {
       console.error('Partner registration error:', error);
