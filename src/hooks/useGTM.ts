@@ -1,3 +1,10 @@
+// Extend Window interface for GTM dataLayer
+declare global {
+  interface Window {
+    dataLayer?: Record<string, any>[];
+  }
+}
+
 // Hook for Google Tag Manager integration
 export const useGTM = () => {
   // Push page view event to GTM data layer
