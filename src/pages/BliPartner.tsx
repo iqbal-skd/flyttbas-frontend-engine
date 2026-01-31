@@ -250,12 +250,14 @@ const BliPartner = () => {
           }
         });
 
+        // Network-level error (function unreachable, etc.)
         if (registerError) {
-          throw new Error(registerError.message || "Registrering misslyckades. Försök igen.");
+          throw new Error("Kunde inte nå servern. Kontrollera din internetanslutning och försök igen.");
         }
 
-        if (registerData?.error) {
-          throw new Error(registerData.error);
+        // Application-level error returned from the edge function
+        if (!registerData?.success) {
+          throw new Error(registerData?.error || "Registrering misslyckades. Försök igen.");
         }
       }
 

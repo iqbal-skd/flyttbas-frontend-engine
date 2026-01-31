@@ -29,6 +29,12 @@ interface RegisterPartnerRequest {
   insuranceCompany?: string;
 }
 
+const jsonResponse = (body: Record<string, unknown>) =>
+  new Response(JSON.stringify(body), {
+    status: 200,
+    headers: { "Content-Type": "application/json", ...corsHeaders },
+  });
+
 const handler = async (req: Request): Promise<Response> => {
   console.log("register-partner function called");
 
@@ -58,10 +64,10 @@ const handler = async (req: Request): Promise<Response> => {
       .maybeSingle();
 
     if (existingPartner) {
-      return new Response(
-        JSON.stringify({ error: "E-postadress används redan av en annan partner." }),
-        { status: 409, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
+      return jsonResponse({
+        success: false,
+        error: "Denna e-postadress används redan av en annan partner. Använd en annan e-postadress.",
+      });
     }
 
     // 2. Check if user already exists
@@ -72,10 +78,10 @@ const handler = async (req: Request): Promise<Response> => {
       .maybeSingle();
 
     if (existingProfile) {
-      return new Response(
-        JSON.stringify({ error: "E-postadress redan registrerad. Logga in först för att bli partner." }),
-        { status: 409, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
+      return jsonResponse({
+        success: false,
+        error: "Denna e-postadress är redan registrerad. Vänligen logga in först för att bli partner.",
+      });
     }
 
     // 3. Create user via admin API (no Supabase confirmation email sent)
@@ -89,12 +95,15 @@ const handler = async (req: Request): Promise<Response> => {
     if (createUserError) {
       console.error("Error creating user:", createUserError);
       if (createUserError.message?.includes("already been registered")) {
-        return new Response(
-          JSON.stringify({ error: "E-postadress redan registrerad. Logga in först eller använd en annan e-post." }),
-          { status: 409, headers: { "Content-Type": "application/json", ...corsHeaders } }
-        );
+        return jsonResponse({
+          success: false,
+          error: "Denna e-postadress är redan registrerad. Logga in först eller använd en annan e-post.",
+        });
       }
-      throw createUserError;
+      return jsonResponse({
+        success: false,
+        error: "Kunde inte skapa användarkonto. Försök igen.",
+      });
     }
 
     const userId = userData.user.id;
@@ -109,7 +118,10 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (roleError) {
       console.error("Error setting partner role:", roleError);
-      throw new Error("Failed to set partner role");
+      return jsonResponse({
+        success: false,
+        error: "Kunde inte sätta partnerroll. Försök igen.",
+      });
     }
     console.log("Partner role set for user:", userId);
 
@@ -132,7 +144,10 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (partnerError) {
       console.error("Error creating partner record:", partnerError);
-      throw new Error("Failed to create partner record");
+      return jsonResponse({
+        success: false,
+        error: "Kunde inte skapa partnerpost. Försök igen.",
+      });
     }
     console.log("Partner record created for user:", userId);
 
@@ -192,38 +207,40 @@ const handler = async (req: Request): Promise<Response> => {
       </html>
     `;
 
-    const resendResponse = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${RESEND_API_KEY}`,
-      },
-      body: JSON.stringify({
-        from: FROM_EMAIL,
-        to: [email],
-        subject: "Verifiera din e-post - Flyttbas",
-        html: htmlContent,
-      }),
-    });
+    try {
+      const resendResponse = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${RESEND_API_KEY}`,
+        },
+        body: JSON.stringify({
+          from: FROM_EMAIL,
+          to: [email],
+          subject: "Verifiera din e-post - Flyttbas",
+          html: htmlContent,
+        }),
+      });
 
-    if (!resendResponse.ok) {
-      const errorData = await resendResponse.text();
-      console.error("Resend API error:", errorData);
+      if (!resendResponse.ok) {
+        const errorData = await resendResponse.text();
+        console.error("Resend API error:", errorData);
+        // Don't fail registration if email fails
+      } else {
+        console.log("Confirmation email sent successfully");
+      }
+    } catch (emailErr) {
+      console.error("Failed to send email:", emailErr);
       // Don't fail registration if email fails
-    } else {
-      console.log("Confirmation email sent successfully");
     }
 
-    return new Response(
-      JSON.stringify({ success: true, userId }),
-      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-    );
+    return jsonResponse({ success: true, userId });
   } catch (error: any) {
     console.error("Error in register-partner function:", error);
-    return new Response(
-      JSON.stringify({ error: error.message || "Registration failed" }),
-      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-    );
+    return jsonResponse({
+      success: false,
+      error: error.message || "Något gick fel vid registrering. Försök igen.",
+    });
   }
 };
 
