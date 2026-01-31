@@ -325,7 +325,7 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error(`Failed to generate link: ${linkError.message}`);
     }
 
-    // For partner applications, confirm the user's email since they set a password during registration
+    // For partner applications, confirm the user's email and ensure partner role is set
     if (type === "partner_application") {
       try {
         const { data: users } = await supabase.auth.admin.listUsers();
@@ -333,9 +333,21 @@ const handler = async (req: Request): Promise<Response> => {
         if (user) {
           await supabase.auth.admin.updateUserById(user.id, { email_confirm: true });
           console.log("Email confirmed for user:", email);
+
+          // Ensure partner role is set (backup in case client-side RPC failed due to permissions)
+          await supabase.from('user_roles').delete().eq('user_id', user.id).eq('role', 'customer');
+          const { error: roleError } = await supabase.from('user_roles').upsert(
+            { user_id: user.id, role: 'partner' },
+            { onConflict: 'user_id,role' }
+          );
+          if (roleError) {
+            console.error("Failed to set partner role:", roleError);
+          } else {
+            console.log("Partner role set for user:", email);
+          }
         }
       } catch (confirmError) {
-        console.log("Could not auto-confirm email:", confirmError);
+        console.log("Could not auto-confirm email or set role:", confirmError);
         // Not critical - user can still use the link
       }
     }

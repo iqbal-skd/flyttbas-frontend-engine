@@ -11,14 +11,15 @@ interface ProtectedRouteProps {
   requireAuth?: boolean;
 }
 
-const ProtectedRoute = ({ 
-  children, 
-  requiredRole, 
-  requireAuth = true 
+const ProtectedRoute = ({
+  children,
+  requiredRole,
+  requireAuth = true
 }: ProtectedRouteProps) => {
-  const { user, loading, roles, isAdmin, isPartner } = useAuth();
+  const { user, loading, rolesLoaded, roles, isAdmin, isPartner } = useAuth();
 
-  if (loading) {
+  // Wait for auth to load, and also wait for roles when a specific role is required
+  if (loading || (user && requiredRole && !rolesLoaded)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
