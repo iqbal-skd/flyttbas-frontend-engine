@@ -20,7 +20,8 @@ export function ThirdPartyScripts() {
     script.setAttribute("data-cbid", COOKIEBOT_ID);
     script.setAttribute("data-blockingmode", "auto");
     script.type = "text/javascript";
-    document.head.insertBefore(script, document.head.firstChild);
+    script.defer = true;
+    document.head.appendChild(script);
     cookiebotInjected.current = true;
   }, []);
 

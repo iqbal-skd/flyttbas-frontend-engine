@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,60 +8,67 @@ import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { PageViewTracker } from "@/components/PageViewTracker";
-import { RecaptchaProvider } from "@/components/RecaptchaProvider";
 import { ThirdPartyScripts } from "@/components/ThirdPartyScripts";
 import Index from "./pages/Index";
-import Privatflytt from "./pages/Privatflytt";
-import Kontorsflytt from "./pages/Kontorsflytt";
-import Priser from "./pages/Priser";
-import Case from "./pages/Case";
-import FAQ from "./pages/FAQ";
-import Kontakt from "./pages/Kontakt";
-import Blogg from "./pages/Blogg";
-import BlogPost from "./pages/BlogPost";
-import LocalArea from "./pages/LocalArea";
-import NotFound from "./pages/NotFound";
-import Auth from "./pages/Auth";
-import BliPartner from "./pages/BliPartner";
-import MinaOfferter from "./pages/MinaOfferter";
-import CustomerDashboard from "./pages/CustomerDashboard";
-import SetupPassword from "./pages/SetupPassword";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminOverview from "./pages/admin/AdminOverview";
-import AdminCustomers from "./pages/admin/AdminCustomers";
-import AdminReviews from "./pages/admin/AdminReviews";
-import AdminAudit from "./pages/admin/AdminAudit";
-import AdminUsers from "./pages/admin/AdminUsers";
-import AdminSettings from "./pages/admin/AdminSettings";
-import PartnerDashboard from "./pages/partner/PartnerDashboard";
-import AllmannaVillkor from "./pages/AllmannaVillkor";
-import Integritetspolicy from "./pages/Integritetspolicy";
-import Cookiepolicy from "./pages/Cookiepolicy";
-import OmOss from "./pages/OmOss";
+
+// Lazy-loaded pages
+const Privatflytt = lazy(() => import("./pages/Privatflytt"));
+const Kontorsflytt = lazy(() => import("./pages/Kontorsflytt"));
+const Priser = lazy(() => import("./pages/Priser"));
+const Case = lazy(() => import("./pages/Case"));
+const FAQ = lazy(() => import("./pages/FAQ"));
+const Kontakt = lazy(() => import("./pages/Kontakt"));
+const Blogg = lazy(() => import("./pages/Blogg"));
+const BlogPost = lazy(() => import("./pages/BlogPost"));
+const LocalArea = lazy(() => import("./pages/LocalArea"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const Auth = lazy(() => import("./pages/Auth"));
+const BliPartner = lazy(() => import("./pages/BliPartner"));
+const MinaOfferter = lazy(() => import("./pages/MinaOfferter"));
+const CustomerDashboard = lazy(() => import("./pages/CustomerDashboard"));
+const SetupPassword = lazy(() => import("./pages/SetupPassword"));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminOverview = lazy(() => import("./pages/admin/AdminOverview"));
+const AdminCustomers = lazy(() => import("./pages/admin/AdminCustomers"));
+const AdminReviews = lazy(() => import("./pages/admin/AdminReviews"));
+const AdminAudit = lazy(() => import("./pages/admin/AdminAudit"));
+const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
+const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
+const PartnerDashboard = lazy(() => import("./pages/partner/PartnerDashboard"));
+const AllmannaVillkor = lazy(() => import("./pages/AllmannaVillkor"));
+const Integritetspolicy = lazy(() => import("./pages/Integritetspolicy"));
+const Cookiepolicy = lazy(() => import("./pages/Cookiepolicy"));
+const OmOss = lazy(() => import("./pages/OmOss"));
 // Guides
-import JamforFlyttfirmor from "./pages/guider/JamforFlyttfirmor";
-import VadKostarEnFlytt from "./pages/guider/VadKostarEnFlytt";
-import FastPrisVsTimpris from "./pages/guider/FastPrisVsTimpris";
+const JamforFlyttfirmor = lazy(() => import("./pages/guider/JamforFlyttfirmor"));
+const VadKostarEnFlytt = lazy(() => import("./pages/guider/VadKostarEnFlytt"));
+const FastPrisVsTimpris = lazy(() => import("./pages/guider/FastPrisVsTimpris"));
 // Checklists
-import FlyttChecklista from "./pages/checklistor/FlyttChecklista";
-import FlyttstadningChecklista from "./pages/checklistor/FlyttstadningChecklista";
-import KontorsflyttChecklista from "./pages/checklistor/KontorsflyttChecklista";
-import DodsboChecklista from "./pages/checklistor/DodsboChecklista";
-import MagasineringChecklista from "./pages/checklistor/MagasineringChecklista";
+const FlyttChecklista = lazy(() => import("./pages/checklistor/FlyttChecklista"));
+const FlyttstadningChecklista = lazy(() => import("./pages/checklistor/FlyttstadningChecklista"));
+const KontorsflyttChecklista = lazy(() => import("./pages/checklistor/KontorsflyttChecklista"));
+const DodsboChecklista = lazy(() => import("./pages/checklistor/DodsboChecklista"));
+const MagasineringChecklista = lazy(() => import("./pages/checklistor/MagasineringChecklista"));
+
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-[60vh]">
+    <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+  </div>
+);
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
-      <RecaptchaProvider>
-        <AuthProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-          <BrowserRouter>
-            <ThirdPartyScripts />
-            <PageViewTracker />
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+        <BrowserRouter>
+          <ThirdPartyScripts />
+          <PageViewTracker />
+          <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/privatflytt" element={<Privatflytt />} />
@@ -72,12 +80,12 @@ const App = () => (
               <Route path="/blogg" element={<Blogg />} />
               <Route path="/blogg/:slug" element={<BlogPost />} />
               <Route path="/flyttfirma/:slug" element={<LocalArea />} />
-              
+
               {/* Auth & Public Routes */}
               <Route path="/auth" element={<Auth />} />
               <Route path="/setup-password" element={<SetupPassword />} />
               <Route path="/bli-partner" element={<BliPartner />} />
-              
+
               {/* Customer Routes - require authentication */}
               <Route path="/mina-offerter" element={
                 <ProtectedRoute>
@@ -89,7 +97,7 @@ const App = () => (
                   <CustomerDashboard />
                 </ProtectedRoute>
               } />
-              
+
               {/* Admin Routes */}
               <Route path="/admin" element={
                 <ProtectedRoute requiredRole="admin">
@@ -146,14 +154,14 @@ const App = () => (
                   <AdminSettings />
                 </ProtectedRoute>
               } />
-              
+
               {/* Partner Routes */}
               <Route path="/partner" element={
                 <ProtectedRoute requiredRole="partner">
                   <PartnerDashboard />
                 </ProtectedRoute>
               } />
-              
+
               {/* Legal */}
               <Route path="/allmanna-villkor" element={<AllmannaVillkor />} />
               <Route path="/integritetspolicy" element={<Integritetspolicy />} />
@@ -179,10 +187,10 @@ const App = () => (
               <Route path="/juridik" element={<AllmannaVillkor />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </AuthProvider>
-    </RecaptchaProvider>
+          </Suspense>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
     </QueryClientProvider>
   </HelmetProvider>
 );

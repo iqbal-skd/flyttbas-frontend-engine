@@ -11,8 +11,9 @@ import { Step1Property } from "./Step1Property";
 import { Step2Details } from "./Step2Details";
 import { Step3Services } from "./Step3Services";
 import { Step4Quote } from "./Step4Quote";
+import { RecaptchaProvider } from "@/components/RecaptchaProvider";
 
-export const QuoteWizard = () => {
+const QuoteWizardInner = () => {
   const { toast } = useToast();
   const { getRecaptchaToken } = useRecaptcha();
   const [currentStep, setCurrentStep] = useState(1);
@@ -311,3 +312,9 @@ export const QuoteWizard = () => {
     </Card>
   );
 };
+
+export const QuoteWizard = () => (
+  <RecaptchaProvider>
+    <QuoteWizardInner />
+  </RecaptchaProvider>
+);
