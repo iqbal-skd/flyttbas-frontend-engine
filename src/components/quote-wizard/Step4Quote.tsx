@@ -119,7 +119,7 @@ export const Step4Quote = ({ formData, setFormData, errors }: StepProps) => {
         </Label>
         <Textarea
           id="notes"
-          placeholder="Beskriv något särskilt om flytten (valfritt)"
+          placeholder="Behöver du några andra tjänster eller har du några allmänna kommentarer? (valfritt)"
           value={formData.notes}
           onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
           className="mt-1.5"
