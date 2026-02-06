@@ -32,7 +32,7 @@ const Index = () => {
 
   const stats = [
     { value: "15+", label: "Verifierade flyttfirmor" },
-    { value: "12 000+", label: "Genomförda flyttar" },
+    { value: "12 00+", label: "Genomförda flyttar" },
     { value: "4.8", label: "Snittbetyg" },
     { value: "50%", label: "RUT-avdrag" },
   ];
