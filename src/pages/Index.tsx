@@ -208,22 +208,26 @@ const Index = () => {
               <div className="flex-1 flex justify-center">
                 <div className="bg-background p-8 rounded-2xl shadow-xl">
                   <div className="text-center mb-4">
-                    <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Prismodell</p>
-                    <p className="text-3xl font-bold text-primary mt-2">Betala per uppdrag</p>
-                    <p className="text-sm text-muted-foreground mt-1">Enkel och transparent prissättning</p>
+                    <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Varför Flyttbas?</p>
+                    <p className="text-3xl font-bold text-primary mt-2">Väx med rätt kunder</p>
+                    <p className="text-sm text-muted-foreground mt-1">Fokusera på flytten – vi sköter matchningen</p>
                   </div>
                   <div className="border-t pt-4 space-y-3 text-sm">
                     <div className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
-                      <span>Ingen startavgift</span>
+                      <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
+                      <span>Kvalificerade förfrågningar i ditt område</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
-                      <span>Ingen månadsavgift</span>
+                      <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
+                      <span>Egen partnerpanel med offerthantering</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
-                      <span>Ingen bindningstid</span>
+                      <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
+                      <span>Synlighet mot tusentals kunder</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
+                      <span>Betyg och recensioner som bygger förtroende</span>
                     </div>
                   </div>
                 </div>
