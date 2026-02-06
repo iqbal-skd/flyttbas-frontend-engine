@@ -151,6 +151,17 @@ export const Footer = () => {
 
         <div className="border-t border-white/10 mt-8 pt-8 text-center text-sm text-white/60">
           <p>&copy; {new Date().getFullYear()} Flyttbas. Alla rättigheter förbehållna.</p>
+          <p className="mt-2">
+            Webbplattform utvecklad av{" "}
+            <a
+              href="https://www.omnisite.se/projekt/flyttbas-flyttjanster-webbplattform"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-white transition-colors underline"
+            >
+              Omnisite
+            </a>
+          </p>
         </div>
       </div>
     </footer>
