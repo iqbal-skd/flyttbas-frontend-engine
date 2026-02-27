@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRecaptcha } from "@/hooks/useRecaptcha";
 import { Calculator, ChevronLeft, ChevronRight, Send, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { trackQuoteFormConversion } from "@/lib/tracking";
 import { FormData, initialFormData, WIZARD_STEPS, formSchema } from "./types";
 import { WizardProgress } from "./WizardProgress";
 import { Step1Property } from "./Step1Property";
@@ -177,6 +178,10 @@ const QuoteWizardInner = () => {
       }
 
       setSubmitted(true);
+
+      // Track Google Ads conversion
+      trackQuoteFormConversion();
+
       toast({
         title: "Förfrågan skickad!",
         description: "Vi har skickat ett bekräftelsemail med en länk till din kundportal.",

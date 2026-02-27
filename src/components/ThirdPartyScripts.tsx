@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 
 // Read from environment variables
 const GOOGLE_ANALYTICS_ID = import.meta.env.VITE_GOOGLE_ANALYTICS_ID;
+const GOOGLE_ADS_CONVERSION_ID = import.meta.env.VITE_GOOGLE_ADS_CONVERSION_ID;
 const FACEBOOK_PIXEL_ID = import.meta.env.VITE_FACEBOOK_PIXEL_ID;
 const COOKIEBOT_ID = import.meta.env.VITE_COOKIEBOT_ID;
 
@@ -25,7 +26,7 @@ export function ThirdPartyScripts() {
     cookiebotInjected.current = true;
   }, []);
 
-  // Inject Google Analytics
+  // Inject Google Analytics and Google Ads
   useEffect(() => {
     if (gaInjected.current || !GOOGLE_ANALYTICS_ID) return;
 
@@ -36,7 +37,7 @@ export function ThirdPartyScripts() {
     gtagScript.setAttribute("data-cookieconsent", "statistics");
     document.head.appendChild(gtagScript);
 
-    // Initialize gtag
+    // Initialize gtag with GA and Google Ads
     const initScript = document.createElement("script");
     initScript.setAttribute("data-cookieconsent", "statistics");
     initScript.textContent = `
@@ -44,6 +45,7 @@ export function ThirdPartyScripts() {
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       gtag('config', '${GOOGLE_ANALYTICS_ID}', { 'anonymize_ip': true });
+      ${GOOGLE_ADS_CONVERSION_ID ? `gtag('config', '${GOOGLE_ADS_CONVERSION_ID}');` : ''}
     `;
     document.head.appendChild(initScript);
     gaInjected.current = true;
