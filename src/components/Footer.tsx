@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Mail, MapPin } from "lucide-react";
+import { Mail, MapPin, Linkedin } from "lucide-react";
 import logo from "@/assets/flyttbas-logo-white.svg";
 
 export const Footer = () => {
@@ -144,6 +144,17 @@ export const Footer = () => {
               <li className="flex items-start gap-2">
                 <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
                 <span className="text-white/80">Industrivägen 10, 135 40 Tyresö</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <Linkedin className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                <a
+                  href="https://www.linkedin.com/company/flyttbas/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white/80 hover:text-white transition-colors"
+                >
+                  LinkedIn
+                </a>
               </li>
             </ul>
           </div>

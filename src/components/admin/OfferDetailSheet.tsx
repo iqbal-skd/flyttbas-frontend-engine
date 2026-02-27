@@ -468,7 +468,7 @@ export const OfferDetailSheet = ({
                     <Separator />
                     <div className="flex justify-between text-lg font-bold">
                       <span>Totalt</span>
-                      <span className="text-primary">{formatCurrency(offer.total_price)}</span>
+                      <span className="text-primary">{formatCurrency(offer.price_before_rut - offer.rut_deduction)}</span>
                     </div>
                   </div>
                 </CardContent>
