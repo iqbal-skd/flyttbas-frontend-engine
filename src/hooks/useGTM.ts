@@ -1,46 +1,51 @@
-// Extend Window interface for GTM dataLayer
-declare global {
-  interface Window {
-    dataLayer?: Record<string, any>[];
-  }
-}
-
-// Hook for Google Tag Manager integration
+/**
+ * Hook for Google Tag Manager / dataLayer integration.
+ *
+ * Provides methods to push events to the dataLayer which GTM can use
+ * to trigger tags. These methods are safe to call even if GTM hasn't
+ * loaded yet - events will queue in the dataLayer.
+ */
 export const useGTM = () => {
-  // Push page view event to GTM data layer
+  /**
+   * Ensures dataLayer exists and returns it
+   */
+  const getDataLayer = (): unknown[] => {
+    if (typeof window === "undefined") return [];
+    window.dataLayer = window.dataLayer || [];
+    return window.dataLayer;
+  };
+
+  /**
+   * Push page view event to GTM dataLayer
+   */
   const trackPageView = (pagePath: string, pageTitle?: string) => {
-    if (typeof window !== "undefined" && window.dataLayer) {
-      window.dataLayer.push({
-        event: "pageview",
-        page: {
-          path: pagePath,
-          title: pageTitle || document.title,
-        },
-      });
-    }
+    getDataLayer().push({
+      event: "pageview",
+      page: {
+        path: pagePath,
+        title: pageTitle || (typeof document !== "undefined" ? document.title : ""),
+      },
+    });
   };
 
-  // Push custom events to GTM
-  const trackEvent = (
-    eventName: string,
-    eventData?: Record<string, any>
-  ) => {
-    if (typeof window !== "undefined" && window.dataLayer) {
-      window.dataLayer.push({
-        event: eventName,
-        ...eventData,
-      });
-    }
+  /**
+   * Push custom event to GTM dataLayer
+   */
+  const trackEvent = (eventName: string, eventData?: Record<string, unknown>) => {
+    getDataLayer().push({
+      event: eventName,
+      ...eventData,
+    });
   };
 
-  // Push e-commerce event (e.g., form submission, purchase)
-  const trackConversion = (data: Record<string, any>) => {
-    if (typeof window !== "undefined" && window.dataLayer) {
-      window.dataLayer.push({
-        event: "conversion",
-        ...data,
-      });
-    }
+  /**
+   * Push conversion event to GTM dataLayer
+   */
+  const trackConversion = (data: Record<string, unknown>) => {
+    getDataLayer().push({
+      event: "conversion",
+      ...data,
+    });
   };
 
   return {
