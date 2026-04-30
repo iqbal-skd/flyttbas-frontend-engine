@@ -8,121 +8,44 @@ const FACEBOOK_PIXEL_ID = import.meta.env.VITE_FACEBOOK_PIXEL_ID;
 const COOKIEBOT_ID = import.meta.env.VITE_COOKIEBOT_ID;
 
 /**
- * Injects all third-party tracking scripts with proper GDPR compliance.
+ * Injects third-party tracking scripts with GDPR compliance.
  *
- * Script loading order:
- * 1. Google Consent Mode v2 defaults (denies all by default)
- * 2. Cookiebot (consent management UI)
- * 3. GTM (if configured) OR standalone gtag.js (fallback)
- *
- * Consent flow:
- * - All tracking starts as 'denied'
- * - Cookiebot events update consent state when user interacts
- * - GTM/gtag respects consent state automatically
+ * NOTE: Google Consent Mode v2 defaults are set in index.html to ensure
+ * they execute BEFORE any tracking scripts load. This component handles:
+ * - Cookiebot (consent UI + consent state updates)
+ * - GTM or standalone gtag.js
+ * - Facebook Pixel (if not using GTM)
  */
 export function ThirdPartyScripts() {
   const initialized = useRef(false);
 
   useEffect(() => {
-    // Prevent double initialization (React StrictMode)
     if (initialized.current) return;
     initialized.current = true;
 
-    // Initialize dataLayer immediately (must exist before any gtag calls)
-    window.dataLayer = window.dataLayer || [];
+    // Set up Cookiebot consent event handlers
+    setupCookiebotHandlers();
 
-    // Define gtag function globally
-    function gtag(...args: unknown[]) {
-      window.dataLayer!.push(args);
-    }
-    window.gtag = gtag;
-
-    // 1. Set Consent Mode v2 defaults FIRST (GDPR: deny all by default)
-    gtag("consent", "default", {
-      ad_storage: "denied",
-      ad_user_data: "denied",
-      ad_personalization: "denied",
-      analytics_storage: "denied",
-      functionality_storage: "denied",
-      personalization_storage: "denied",
-      security_storage: "granted",
-      wait_for_update: 500,
-    });
-
-    // Enable URL passthrough for better conversion attribution when cookies denied
-    gtag("set", "url_passthrough", true);
-
-    // Redact ads data when consent is denied
-    gtag("set", "ads_data_redaction", true);
-
-    // 2. Set up Cookiebot consent event handlers
-    const handleCookiebotAccept = () => {
-      if (typeof window.gtag === "function" && window.Cookiebot) {
-        window.gtag("consent", "update", {
-          ad_storage: window.Cookiebot.consent.marketing ? "granted" : "denied",
-          ad_user_data: window.Cookiebot.consent.marketing ? "granted" : "denied",
-          ad_personalization: window.Cookiebot.consent.marketing ? "granted" : "denied",
-          analytics_storage: window.Cookiebot.consent.statistics ? "granted" : "denied",
-          functionality_storage: window.Cookiebot.consent.preferences ? "granted" : "denied",
-          personalization_storage: window.Cookiebot.consent.preferences ? "granted" : "denied",
-        });
-      }
-    };
-
-    const handleCookiebotDecline = () => {
-      if (typeof window.gtag === "function") {
-        window.gtag("consent", "update", {
-          ad_storage: "denied",
-          ad_user_data: "denied",
-          ad_personalization: "denied",
-          analytics_storage: "denied",
-          functionality_storage: "denied",
-          personalization_storage: "denied",
-        });
-      }
-    };
-
-    // Handle returning visitors who already gave consent
-    const handleCookiebotLoad = () => {
-      if (window.Cookiebot?.consented) {
-        handleCookiebotAccept();
-      }
-    };
-
-    window.addEventListener("CookiebotOnAccept", handleCookiebotAccept);
-    window.addEventListener("CookiebotOnDecline", handleCookiebotDecline);
-    window.addEventListener("CookiebotOnLoad", handleCookiebotLoad);
-
-    // 3. Inject Cookiebot script (loads the consent banner)
+    // Inject Cookiebot script (consent banner)
     if (COOKIEBOT_ID) {
-      const cookiebotScript = document.createElement("script");
-      cookiebotScript.id = "Cookiebot";
-      cookiebotScript.src = "https://consent.cookiebot.com/uc.js";
-      cookiebotScript.setAttribute("data-cbid", COOKIEBOT_ID);
-      // Note: We don't use auto-blocking since we handle consent via Consent Mode v2
-      cookiebotScript.type = "text/javascript";
-      document.head.appendChild(cookiebotScript);
+      injectCookiebot(COOKIEBOT_ID);
     }
 
-    // 4. Inject tracking scripts
+    // Inject tracking scripts
+    // Consent defaults are already set in index.html, so cookies won't be set
     if (GTM_ID) {
-      // GTM mode: GTM manages all tags (GA4, Google Ads, FB Pixel, etc.)
       injectGTM(GTM_ID);
     } else if (GOOGLE_ANALYTICS_ID) {
-      // Fallback mode: Use standalone gtag.js when GTM is not configured
       injectStandaloneGtag(GOOGLE_ANALYTICS_ID, GOOGLE_ADS_CONVERSION_ID);
     }
 
-    // 5. Inject Facebook Pixel if configured and not using GTM
+    // Facebook Pixel (only if not using GTM)
     if (!GTM_ID && FACEBOOK_PIXEL_ID) {
       injectFacebookPixel(FACEBOOK_PIXEL_ID);
     }
 
-    // Cleanup event listeners on unmount
     return () => {
-      window.removeEventListener("CookiebotOnAccept", handleCookiebotAccept);
-      window.removeEventListener("CookiebotOnDecline", handleCookiebotDecline);
-      window.removeEventListener("CookiebotOnLoad", handleCookiebotLoad);
+      cleanupCookiebotHandlers();
     };
   }, []);
 
@@ -130,10 +53,73 @@ export function ThirdPartyScripts() {
 }
 
 /**
- * Injects Google Tag Manager container
+ * Cookiebot event handler references (for cleanup)
  */
+let cookiebotAcceptHandler: (() => void) | null = null;
+let cookiebotDeclineHandler: (() => void) | null = null;
+let cookiebotLoadHandler: (() => void) | null = null;
+
+function setupCookiebotHandlers() {
+  cookiebotAcceptHandler = () => {
+    if (typeof window.gtag === "function" && window.Cookiebot) {
+      window.gtag("consent", "update", {
+        ad_storage: window.Cookiebot.consent.marketing ? "granted" : "denied",
+        ad_user_data: window.Cookiebot.consent.marketing ? "granted" : "denied",
+        ad_personalization: window.Cookiebot.consent.marketing ? "granted" : "denied",
+        analytics_storage: window.Cookiebot.consent.statistics ? "granted" : "denied",
+        functionality_storage: window.Cookiebot.consent.preferences ? "granted" : "denied",
+        personalization_storage: window.Cookiebot.consent.preferences ? "granted" : "denied",
+      });
+    }
+  };
+
+  cookiebotDeclineHandler = () => {
+    if (typeof window.gtag === "function") {
+      window.gtag("consent", "update", {
+        ad_storage: "denied",
+        ad_user_data: "denied",
+        ad_personalization: "denied",
+        analytics_storage: "denied",
+        functionality_storage: "denied",
+        personalization_storage: "denied",
+      });
+    }
+  };
+
+  cookiebotLoadHandler = () => {
+    // Handle returning visitors who already gave/denied consent
+    if (window.Cookiebot?.consented) {
+      cookiebotAcceptHandler?.();
+    }
+  };
+
+  window.addEventListener("CookiebotOnAccept", cookiebotAcceptHandler);
+  window.addEventListener("CookiebotOnDecline", cookiebotDeclineHandler);
+  window.addEventListener("CookiebotOnLoad", cookiebotLoadHandler);
+}
+
+function cleanupCookiebotHandlers() {
+  if (cookiebotAcceptHandler) {
+    window.removeEventListener("CookiebotOnAccept", cookiebotAcceptHandler);
+  }
+  if (cookiebotDeclineHandler) {
+    window.removeEventListener("CookiebotOnDecline", cookiebotDeclineHandler);
+  }
+  if (cookiebotLoadHandler) {
+    window.removeEventListener("CookiebotOnLoad", cookiebotLoadHandler);
+  }
+}
+
+function injectCookiebot(cookiebotId: string) {
+  const script = document.createElement("script");
+  script.id = "Cookiebot";
+  script.src = "https://consent.cookiebot.com/uc.js";
+  script.setAttribute("data-cbid", cookiebotId);
+  script.type = "text/javascript";
+  document.head.appendChild(script);
+}
+
 function injectGTM(gtmId: string) {
-  // GTM head script - inject at beginning of head for earliest possible loading
   const gtmScript = document.createElement("script");
   gtmScript.textContent = `
     (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
@@ -144,7 +130,7 @@ function injectGTM(gtmId: string) {
   `;
   document.head.appendChild(gtmScript);
 
-  // GTM noscript iframe - insert at beginning of body
+  // GTM noscript iframe (for users without JavaScript)
   const noscript = document.createElement("noscript");
   const iframe = document.createElement("iframe");
   iframe.src = `https://www.googletagmanager.com/ns.html?id=${gtmId}`;
@@ -153,7 +139,6 @@ function injectGTM(gtmId: string) {
   iframe.style.cssText = "display:none;visibility:hidden";
   noscript.appendChild(iframe);
 
-  // Insert as first child of body (after React root if it exists)
   if (document.body.firstChild) {
     document.body.insertBefore(noscript, document.body.firstChild);
   } else {
@@ -161,17 +146,12 @@ function injectGTM(gtmId: string) {
   }
 }
 
-/**
- * Injects standalone gtag.js for GA4 and Google Ads (fallback when GTM not used)
- */
 function injectStandaloneGtag(gaId: string, adsId?: string) {
-  // Load gtag.js library
   const gtagScript = document.createElement("script");
   gtagScript.async = true;
   gtagScript.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
   document.head.appendChild(gtagScript);
 
-  // Initialize after library loads
   gtagScript.onload = () => {
     if (typeof window.gtag === "function") {
       window.gtag("js", new Date());
@@ -183,9 +163,6 @@ function injectStandaloneGtag(gaId: string, adsId?: string) {
   };
 }
 
-/**
- * Injects Facebook Pixel (only used when GTM is not configured)
- */
 function injectFacebookPixel(pixelId: string) {
   const fbScript = document.createElement("script");
   fbScript.textContent = `
@@ -202,7 +179,6 @@ function injectFacebookPixel(pixelId: string) {
   `;
   document.head.appendChild(fbScript);
 
-  // Add noscript fallback
   const noscript = document.createElement("noscript");
   const img = document.createElement("img");
   img.height = 1;
@@ -213,7 +189,7 @@ function injectFacebookPixel(pixelId: string) {
   document.body.appendChild(noscript);
 }
 
-// Extend Window interface for TypeScript
+// TypeScript declarations
 declare global {
   interface Window {
     dataLayer: unknown[];

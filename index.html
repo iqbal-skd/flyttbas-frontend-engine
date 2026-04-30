@@ -3,6 +3,32 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Google Consent Mode v2 - MUST be first script to prevent cookies before consent -->
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+
+      // Default all consent to denied (GDPR requirement)
+      // This MUST run before GTM/gtag.js loads
+      gtag('consent', 'default', {
+        'ad_storage': 'denied',
+        'ad_user_data': 'denied',
+        'ad_personalization': 'denied',
+        'analytics_storage': 'denied',
+        'functionality_storage': 'denied',
+        'personalization_storage': 'denied',
+        'security_storage': 'granted',
+        'wait_for_update': 500
+      });
+
+      // Redact ads data when ad_storage is denied
+      gtag('set', 'ads_data_redaction', true);
+
+      // Enable URL passthrough for conversion attribution without cookies
+      gtag('set', 'url_passthrough', true);
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
@@ -12,7 +38,7 @@
       body { margin: 0; font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
       #root { min-height: 100vh; }
     </style>
-    <!-- Third-party scripts (Cookiebot, GA, FB Pixel) are loaded dynamically from system settings -->
+    <!-- GTM, Cookiebot, and other tracking scripts are loaded dynamically from ThirdPartyScripts component -->
   </head>
 
   <body>
