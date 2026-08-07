@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(done)",
+      "Bash(dir /s /b \"C:\\\\Work\\\\Personal\\\\Projects\\\\flyttbas\\\\flyttbas-frontend-engine\\\\src\")",
+      "Bash(sort:*)",
+      "Bash(npm run build:*)"
     ]
   }
 }

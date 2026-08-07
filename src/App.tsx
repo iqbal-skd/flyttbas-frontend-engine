@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { EnvironmentBanner } from "@/components/EnvironmentBanner";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { PageViewTracker } from "@/components/PageViewTracker";
 import { ThirdPartyScripts } from "@/components/ThirdPartyScripts";
@@ -66,6 +67,7 @@ const App = () => (
           <Toaster />
           <Sonner />
         <BrowserRouter>
+          <EnvironmentBanner />
           <ThirdPartyScripts />
           <PageViewTracker />
           <Suspense fallback={<PageLoader />}>

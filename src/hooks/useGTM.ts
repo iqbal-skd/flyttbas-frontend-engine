@@ -1,3 +1,5 @@
+import { isTrackingEnabled } from "@/lib/environment";
+
 /**
  * Hook for Google Tag Manager / dataLayer integration.
  *
@@ -10,7 +12,7 @@ export const useGTM = () => {
    * Ensures dataLayer exists and returns it
    */
   const getDataLayer = (): unknown[] => {
-    if (typeof window === "undefined") return [];
+    if (!isTrackingEnabled || typeof window === "undefined") return [];
     window.dataLayer = window.dataLayer || [];
     return window.dataLayer;
   };

@@ -1,3 +1,5 @@
+import { isTrackingEnabled } from "@/lib/environment";
+
 // Google Ads Conversion Tracking utilities
 
 const GOOGLE_ADS_CONVERSION_ID = import.meta.env.VITE_GOOGLE_ADS_CONVERSION_ID;
@@ -11,6 +13,10 @@ const QUOTE_FORM_CONVERSION_LABEL = import.meta.env.VITE_GOOGLE_ADS_QUOTE_CONVER
  * When using gtag.js: The conversion is sent directly via gtag().
  */
 export function trackQuoteFormConversion() {
+  if (!isTrackingEnabled) {
+    return;
+  }
+
   if (!GOOGLE_ADS_CONVERSION_ID || !QUOTE_FORM_CONVERSION_LABEL) {
     console.warn("Google Ads conversion tracking not configured");
     return;

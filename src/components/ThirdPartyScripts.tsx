@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { isTrackingEnabled } from "@/lib/environment";
 
 // Read from environment variables
 const GTM_ID = import.meta.env.VITE_GTM_ID;
@@ -20,6 +21,10 @@ export function ThirdPartyScripts() {
   const initialized = useRef(false);
 
   useEffect(() => {
+    if (!isTrackingEnabled) {
+      return;
+    }
+
     if (initialized.current) return;
     initialized.current = true;
 

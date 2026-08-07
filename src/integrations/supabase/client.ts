@@ -2,8 +2,18 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+function requireEnv(name: keyof ImportMetaEnv): string {
+  const value = import.meta.env[name];
+
+  if (!value) {
+    throw new Error(`${name} is required for the active ${import.meta.env.VITE_APP_ENV} environment.`);
+  }
+
+  return value;
+}
+
+const SUPABASE_URL = requireEnv('VITE_SUPABASE_URL');
+const SUPABASE_PUBLISHABLE_KEY = requireEnv('VITE_SUPABASE_PUBLISHABLE_KEY');
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";

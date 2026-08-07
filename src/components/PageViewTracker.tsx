@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useGTM } from "@/hooks/useGTM";
+import { isTrackingEnabled } from "@/lib/environment";
 
 /**
  * PageViewTracker component that automatically tracks page views
@@ -13,7 +14,10 @@ export const PageViewTracker = () => {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    trackPageView(location.pathname, document.title);
+
+    if (isTrackingEnabled) {
+      trackPageView(location.pathname, document.title);
+    }
   }, [location.pathname, trackPageView]);
 
   return null; // This component doesn't render anything

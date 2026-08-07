@@ -1,20 +1,120 @@
-name: Release & Deploy
+name: Deploy By Environment
 
 on:
   push:
     branches:
+      - 'develop'
+      - 'staging'
       - 'release/**'
       - 'release-*'
-
-env:
-  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+  workflow_dispatch:
+    inputs:
+      target_environment:
+        description: 'Environment to deploy'
+        required: true
+        type: choice
+        options:
+          - development
+          - staging
+          - production
 
 jobs:
-  # Job 1: Build and test
+  resolve-environment:
+    name: Resolve Target Environment
+    runs-on: ubuntu-latest
+    outputs:
+      app_env: ${{ steps.resolve.outputs.app_env }}
+      github_environment: ${{ steps.resolve.outputs.github_environment }}
+      vercel_prod_flag: ${{ steps.resolve.outputs.vercel_prod_flag }}
+      should_deploy_frontend: ${{ steps.resolve.outputs.should_deploy_frontend }}
+      branch_name: ${{ steps.resolve.outputs.branch_name }}
+    steps:
+      - name: Resolve environment from ref or input
+        id: resolve
+        run: |
+          branch_name="${GITHUB_REF_NAME}"
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            app_env="${{ github.event.inputs.target_environment }}"
+          else
+            case "$branch_name" in
+              develop)
+                app_env="development"
+                ;;
+              staging)
+                app_env="staging"
+                ;;
+              release/*|release-*)
+                app_env="production"
+                ;;
+              *)
+                echo "Unsupported branch for deployment: $branch_name"
+                exit 1
+                ;;
+            esac
+          fi
+
+          case "$app_env" in
+            development)
+              if [ "$branch_name" != "develop" ]; then
+                echo "Development deployments must run from the develop branch."
+                exit 1
+              fi
+              should_deploy_frontend="false"
+              ;;
+            staging)
+              if [ "$branch_name" != "staging" ]; then
+                echo "Staging deployments must run from the staging branch."
+                exit 1
+              fi
+              should_deploy_frontend="true"
+              ;;
+            production)
+              case "$branch_name" in
+                release/*|release-*)
+                  ;;
+                *)
+                  echo "Production deployments must run from a release branch."
+                  exit 1
+                  ;;
+              esac
+              should_deploy_frontend="true"
+              ;;
+            *)
+              echo "Unsupported environment: $app_env"
+              exit 1
+              ;;
+          esac
+
+          if [ "$app_env" = "production" ]; then
+            vercel_prod_flag="true"
+          else
+            vercel_prod_flag="false"
+          fi
+
+          echo "branch_name=$branch_name" >> "$GITHUB_OUTPUT"
+          echo "app_env=$app_env" >> "$GITHUB_OUTPUT"
+          echo "github_environment=$app_env" >> "$GITHUB_OUTPUT"
+          echo "vercel_prod_flag=$vercel_prod_flag" >> "$GITHUB_OUTPUT"
+          echo "should_deploy_frontend=$should_deploy_frontend" >> "$GITHUB_OUTPUT"
+
   build:
     name: Build & Test
+    needs: resolve-environment
     runs-on: ubuntu-latest
+    environment: ${{ needs.resolve-environment.outputs.github_environment }}
+    env:
+      VITE_APP_ENV: ${{ needs.resolve-environment.outputs.app_env }}
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+      VITE_SUPABASE_PROJECT_ID: ${{ secrets.VITE_SUPABASE_PROJECT_ID }}
+      VITE_RECAPTCHA_SITE_KEY: ${{ secrets.VITE_RECAPTCHA_SITE_KEY }}
+      VITE_GTM_ID: ${{ secrets.VITE_GTM_ID }}
+      VITE_GOOGLE_ANALYTICS_ID: ${{ secrets.VITE_GOOGLE_ANALYTICS_ID }}
+      VITE_GOOGLE_ADS_CONVERSION_ID: ${{ secrets.VITE_GOOGLE_ADS_CONVERSION_ID }}
+      VITE_GOOGLE_ADS_QUOTE_CONVERSION_LABEL: ${{ secrets.VITE_GOOGLE_ADS_QUOTE_CONVERSION_LABEL }}
+      VITE_FACEBOOK_PIXEL_ID: ${{ secrets.VITE_FACEBOOK_PIXEL_ID }}
+      VITE_COOKIEBOT_ID: ${{ secrets.VITE_COOKIEBOT_ID }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -25,6 +125,9 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
+      - name: Validate tracked environment files
+        run: npm run check:tracked-env-files
+
       - name: Install dependencies
         run: npm ci
 
@@ -32,31 +135,39 @@ jobs:
         run: npx tsc --noEmit
 
       - name: Build project
-        run: npm run build
-        env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
-          VITE_SUPABASE_PROJECT_ID: ${{ secrets.VITE_SUPABASE_PROJECT_ID }}
-          VITE_RECAPTCHA_SITE_KEY: ${{ secrets.VITE_RECAPTCHA_SITE_KEY }}
-          VITE_GOOGLE_ANALYTICS_ID: ${{ secrets.VITE_GOOGLE_ANALYTICS_ID }}
-          VITE_FACEBOOK_PIXEL_ID: ${{ secrets.VITE_FACEBOOK_PIXEL_ID }}
-          VITE_COOKIEBOT_ID: ${{ secrets.VITE_COOKIEBOT_ID }}
+        run: npm run build:${{ needs.resolve-environment.outputs.app_env }}
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: build-output
+          name: build-output-${{ needs.resolve-environment.outputs.app_env }}
           path: dist/
           retention-days: 1
 
-  # Job 2: Deploy to Vercel (requires approval)
   deploy:
-    name: Deploy to Production
-    needs: build
+    name: Deploy Frontend
+    needs:
+      - resolve-environment
+      - build
+    if: ${{ needs.resolve-environment.outputs.should_deploy_frontend == 'true' }}
     runs-on: ubuntu-latest
     environment:
-      name: production
+      name: ${{ needs.resolve-environment.outputs.github_environment }}
       url: ${{ steps.deploy.outputs.url }}
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VITE_APP_ENV: ${{ needs.resolve-environment.outputs.app_env }}
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+      VITE_SUPABASE_PROJECT_ID: ${{ secrets.VITE_SUPABASE_PROJECT_ID }}
+      VITE_RECAPTCHA_SITE_KEY: ${{ secrets.VITE_RECAPTCHA_SITE_KEY }}
+      VITE_GTM_ID: ${{ secrets.VITE_GTM_ID }}
+      VITE_GOOGLE_ANALYTICS_ID: ${{ secrets.VITE_GOOGLE_ANALYTICS_ID }}
+      VITE_GOOGLE_ADS_CONVERSION_ID: ${{ secrets.VITE_GOOGLE_ADS_CONVERSION_ID }}
+      VITE_GOOGLE_ADS_QUOTE_CONVERSION_LABEL: ${{ secrets.VITE_GOOGLE_ADS_QUOTE_CONVERSION_LABEL }}
+      VITE_FACEBOOK_PIXEL_ID: ${{ secrets.VITE_FACEBOOK_PIXEL_ID }}
+      VITE_COOKIEBOT_ID: ${{ secrets.VITE_COOKIEBOT_ID }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -71,31 +182,41 @@ jobs:
         run: npm install -g vercel@latest
 
       - name: Pull Vercel Environment
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+        run: |
+          if [ "${{ needs.resolve-environment.outputs.vercel_prod_flag }}" = "true" ]; then
+            vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+          else
+            vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+          fi
 
       - name: Build for Vercel
-        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-        env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
-          VITE_SUPABASE_PROJECT_ID: ${{ secrets.VITE_SUPABASE_PROJECT_ID }}
-          VITE_RECAPTCHA_SITE_KEY: ${{ secrets.VITE_RECAPTCHA_SITE_KEY }}
-          VITE_GOOGLE_ANALYTICS_ID: ${{ secrets.VITE_GOOGLE_ANALYTICS_ID }}
-          VITE_FACEBOOK_PIXEL_ID: ${{ secrets.VITE_FACEBOOK_PIXEL_ID }}
-          VITE_COOKIEBOT_ID: ${{ secrets.VITE_COOKIEBOT_ID }}
+        run: |
+          if [ "${{ needs.resolve-environment.outputs.vercel_prod_flag }}" = "true" ]; then
+            vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+          else
+            vercel build --token=${{ secrets.VERCEL_TOKEN }}
+          fi
 
       - name: Deploy to Vercel
         id: deploy
         run: |
-          url=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
+          if [ "${{ needs.resolve-environment.outputs.vercel_prod_flag }}" = "true" ]; then
+            url=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
+          else
+            url=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          fi
           echo "url=$url" >> $GITHUB_OUTPUT
           echo "Deployed to: $url"
 
-  # Job 3: Run database migrations and deploy edge functions (after deploy)
   migrate:
     name: Migrations & Edge Functions
-    needs: deploy
+    needs:
+      - resolve-environment
+      - build
+      - deploy
+    if: ${{ always() && needs.build.result == 'success' && (needs.resolve-environment.outputs.should_deploy_frontend == 'false' || needs.deploy.result == 'success') }}
     runs-on: ubuntu-latest
+    environment: ${{ needs.resolve-environment.outputs.github_environment }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
